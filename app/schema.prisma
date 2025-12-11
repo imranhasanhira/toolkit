@@ -127,11 +127,15 @@ model SubmissionTestCaseResult {
   submission                Submission      @relation(fields: [submissionId], references: [id])
   submissionId              String
 
-  testCase                  TestCase        @relation(fields: [testCaseId], references: [id])
-  testCaseId                String
+  testCase                  TestCase?       @relation(fields: [testCaseId], references: [id], onDelete: SetNull)
+  testCaseId                String?
 
   status                    String // ACCEPTED, WRONG_ANSWER, etc.
   stdout                    String?
   executionTime             Int? // ms
   memoryUsage               Int? // MB
+  
+  // Snapshot of the test case at the time of submission
+  input                     String          @default("")
+  expectedOutput            String          @default("")
 }

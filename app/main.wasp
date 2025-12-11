@@ -249,6 +249,28 @@ page AdminMessagesPage {
 //#endregion
 
 //#region Online Judge
+route CreateProblemRoute { path: "/online-judge/create", to: CreateProblemPage }
+page CreateProblemPage {
+  authRequired: true,
+  component: import CreateProblemPage from "@src/admin/problems/CreateProblemPage"
+}
+
+route ProblemListRoute { path: "/online-judge", to: ProblemListPage }
+page ProblemListPage {
+  component: import ProblemListPage from "@src/problems/ProblemListPage"
+}
+
+route ProblemDetailRoute { path: "/online-judge/:slug", to: ProblemDetailPage }
+page ProblemDetailPage {
+  component: import ProblemDetailPage from "@src/problems/ProblemDetailPage"
+}
+
+route EditProblemRoute { path: "/online-judge/:slug/edit", to: EditProblemPage }
+page EditProblemPage {
+  authRequired: true,
+  component: import EditProblemPage from "@src/problems/EditProblemPage"
+}
+
 action submitCode {
   fn: import { submitCode } from "@src/problems/operations",
   entities: [Submission, Problem]
@@ -272,6 +294,11 @@ query getProblems {
 query getProblem {
   fn: import { getProblem } from "@src/problems/operations",
   entities: [Problem, TestCase]
+}
+
+query getSubmissions {
+  fn: import { getSubmissions } from "@src/problems/operations",
+  entities: [Submission, SubmissionTestCaseResult]
 }
 
 job gradeSubmission {
