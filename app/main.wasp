@@ -252,52 +252,78 @@ page AdminMessagesPage {
 route CreateProblemRoute { path: "/online-judge/create", to: CreateProblemPage }
 page CreateProblemPage {
   authRequired: true,
-  component: import CreateProblemPage from "@src/admin/problems/CreateProblemPage"
+  component: import CreateProblemPage from "@src/admin/online-judge/CreateProblemPage"
 }
 
 route ProblemListRoute { path: "/online-judge", to: ProblemListPage }
 page ProblemListPage {
-  component: import ProblemListPage from "@src/problems/ProblemListPage"
+  component: import ProblemListPage from "@src/online-judge/ProblemListPage"
 }
 
 route ProblemDetailRoute { path: "/online-judge/:slug", to: ProblemDetailPage }
 page ProblemDetailPage {
-  component: import ProblemDetailPage from "@src/problems/ProblemDetailPage"
+  component: import ProblemDetailPage from "@src/online-judge/ProblemDetailPage"
 }
 
 route EditProblemRoute { path: "/online-judge/:slug/edit", to: EditProblemPage }
 page EditProblemPage {
   authRequired: true,
-  component: import EditProblemPage from "@src/problems/EditProblemPage"
+  component: import EditProblemPage from "@src/online-judge/EditProblemPage"
+}
+
+route RuntimeListRoute { path: "/online-judge/runtimes", to: RuntimeListPage }
+page RuntimeListPage {
+  authRequired: true,
+  component: import RuntimeListPage from "@src/online-judge/RuntimeListPage"
 }
 
 action submitCode {
-  fn: import { submitCode } from "@src/problems/operations",
-  entities: [Submission, Problem]
+  fn: import { submitCode } from "@src/online-judge/operations",
+  entities: [Submission, Problem, Runtime]
 }
 
 action createProblem {
-  fn: import { createProblem } from "@src/problems/operations",
+  fn: import { createProblem } from "@src/online-judge/operations",
   entities: [Problem, TestCase]
+}
+
+action runCode {
+  fn: import { runCode } from "@src/online-judge/operations",
+  entities: []
 }
 
 action updateProblem {
-  fn: import { updateProblem } from "@src/problems/operations",
+  fn: import { updateProblem } from "@src/online-judge/operations",
   entities: [Problem, TestCase]
 }
 
+action updateRuntime {
+    fn: import { updateRuntime } from "@src/online-judge/operations",
+    entities: [Runtime]
+}
+
+action createRuntime {
+    fn: import { createRuntime } from "@src/online-judge/operations",
+    entities: [Runtime]
+}
+
 query getProblems {
-  fn: import { getProblems } from "@src/problems/operations",
+  fn: import { getProblems } from "@src/online-judge/operations",
   entities: [Problem]
 }
 
 query getProblem {
-  fn: import { getProblem } from "@src/problems/operations",
+  fn: import { getProblem } from "@src/online-judge/operations",
   entities: [Problem, TestCase]
 }
 
+query getRuntimes {
+    fn: import { getRuntimes } from "@src/online-judge/operations",
+    entities: [Runtime]
+}
+
 query getSubmissions {
-  fn: import { getSubmissions } from "@src/problems/operations",
+  fn: import { getSubmissions } from "@src/online-judge/operations",
   entities: [Submission, SubmissionTestCaseResult]
 }
 

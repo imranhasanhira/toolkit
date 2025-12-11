@@ -5,7 +5,7 @@ import {
     type GetProblem,
     type SubmitCode,
 } from "wasp/server/operations";
-import { type Problem, type TestCase, type Submission } from "wasp/entities";
+import { type Problem, type TestCase, type Submission, type Runtime } from "wasp/entities";
 import { gradeSubmission } from "wasp/server/jobs";
 import { HttpError } from "wasp/server";
 
@@ -141,6 +141,7 @@ export const submitCode: SubmitCode<SubmitCodeArgs, void> = async (
             status: "PENDING",
             problem: { connect: { id: args.problemId } },
             user: { connect: { id: context.user.id } },
+            runtime: { connect: { language: args.language } }, // Connect by unique language key
         },
     });
 
@@ -168,4 +169,99 @@ export const getSubmissions = async (
             testCaseResults: true,
         },
     });
+};
+
+export const getRuntimes = async (args: void, context: any) => {
+    return context.entities.Runtime.findMany({
+        orderBy: { language: "asc" },
+    });
+};
+
+type UpdateRuntimeArgs = {
+    id: string;
+    defaultCode: string;
+};
+
+export const updateRuntime = async (args: UpdateRuntimeArgs, context: any) => {
+    if (!context.user) throw new HttpError(401, "Unauthorized");
+
+    return context.entities.Runtime.update({
+        where: { id: args.id },
+        data: { defaultCode: args.defaultCode },
+    });
+};
+
+type CreateRuntimeArgs = {
+    language: string;
+    defaultCode: string;
+};
+
+export const createRuntime = async (args: CreateRuntimeArgs, context: any) => {
+    if (!context.user) throw new HttpError(401, "Unauthorized");
+
+    return context.entities.Runtime.create({
+        data: {
+            language: args.language,
+            defaultCode: args.defaultCode,
+        },
+    });
+};
+
+type RunCodeArgs = {
+    code: string;
+    language: string;
+    testCases: { input: string; expectedOutput?: string }[];
+};
+
+type RunCodeResult = {
+    results: {
+        status: string;
+        stdout: string;
+        executionTime: number;
+        input: string;
+        expectedOutput?: string;
+    }[];
+};
+
+import { prepareExecutionEnvironment, executeTestCase, cleanupExecutionEnvironment } from "../server/utils/executor";
+
+export const runCode = async (args: RunCodeArgs, context: any): Promise<RunCodeResult> => {
+    if (!context.user) throw new HttpError(401, "Unauthorized");
+
+    const { code, language, testCases } = args;
+    const timeLimit = 2; // Default 2s for "Run"
+
+    let execCtx;
+    // Explicitly type the array to avoid never[] inference
+    const results: {
+        status: string;
+        stdout: string;
+        executionTime: number;
+        input: string;
+        expectedOutput?: string;
+    }[] = [];
+
+    try {
+        execCtx = prepareExecutionEnvironment(code, language);
+
+        for (const tc of testCases) {
+            const result = await executeTestCase(execCtx, tc.input, tc.expectedOutput || null, timeLimit);
+            results.push({
+                status: result.status,
+                stdout: result.stdout,
+                executionTime: result.executionTime,
+                input: tc.input,
+                expectedOutput: tc.expectedOutput,
+            });
+        }
+    } catch (err: any) {
+        console.error("Error in runCode:", err);
+        throw new HttpError(500, "Execution failed: " + err.message);
+    } finally {
+        if (execCtx) {
+            cleanupExecutionEnvironment(execCtx);
+        }
+    }
+
+    return { results };
 };

@@ -1,11 +1,6 @@
 import { type GradeSubmission } from "wasp/server/jobs";
-import { exec } from "child_process";
-import fs from "fs";
-import path from "path";
-import { promisify } from "util";
 import { type Submission, type Problem, type TestCase } from "wasp/entities";
-
-const execAsync = promisify(exec);
+import { prepareExecutionEnvironment, executeTestCase, cleanupExecutionEnvironment } from "../utils/executor";
 
 export const gradeSubmission: GradeSubmission<never, void> = async (
     args,
@@ -40,67 +35,22 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
     const testCases = problem.testCases;
     let allPassed = true;
 
-    // Create a temporary directory for execution
-    const tempDir = path.join("/tmp", `submission-${submissionId}`);
-    if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-    }
-
+    // Prepare Environment
+    let execCtx;
     try {
-        // Write code to file
-        const fileExtension = language === "python" ? "py" : "js"; // Simple mapping for now
-        const fileName = `main.${fileExtension}`;
-        const filePath = path.join(tempDir, fileName);
-        fs.writeFileSync(filePath, code);
+        execCtx = prepareExecutionEnvironment(code, language);
 
         for (const testCase of testCases) {
             console.log(`Running test case ${testCase.id}`);
-            const startTime = Date.now();
 
-            let dockerImage = "";
-            let runCommand = "";
+            const result = await executeTestCase(
+                execCtx,
+                testCase.input,
+                testCase.expectedOutput,
+                problem.timeLimit
+            );
 
-            if (language === "python") {
-                dockerImage = "python:3.9-slim";
-                runCommand = `python /app/${fileName}`;
-            } else if (language === "javascript") {
-                dockerImage = "node:18-alpine";
-                runCommand = `node /app/${fileName}`;
-            } else {
-                throw new Error(`Unsupported language: ${language}`);
-            }
-
-            // Prepare input file
-            const inputPath = path.join(tempDir, "input.txt");
-            fs.writeFileSync(inputPath, testCase.input);
-
-            // Docker command: mount tempDir to /app, run command, pipe input
-            const dockerCmd = `docker run --rm -v "${tempDir}:/app" -i ${dockerImage} sh -c "${runCommand} < /app/input.txt"`;
-
-            let stdout = "";
-            let status = "ACCEPTED";
-            let executionTime = 0;
-
-            try {
-                const { stdout: output, stderr } = await execAsync(dockerCmd, {
-                    timeout: problem.timeLimit * 1000 + 1000,
-                });
-                stdout = output.trim();
-                executionTime = Date.now() - startTime;
-
-                if (stdout !== testCase.expectedOutput.trim()) {
-                    status = "WRONG_ANSWER";
-                    allPassed = false;
-                }
-
-            } catch (error: any) {
-                executionTime = Date.now() - startTime;
-                if (error.signal === "SIGTERM") {
-                    status = "TIME_LIMIT_EXCEEDED";
-                } else {
-                    status = "RUNTIME_ERROR";
-                    stdout = error.message;
-                }
+            if (result.status !== "ACCEPTED") {
                 allPassed = false;
             }
 
@@ -108,9 +58,9 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
                 data: {
                     submissionId: submission.id,
                     testCaseId: testCase.id,
-                    status,
-                    stdout,
-                    executionTime,
+                    status: result.status,
+                    stdout: result.stdout,
+                    executionTime: result.executionTime,
                     input: testCase.input,
                     expectedOutput: testCase.expectedOutput,
                 },
@@ -118,7 +68,6 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
         }
 
         const finalStatus = allPassed ? "ACCEPTED" : "WRONG_ANSWER";
-
         await context.entities.Submission.update({
             where: { id: submissionId },
             data: { status: finalStatus },
@@ -131,11 +80,8 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
             data: { status: "RUNTIME_ERROR" },
         });
     } finally {
-        // Cleanup
-        try {
-            if (fs.existsSync(tempDir)) {
-                fs.rmSync(tempDir, { recursive: true, force: true });
-            }
-        } catch (e) { console.error("Failed to cleanup temp dir", e); }
+        if (execCtx) {
+            cleanupExecutionEnvironment(execCtx);
+        }
     }
 };
