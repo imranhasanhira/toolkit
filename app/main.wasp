@@ -249,10 +249,18 @@ page AdminMessagesPage {
 //#endregion
 
 //#region Online Judge
-route CreateProblemRoute { path: "/online-judge/create", to: CreateProblemPage }
+job gradeSubmission {
+  executor: PgBoss,
+  perform: {
+    fn: import { gradeSubmission } from "@src/server/online-judge/submissionWorker"
+  },
+  entities: [Submission, SubmissionTestCaseResult, Problem, TestCase]
+}
+
+route CreateProblemRoute { path: "/admin/problems/create", to: CreateProblemPage }
 page CreateProblemPage {
   authRequired: true,
-  component: import CreateProblemPage from "@src/admin/online-judge/CreateProblemPage"
+  component: import CreateProblemPage from "@src/online-judge/admin/CreateProblemPage"
 }
 
 route ProblemListRoute { path: "/online-judge", to: ProblemListPage }
@@ -289,7 +297,7 @@ action createProblem {
 
 action runCode {
   fn: import { runCode } from "@src/online-judge/operations",
-  entities: []
+  entities: [Runtime]
 }
 
 action updateProblem {
@@ -305,6 +313,11 @@ action updateRuntime {
 action createRuntime {
     fn: import { createRuntime } from "@src/online-judge/operations",
     entities: [Runtime]
+}
+
+action checkRuntimeStatus {
+    fn: import { checkRuntimeStatus } from "@src/online-judge/operations",
+    entities: []
 }
 
 query getProblems {
@@ -327,11 +340,5 @@ query getSubmissions {
   entities: [Submission, SubmissionTestCaseResult]
 }
 
-job gradeSubmission {
-  executor: PgBoss,
-  perform: {
-    fn: import { gradeSubmission } from "@src/server/jobs/submissionWorker"
-  },
-  entities: [Submission, SubmissionTestCaseResult, Problem, TestCase]
-}
+
 //#endregion

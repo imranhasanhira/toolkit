@@ -115,7 +115,8 @@ model Submission {
 
   code                      String
   language                  String
-  status                    String          @default("PENDING") // PENDING, PROCESSING, ACCEPTED, WRONG_ANSWER, TIME_LIMIT_EXCEEDED, COMPILATION_ERROR, RUNTIME_ERROR
+  status                    SubmissionStatus @default(PENDING)
+  executionTime             Int?            // Total time in ms
 
   runtime                   Runtime?        @relation(fields: [runtimeId], references: [id])
   runtimeId                 String?
@@ -133,7 +134,7 @@ model SubmissionTestCaseResult {
   testCase                  TestCase?       @relation(fields: [testCaseId], references: [id], onDelete: SetNull)
   testCaseId                String?
 
-  status                    String // ACCEPTED, WRONG_ANSWER, etc.
+  status                    SubmissionStatus
   stdout                    String?
   executionTime             Int? // ms
   memoryUsage               Int? // MB
@@ -143,10 +144,29 @@ model SubmissionTestCaseResult {
   expectedOutput            String          @default("")
 }
 
+enum SubmissionStatus {
+  PENDING
+  PROCESSING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  COMPILATION_ERROR
+  RUNTIME_ERROR
+  SYSTEM_ERROR
+}
+
 model Runtime {
   id                        String          @id @default(uuid())
   language                  String          @unique // e.g., "javascript", "python"
   defaultCode               String          @default("")
+  
+  // Execution Configuration
+  dockerImage               String          @default("node:18-alpine")
+  runCommand                String          @default("node solution.js")
+  fileName                  String          @default("solution.js")
+  memoryLimit               Int             @default(128) // MB
+  cpuLimit                  Float           @default(0.5) // CPUs
+
   
   submissions               Submission[]
 }

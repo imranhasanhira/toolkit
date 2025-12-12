@@ -1,6 +1,6 @@
 
-import { useQuery, getRuntimes, updateRuntime, createRuntime } from "wasp/client/operations";
-import { useState, useEffect } from "react";
+import { useQuery, getRuntimes, updateRuntime, createRuntime, checkRuntimeStatus } from "wasp/client/operations";
+import { useState, useEffect, useCallback } from "react";
 import Editor from "@monaco-editor/react";
 import OJLayout from "./OJLayout";
 
@@ -58,8 +58,8 @@ function RuntimeListContent() {
                             key={rt.id}
                             onClick={() => handleSelect(rt.id)}
                             className={`w-full text-left px-4 py-3 border-b border-gray-100 transition-colors ${selectedRuntimeId === rt.id
-                                    ? "bg-blue-50 text-blue-700 font-medium border-l-4 border-l-blue-600"
-                                    : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-l-transparent"
+                                ? "bg-blue-50 text-blue-700 font-medium border-l-4 border-l-blue-600"
+                                : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-l-transparent"
                                 }`}
                         >
                             <div className="capitalize">{rt.language}</div>
@@ -90,6 +90,11 @@ function RuntimeListContent() {
 function RuntimeCreator({ onCancel }: { onCancel: () => void }) {
     const [language, setLanguage] = useState("");
     const [code, setCode] = useState("// Default code here");
+    const [dockerImage, setDockerImage] = useState("node:18-alpine");
+    const [runCommand, setRunCommand] = useState("node solution.js");
+    const [fileName, setFileName] = useState("solution.js");
+    const [memoryLimit, setMemoryLimit] = useState(128);
+    const [cpuLimit, setCpuLimit] = useState(0.5);
     const [saving, setSaving] = useState(false);
 
     const handleSave = async () => {
@@ -99,14 +104,14 @@ function RuntimeCreator({ onCancel }: { onCancel: () => void }) {
             await createRuntime({
                 language: language.toLowerCase(),
                 defaultCode: code,
+                dockerImage,
+                runCommand,
+                fileName,
+                memoryLimit,
+                cpuLimit,
             });
-            // Ideally we'd await invalidation or optimistically update, 
-            // but simpler to reload or just let useQuery refetch naturally if configured. 
-            // We'll perform a hard reload or just wait. 
-            // Better: Wasp useQuery auto-refetches on action success usually if properly keyed? 
-            // Yes, standard query invalidation should happen.
             setSaving(false);
-            window.location.reload(); // Lazy reload to select the new one, or wait for query update.
+            window.location.reload();
         } catch (err: any) {
             alert("Error creating: " + err.message);
             setSaving(false);
@@ -114,59 +119,72 @@ function RuntimeCreator({ onCancel }: { onCancel: () => void }) {
     };
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="px-6 py-4 border-b bg-white flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <input
-                        type="text"
-                        placeholder="e.g. rust"
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        className="text-xl font-bold border-b border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5 w-48"
-                    />
-                    <span className="text-xs text-gray-400">Enter language name (unique ID)</span>
-                </div>
+        <div className="flex flex-col h-full bg-white">
+            <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">New Runtime</h2>
                 <div className="flex gap-2">
-                    <button
-                        onClick={onCancel}
-                        className="px-4 py-2 rounded text-sm text-gray-600 hover:bg-gray-100"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving || !language}
-                        className="px-4 py-2 rounded text-sm font-semibold bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
-                    >
-                        {saving ? "Creating..." : "Create Runtime"}
+                    <button onClick={onCancel} className="px-4 py-2 rounded text-sm text-gray-600 hover:bg-gray-200">Cancel</button>
+                    <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded text-sm font-semibold bg-green-600 hover:bg-green-700 text-white">
+                        {saving ? "Creating..." : "Create"}
                     </button>
                 </div>
             </div>
-            <div className="bg-gray-50 px-6 py-2 border-b text-xs text-gray-500">
-                Default Code Template
-            </div>
-            <div className="flex-1">
-                <Editor
-                    height="100%"
-                    theme="light"
-                    value={code}
-                    onChange={(val) => setCode(val || "")}
-                    options={{ minimap: { enabled: false }, fontSize: 14, padding: { top: 16 } }}
-                />
+
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="p-6 grid grid-cols-2 gap-6 border-b bg-white">
+                    <div className="col-span-2">
+                        <label className="block text-xs font-bold text-gray-500 uppercase">Language Name (ID)</label>
+                        <input type="text" value={language} onChange={e => setLanguage(e.target.value)} className="w-full mt-1 p-2 border rounded" placeholder="e.g. rust" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">Docker Image</label>
+                        <input type="text" value={dockerImage} onChange={e => setDockerImage(e.target.value)} className="w-full mt-1 p-2 border rounded" placeholder="node:18-alpine" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">Run Command</label>
+                        <input type="text" value={runCommand} onChange={e => setRunCommand(e.target.value)} className="w-full mt-1 p-2 border rounded" placeholder="node solution.js" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">File Name</label>
+                        <input type="text" value={fileName} onChange={e => setFileName(e.target.value)} className="w-full mt-1 p-2 border rounded" placeholder="solution.js" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">Memory (MB)</label>
+                        <input type="number" value={memoryLimit} onChange={e => setMemoryLimit(parseInt(e.target.value) || 128)} className="w-full mt-1 p-2 border rounded" placeholder="128" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">CPUs</label>
+                        <input type="number" step="0.1" value={cpuLimit} onChange={e => setCpuLimit(parseFloat(e.target.value) || 0.5)} className="w-full mt-1 p-2 border rounded" placeholder="0.5" />
+                    </div>
+                </div>
+
+                <div className="bg-gray-100 px-6 py-2 border-b text-xs text-gray-500">Default Code Template</div>
+                <div className="flex-1">
+                    <Editor height="100%" theme="light" value={code} onChange={(val) => setCode(val || "")} options={{ minimap: { enabled: false } }} />
+                </div>
             </div>
         </div>
     );
 }
 
 function RuntimeEditor({ runtime }: { runtime: any }) {
-    // Keep local state for the form
     const [code, setCode] = useState(runtime.defaultCode);
+    const [dockerImage, setDockerImage] = useState(runtime.dockerImage || "");
+    const [runCommand, setRunCommand] = useState(runtime.runCommand || "");
+    const [fileName, setFileName] = useState(runtime.fileName || "");
+    const [memoryLimit, setMemoryLimit] = useState(runtime.memoryLimit || 128);
+    const [cpuLimit, setCpuLimit] = useState(runtime.cpuLimit || 0.5);
+
     const [saving, setSaving] = useState(false);
     const [dirty, setDirty] = useState(false);
 
-    // Reset state when runtime selection changes
     useEffect(() => {
         setCode(runtime.defaultCode);
+        setDockerImage(runtime.dockerImage || "");
+        setRunCommand(runtime.runCommand || "");
+        setFileName(runtime.fileName || "");
+        setMemoryLimit(runtime.memoryLimit || 128);
+        setCpuLimit(runtime.cpuLimit || 0.5);
         setDirty(false);
     }, [runtime.id]);
 
@@ -176,9 +194,13 @@ function RuntimeEditor({ runtime }: { runtime: any }) {
             await updateRuntime({
                 id: runtime.id,
                 defaultCode: code,
+                dockerImage,
+                runCommand,
+                fileName,
+                memoryLimit,
+                cpuLimit,
             });
             setDirty(false);
-            // alert("Saved successfully!"); 
         } catch (err: any) {
             alert("Error saving: " + err.message);
         } finally {
@@ -186,9 +208,14 @@ function RuntimeEditor({ runtime }: { runtime: any }) {
         }
     };
 
+    const handleChange = (setter: any, val: any) => {
+        setter(val);
+        setDirty(true);
+    };
+
     return (
-        <div className="flex flex-col h-full">
-            <div className="px-6 py-4 border-b bg-white flex justify-between items-center">
+        <div className="flex flex-col h-full bg-white">
+            <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <h2 className="text-xl font-bold capitalize text-gray-800">{runtime.language}</h2>
                     {dirty && <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-200">Unsaved Changes</span>}
@@ -196,38 +223,97 @@ function RuntimeEditor({ runtime }: { runtime: any }) {
                 <button
                     onClick={handleSave}
                     disabled={!dirty || saving}
-                    className={`px-4 py-2 rounded text-sm font-semibold transition-colors ${!dirty
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : saving
-                                ? "bg-blue-400 text-white cursor-wait"
-                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                    className={`px-4 py-2 rounded text-sm font-semibold transition-colors ${!dirty ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"
                         }`}
                 >
                     {saving ? "Saving..." : "Save Configuration"}
                 </button>
             </div>
 
-            <div className="bg-gray-50 px-6 py-2 border-b text-xs text-gray-500">
-                Default Code Template (Loaded when a user selects this language)
-            </div>
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="p-6 grid grid-cols-2 gap-6 border-b bg-white">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase flex items-center justify-between">
+                            Docker Image
+                            <RuntimeStatusBadge dockerImage={dockerImage} />
+                        </label>
+                        <input type="text" value={dockerImage} onChange={e => handleChange(setDockerImage, e.target.value)} className="w-full mt-1 p-2 border rounded" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">Run Command</label>
+                        <input type="text" value={runCommand} onChange={e => handleChange(setRunCommand, e.target.value)} className="w-full mt-1 p-2 border rounded" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">File Name</label>
+                        <input type="text" value={fileName} onChange={e => handleChange(setFileName, e.target.value)} className="w-full mt-1 p-2 border rounded" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">Memory (MB)</label>
+                        <input type="number" value={memoryLimit} onChange={e => handleChange(setMemoryLimit, parseInt(e.target.value) || 128)} className="w-full mt-1 p-2 border rounded" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">CPUs</label>
+                        <input type="number" step="0.1" value={cpuLimit} onChange={e => handleChange(setCpuLimit, parseFloat(e.target.value) || 0.5)} className="w-full mt-1 p-2 border rounded" />
+                    </div>
+                </div>
 
-            <div className="flex-1">
-                <Editor
-                    height="100%"
-                    theme="light" // Use light theme for settings page usually, but user might prefer dark? Sticky to light for admin-like feels.
-                    language={runtime.language === "javascript" ? "javascript" : "python"}
-                    value={code}
-                    onChange={(val) => {
-                        setCode(val || "");
-                        setDirty(true);
-                    }}
-                    options={{
-                        minimap: { enabled: false },
-                        fontSize: 14,
-                        padding: { top: 16 }
-                    }}
-                />
+                <div className="bg-gray-100 px-6 py-2 border-b text-xs text-gray-500">Default Code Template</div>
+                <div className="flex-1">
+                    <Editor
+                        height="100%"
+                        theme="light"
+                        language={runtime.language === "javascript" ? "javascript" : "python"} // Best guess or add extension mapping layer
+                        value={code}
+                        onChange={(val) => handleChange(setCode, val || "")}
+                        options={{ minimap: { enabled: false } }}
+                    />
+                </div>
             </div>
         </div>
     );
+}
+
+function RuntimeStatusBadge({ dockerImage }: { dockerImage: string }) {
+    const [status, setStatus] = useState<any>(null);
+    const [checking, setChecking] = useState(false);
+
+    useEffect(() => {
+        if (!dockerImage) {
+            setStatus(null);
+            return;
+        }
+
+        const check = async () => {
+            setChecking(true);
+            try {
+                const result = await checkRuntimeStatus({ dockerImage });
+                setStatus(result);
+            } catch (err) {
+                setStatus({ status: "ERROR" });
+            } finally {
+                setChecking(false);
+            }
+        };
+
+        const timeoutId = setTimeout(check, 1000); // Debounce 1s
+        return () => clearTimeout(timeoutId);
+    }, [dockerImage]);
+
+    if (checking) return <span className="text-xs text-gray-400 font-normal normal-case ml-2">Checking...</span>
+
+    if (!status) return null;
+
+    if (status.status === "DOCKER_UNAVAILABLE") {
+        return <span className="text-xs text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded normal-case ml-2">Docker Unavailable</span>;
+    }
+
+    if (status.status === "READY") {
+        return <span className="text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded normal-case ml-2">Ready</span>;
+    }
+
+    if (status.status === "IMAGE_MISSING") {
+        return <span className="text-xs text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded normal-case ml-2">Image Missing on Host</span>;
+    }
+
+    return <span className="text-xs text-red-600 normal-case ml-2">Error</span>;
 }

@@ -180,6 +180,11 @@ export const getRuntimes = async (args: void, context: any) => {
 type UpdateRuntimeArgs = {
     id: string;
     defaultCode: string;
+    dockerImage: string;
+    runCommand: string;
+    fileName: string;
+    memoryLimit: number;
+    cpuLimit: number;
 };
 
 export const updateRuntime = async (args: UpdateRuntimeArgs, context: any) => {
@@ -187,13 +192,25 @@ export const updateRuntime = async (args: UpdateRuntimeArgs, context: any) => {
 
     return context.entities.Runtime.update({
         where: { id: args.id },
-        data: { defaultCode: args.defaultCode },
+        data: {
+            defaultCode: args.defaultCode,
+            dockerImage: args.dockerImage,
+            runCommand: args.runCommand,
+            fileName: args.fileName,
+            memoryLimit: args.memoryLimit,
+            cpuLimit: args.cpuLimit,
+        },
     });
 };
 
 type CreateRuntimeArgs = {
     language: string;
     defaultCode: string;
+    dockerImage: string;
+    runCommand: string;
+    fileName: string;
+    memoryLimit: number;
+    cpuLimit: number;
 };
 
 export const createRuntime = async (args: CreateRuntimeArgs, context: any) => {
@@ -203,6 +220,11 @@ export const createRuntime = async (args: CreateRuntimeArgs, context: any) => {
         data: {
             language: args.language,
             defaultCode: args.defaultCode,
+            dockerImage: args.dockerImage,
+            runCommand: args.runCommand,
+            fileName: args.fileName,
+            memoryLimit: args.memoryLimit,
+            cpuLimit: args.cpuLimit,
         },
     });
 };
@@ -223,13 +245,27 @@ type RunCodeResult = {
     }[];
 };
 
-import { prepareExecutionEnvironment, executeTestCase, cleanupExecutionEnvironment } from "../server/utils/executor";
+import { prepareExecutionEnvironment, executeTestCase, cleanupExecutionEnvironment, validateRuntime, type RuntimeStatus } from "../server/online-judge/executor";
+
+export const checkRuntimeStatus = async (args: { dockerImage: string }, context: any): Promise<RuntimeStatus> => {
+    if (!context.user) throw new HttpError(401, "Unauthorized");
+    return validateRuntime(args.dockerImage);
+};
 
 export const runCode = async (args: RunCodeArgs, context: any): Promise<RunCodeResult> => {
     if (!context.user) throw new HttpError(401, "Unauthorized");
 
     const { code, language, testCases } = args;
-    const timeLimit = 2; // Default 2s for "Run"
+    const timeLimit = 10; // Default 10s for "Run" to accommodate compilation (e.g. Java)
+
+    // Fetch the runtime configuration
+    const runtime = await context.entities.Runtime.findUnique({
+        where: { language: language }
+    });
+
+    if (!runtime) {
+        throw new HttpError(400, `Runtime for language '${language}' not found.`);
+    }
 
     let execCtx;
     // Explicitly type the array to avoid never[] inference
@@ -242,9 +278,24 @@ export const runCode = async (args: RunCodeArgs, context: any): Promise<RunCodeR
     }[] = [];
 
     try {
-        execCtx = prepareExecutionEnvironment(code, language);
+        execCtx = prepareExecutionEnvironment(code, {
+            // language: runtime.language, // Removed from interface
+            dockerImage: runtime.dockerImage,
+            runCommand: runtime.runCommand,
+            fileName: runtime.fileName,
+            memoryLimit: runtime.memoryLimit,
+            cpuLimit: runtime.cpuLimit,
+        });
+
 
         for (const tc of testCases) {
+            // ... executeTestCase loop ...
+            // executeTestCase actually depends on context which has runtime now. 
+            // We need to ensure executeTestCase is compatible? 
+            // Yes, I updated executor.ts to use context.runtime. 
+            // But wait, executeTestCase signature changed? 
+            // "export const executeTestCase = async (context, input, expected, timeLimit)"
+            // Inside it uses context.runtime. So we are good.
             const result = await executeTestCase(execCtx, tc.input, tc.expectedOutput || null, timeLimit);
             results.push({
                 status: result.status,

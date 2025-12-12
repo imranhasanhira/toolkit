@@ -45,8 +45,26 @@ export default function ProblemDetailPage() {
     const [submitting, setSubmitting] = useState(false);
     const [running, setRunning] = useState(false);
     const [runResults, setRunResults] = useState<any>(null);
-    const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+    const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<"submissions" | "console" | "submission_details">("submissions");
+
+    const { data: submissions, isLoading: isLoadingSubmissions } = useQuery(getSubmissions, { problemId: problem?.id || "" }, {
+        enabled: !!problem,
+        // Poll every 5s if any submission is pending/processing AND was created < 5 minutes ago
+        refetchInterval: (data: any) => {
+            if (!data) return false;
+            const now = Date.now();
+            const fiveMinutes = 5 * 60 * 1000;
+            const hasRecentPending = data.some((s: any) => {
+                const isPending = s.status === "PENDING" || s.status === "PROCESSING";
+                const isRecent = (now - new Date(s.createdAt).getTime()) < fiveMinutes;
+                return isPending && isRecent;
+            });
+            return hasRecentPending ? 5000 : false;
+        }
+    });
+
+    const selectedSubmission = submissions?.find((s: any) => s.id === selectedSubmissionId);
 
     if (isLoadingProblem || isLoadingRuntimes) return <div>Loading problem and runtimes...</div>;
     if (errorProblem) return <div>Error loading problem</div>;
@@ -82,7 +100,7 @@ export default function ProblemDetailPage() {
     };
 
     const handleSubmissionClick = (submission: any) => {
-        setSelectedSubmission(submission);
+        setSelectedSubmissionId(submission.id);
         setActiveTab("submission_details");
     };
 
@@ -264,7 +282,7 @@ export default function ProblemDetailPage() {
                         )}
 
                         {activeTab === "submissions" && (
-                            <SubmissionHistory problemId={problem.id} onSelect={handleSubmissionClick} />
+                            <SubmissionHistory submissions={submissions || []} isLoading={isLoadingSubmissions} onSelect={handleSubmissionClick} />
                         )}
 
                         {activeTab === "submission_details" && selectedSubmission && (
@@ -317,9 +335,7 @@ export default function ProblemDetailPage() {
     );
 }
 
-function SubmissionHistory({ problemId, onSelect }: { problemId: string, onSelect: (sub: any) => void }) {
-    const { data: submissions, isLoading } = useQuery(getSubmissions, { problemId });
-
+function SubmissionHistory({ submissions, isLoading, onSelect }: { submissions: any[], isLoading: boolean, onSelect: (sub: any) => void }) {
     if (isLoading) return <div className="text-sm text-gray-400">Loading history...</div>;
     if (!submissions || submissions.length === 0) return <div className="text-sm text-gray-400">No submissions yet.</div>;
 
