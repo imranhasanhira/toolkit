@@ -17,13 +17,46 @@ export default function ProblemDetailPage() {
 
     // Effect to set initial language and code when runtimes load
     useEffect(() => {
-        if (runtimes && runtimes.length > 0 && !language) {
-            const defaultRuntime = runtimes.find((r: any) => r.language === "javascript") || runtimes[0];
+        if (!runtimes || runtimes.length === 0 || !problem) return;
+
+        // Try to load draft
+        const draftKey = `oj_draft_${problem.id}`;
+        const savedDraft = localStorage.getItem(draftKey);
+
+        if (savedDraft) {
+            try {
+                const { language: savedLang, code: savedCode } = JSON.parse(savedDraft);
+                // Verify language still exists
+                const runtimeExists = runtimes.find((r: any) => r.language === savedLang);
+                if (runtimeExists) {
+                    setLanguage(savedLang);
+                    setCode(savedCode);
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse draft", e);
+            }
+        }
+
+        // Default to Java if available, otherwise first one
+        if (!language) {
+            const defaultRuntime = runtimes.find((r: any) => r.language === "java") || runtimes[0];
             setLanguage(defaultRuntime.language);
             setCode(defaultRuntime.defaultCode);
             setIsDirty(false);
         }
-    }, [runtimes]);
+    }, [runtimes, problem?.id]); // Depend on problem.id to reload when switching problems
+
+    // Save draft on change
+    useEffect(() => {
+        if (!problem || !language) return;
+        const draftKey = `oj_draft_${problem.id}`;
+        const timeoutId = setTimeout(() => {
+            localStorage.setItem(draftKey, JSON.stringify({ language, code }));
+        }, 1000); // Debounce 1s
+
+        return () => clearTimeout(timeoutId);
+    }, [code, language, problem?.id]);
 
     const handleLanguageChange = (newLang: string) => {
         if (isDirty) {
@@ -34,9 +67,8 @@ export default function ProblemDetailPage() {
 
         const runtime = runtimes.find((r: any) => r.language === newLang);
         if (runtime) {
-            // Only replace code if it matches a known default to avoid overwriting user work, 
-            // or just always replace if user is switching languages explicitly. 
-            // For now, simpler: always replace.
+            // Check if we have a draft for this language? 
+            // For now, simplier behavior: resetting to template when switching language manually
             setCode(runtime.defaultCode);
             setLanguage(newLang);
             setIsDirty(false);

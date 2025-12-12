@@ -53,34 +53,73 @@ export const executeTestCase = async (
 ): Promise<ExecutionResult> => {
     const { tempDir, runtime } = context;
     const inputPath = path.join(tempDir, "input.txt");
+    const stdoutPath = path.join(tempDir, "stdout.txt");
+    const stderrPath = path.join(tempDir, "stderr.txt");
+    const timePath = path.join(tempDir, "time.txt");
+
     fs.writeFileSync(inputPath, input);
 
-    // Construct Docker command using runtime config
-    // We mount the tempDir to /app in the container
-    // We use `timeout` command inside shell or docker logic if possible.
-    // Simpler: Use docker run with limits (though timeout signal handling is tricky).
-    // Let's use `timeout` on host for simplicity or node's child_process timeout.
+    const runScriptPath = path.join(tempDir, "run.sh");
+    // We create a robust wrapper script to handle:
+    // 1. Shell differences (bash vs sh/time availability)
+    // 2. Complex quoting (avoiding nested quote hell in docker command)
+    // 3. Ensuring inputs/outputs are redirected correctly
+    const runScript = `#!/bin/sh
+CMD="${runtime.runCommand.replace(/"/g, '\\"')}"
+if [ -x /bin/bash ]; then
+    # Debian/Ubuntu (has bash, time is builtin or in /usr/bin)
+    exec /bin/bash -c "time -p sh -c \\"\$CMD < input.txt > stdout.txt 2> stderr.txt\\" 2> time.txt"
+else
+    # Alpine (busybox sh has time)
+    exec time -p sh -c "$CMD < input.txt > stdout.txt 2> stderr.txt" 2> time.txt
+fi
+`;
+    fs.writeFileSync(runScriptPath, runScript);
 
-    // Command: docker run --rm -v tempDir:/app -w /app runtime.dockerImage sh -c "runtime.runCommand < input.txt"
-    // Note: This assumes the image has sh. Most alpine/slim do.
-
-    // Safety: runCommand comes from DB (Admin controlled).
-
-    // We need to properly escape the command? ideally runCommand is simple "node file.js"
-    const dockerCmd = `docker run --rm --network none --memory ${runtime.memoryLimit}m --cpus ${runtime.cpuLimit} -v "${tempDir}":/app -w /app ${runtime.dockerImage} sh -c "${runtime.runCommand} < input.txt"`;
+    // Command: docker run ... sh /app/run.sh
+    const dockerCmd = `docker run --rm --network none --memory ${runtime.memoryLimit}m --cpus ${runtime.cpuLimit} -v "${tempDir}":/app -w /app ${runtime.dockerImage} sh /app/run.sh`;
 
     const startTime = process.hrtime();
 
     try {
-        const { stdout, stderr } = await execAsync(dockerCmd, {
+        await execAsync(dockerCmd, {
             timeout: timeLimit * 1000,
-            maxBuffer: 1024 * 1024 // 1MB output limit
+            maxBuffer: 1024 * 1024 // 1MB output limit (for Docker structure output, not user output anymore)
         });
 
-        const diff = process.hrtime(startTime);
-        const executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6); // in ms
+        // Read outputs from files
+        // Paths already defined above.
 
-        const actualOutput = stdout.trim();
+        let actualOutput = "";
+        let stderrOutput = ""; // We can optionaly return this if needed for debugging users code
+        let executionTime = 0; // ms
+
+        if (fs.existsSync(stdoutPath)) {
+            actualOutput = fs.readFileSync(stdoutPath, "utf-8").trim();
+        }
+
+        // Try to parse execution time from time.txt
+        // Format:
+        // real 0.00
+        // user 0.00
+        // sys 0.00
+        if (fs.existsSync(timePath)) {
+            const timeContent = fs.readFileSync(timePath, "utf-8");
+            const realTimeMatch = timeContent.match(/real\s+(\d+\.?\d*)/);
+            if (realTimeMatch && realTimeMatch[1]) {
+                // Convert seconds to ms
+                executionTime = Math.round(parseFloat(realTimeMatch[1]) * 1000);
+            } else {
+                // Fallback if parsing fails (shouldn't happen if time works)
+                const diff = process.hrtime(startTime);
+                executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
+            }
+        } else {
+            // Fallback if time.txt doesn't exist (e.g. killed by timeout or docker error)
+            const diff = process.hrtime(startTime);
+            executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
+        }
+
         const expected = expectedOutput ? expectedOutput.trim() : null;
 
         let status: ExecutionResult["status"] = "ACCEPTED";
@@ -95,19 +134,29 @@ export const executeTestCase = async (
         };
 
     } catch (error: any) {
+        // If the process timed out or errored
         const diff = process.hrtime(startTime);
-        const executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
 
-        if (error.killed || error.signal === 'SIGTERM') {
-            return { status: "TIME_LIMIT_EXCEEDED", stdout: "", executionTime };
+        // If it was a timeout from execAsync, it likely means valid TLE
+        if (error.signal === "SIGTERM" || error.cancelled) { // exec default timeout kill
+            return {
+                status: "TIME_LIMIT_EXCEEDED",
+                stdout: "",
+                executionTime: timeLimit * 1000
+            };
         }
 
-        // Check for common error codes if needed, or return RUNTIME_ERROR
+        // For other errors, check if we have partial output or if it's a runtime error
+        // But usually exec error implies non-zero exit code.
+
+        // If time.txt or stderr.txt exists, we might glean more info.
+        // For SIMPLICITY: Treat non-zero exit as RUNTIME_ERROR
         return {
             status: "RUNTIME_ERROR",
-            stdout: error.stderr || error.message || "Error",
-            executionTime
+            stdout: error.stderr || (fs.existsSync(stderrPath) ? fs.readFileSync(stderrPath, "utf-8") : "") || error.message || "Runtime Error",
+            executionTime: Math.round(diff[0] * 1000 + diff[1] / 1e6)
         };
+
     }
 };
 

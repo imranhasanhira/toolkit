@@ -24,8 +24,9 @@ export async function seedMockUsers(prismaClient: PrismaClient) {
     {
       language: "java",
       defaultCode: "import java.util.Scanner;\n\npublic class Solution {\n    public static void main(String[] args) {\n        System.out.println(\"Hello from Java\");\n    }\n}",
-      dockerImage: "azul/zulu-openjdk:25-latest", // Using 25-slim as requested, though it might be EA
-      runCommand: "javac Solution.java && java Solution",
+      // dockerImage: "azul/zulu-openjdk:25-latest", // Using 25-slim as requested, though it might be EA
+      dockerImage: "eclipse-temurin:25-jdk-jammy",
+      runCommand: "java Solution.java",
       fileName: "Solution.java",
       memoryLimit: 512,
       cpuLimit: 1.0,
