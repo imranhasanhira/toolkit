@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 
 const execAsync = promisify(exec);
 
-export type Language = "javascript" | "python";
+
 
 export interface RuntimeConfig {
     fileName: string;
