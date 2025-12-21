@@ -148,33 +148,33 @@ action updateIsUserAdminById {
 
 
 //#region Payment
-route PricingPageRoute { path: "/pricing", to: PricingPage }
-page PricingPage {
-  component: import PricingPage from "@src/payment/PricingPage"
-}
+// route PricingPageRoute { path: "/pricing", to: PricingPage }
+// page PricingPage {
+//   component: import PricingPage from "@src/payment/PricingPage"
+// }
 
-route CheckoutResultRoute { path: "/checkout", to: CheckoutResultPage }
-page CheckoutResultPage {
-  authRequired: true,
-  component: import CheckoutResultPage from "@src/payment/CheckoutResultPage"
-}
+// route CheckoutResultRoute { path: "/checkout", to: CheckoutResultPage }
+// page CheckoutResultPage {
+//   authRequired: true,
+//   component: import CheckoutResultPage from "@src/payment/CheckoutResultPage"
+// }
 
-query getCustomerPortalUrl {
-  fn: import { getCustomerPortalUrl } from  "@src/payment/operations",
-  entities: [User]
-}
+// query getCustomerPortalUrl {
+//   fn: import { getCustomerPortalUrl } from  "@src/payment/operations",
+//   entities: [User]
+// }
 
-action generateCheckoutSession {
-  fn: import { generateCheckoutSession } from "@src/payment/operations",
-  entities: [User]
-}
+// action generateCheckoutSession {
+//   fn: import { generateCheckoutSession } from "@src/payment/operations",
+//   entities: [User]
+// }
 
-api paymentsWebhook {
-  fn: import { paymentsWebhook } from "@src/payment/webhook",
-  entities: [User],
-  middlewareConfigFn: import { paymentsMiddlewareConfigFn } from "@src/payment/webhook",
-  httpRoute: (POST, "/payments-webhook")
-}
+// api paymentsWebhook {
+//   fn: import { paymentsWebhook } from "@src/payment/webhook",
+//   entities: [User],
+//   middlewareConfigFn: import { paymentsMiddlewareConfigFn } from "@src/payment/webhook",
+//   httpRoute: (POST, "/payments-webhook")
+// }
 //#endregion
 
 

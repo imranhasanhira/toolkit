@@ -17,7 +17,7 @@ export default function LandingPage() {
       <main className="isolate">
         <Hero />
         <ExamplesCarousel examples={examples} />
-        <FeaturesGrid features={features} />
+
         <Testimonials testimonials={testimonials} />
         <FAQ faqs={faqs} />
       </main >

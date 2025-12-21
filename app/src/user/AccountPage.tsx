@@ -1,7 +1,6 @@
-import { getCustomerPortalUrl, useQuery } from "wasp/client/operations";
-import { Link as WaspRouterLink, routes } from "wasp/client/router";
+// import { getCustomerPortalUrl, useQuery } from "wasp/client/operations";
+// import { Link as WaspRouterLink, routes } from "wasp/client/router";
 import type { User } from "wasp/entities";
-import { Button } from "../client/components/ui/button";
 import {
   Card,
   CardContent,
@@ -77,7 +76,7 @@ export default function AccountPage({ user }: { user: User }) {
                   {user.credits} credits
                 </div>
                 <div className="ml-auto mt-4 sm:mt-0">
-                  <BuyMoreButton subscriptionStatus={user.subscriptionStatus} />
+                  {/* <BuyMoreButton subscriptionStatus={user.subscriptionStatus} /> */}
                 </div>
               </div>
             </div>
@@ -123,7 +122,7 @@ function UserCurrentSubscriptionPlan({
         {subscriptionPlanMessage}
       </div>
       <div className="ml-auto mt-4 sm:mt-0">
-        <CustomerPortalButton />
+        {/* <CustomerPortalButton /> */}
       </div>
     </>
   );
@@ -157,39 +156,39 @@ function prettyPrintEndOfBillingPeriod(date: Date) {
   return oneMonthFromNow.toLocaleDateString();
 }
 
-function CustomerPortalButton() {
-  const { data: customerPortalUrl, isLoading: isCustomerPortalUrlLoading } =
-    useQuery(getCustomerPortalUrl);
+// function CustomerPortalButton() {
+//   const { data: customerPortalUrl, isLoading: isCustomerPortalUrlLoading } =
+//     useQuery(getCustomerPortalUrl);
 
-  if (!customerPortalUrl) {
-    return null;
-  }
+//   if (!customerPortalUrl) {
+//     return null;
+//   }
 
-  return (
-    <a href={customerPortalUrl} target="_blank" rel="noopener noreferrer">
-      <Button disabled={isCustomerPortalUrlLoading} variant="link">
-        Manage Payment Details
-      </Button>
-    </a>
-  );
-}
+//   return (
+//     <a href={customerPortalUrl} target="_blank" rel="noopener noreferrer">
+//       <Button disabled={isCustomerPortalUrlLoading} variant="link">
+//         Manage Payment Details
+//       </Button>
+//     </a>
+//   );
+// }
 
-function BuyMoreButton({
-  subscriptionStatus,
-}: Pick<User, "subscriptionStatus">) {
-  if (
-    subscriptionStatus === SubscriptionStatus.Active ||
-    subscriptionStatus === SubscriptionStatus.CancelAtPeriodEnd
-  ) {
-    return null;
-  }
+// function BuyMoreButton({
+//   subscriptionStatus,
+// }: Pick<User, "subscriptionStatus">) {
+//   if (
+//     subscriptionStatus === SubscriptionStatus.Active ||
+//     subscriptionStatus === SubscriptionStatus.CancelAtPeriodEnd
+//   ) {
+//     return null;
+//   }
 
-  return (
-    <WaspRouterLink
-      to={routes.PricingPageRoute.to}
-      className="text-primary hover:text-primary/80 text-sm font-medium transition-colors duration-200"
-    >
-      <Button variant="link">Buy More Credits</Button>
-    </WaspRouterLink>
-  );
-}
+//   return (
+//     <WaspRouterLink
+//       to={routes.PricingPageRoute.to}
+//       className="text-primary hover:text-primary/80 text-sm font-medium transition-colors duration-200"
+//     >
+//       <Button variant="link">Buy More Credits</Button>
+//     </WaspRouterLink>
+//   );
+// }

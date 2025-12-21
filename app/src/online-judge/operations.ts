@@ -188,7 +188,7 @@ type UpdateRuntimeArgs = {
 };
 
 export const updateRuntime = async (args: UpdateRuntimeArgs, context: any) => {
-    if (!context.user) throw new HttpError(401, "Unauthorized");
+    if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
 
     return context.entities.Runtime.update({
         where: { id: args.id },
@@ -214,7 +214,7 @@ type CreateRuntimeArgs = {
 };
 
 export const createRuntime = async (args: CreateRuntimeArgs, context: any) => {
-    if (!context.user) throw new HttpError(401, "Unauthorized");
+    if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
 
     return context.entities.Runtime.create({
         data: {
@@ -248,7 +248,7 @@ type RunCodeResult = {
 import { prepareExecutionEnvironment, executeTestCase, cleanupExecutionEnvironment, validateRuntime, type RuntimeStatus } from "../server/online-judge/executor";
 
 export const checkRuntimeStatus = async (args: { dockerImage: string }, context: any): Promise<RuntimeStatus> => {
-    if (!context.user) throw new HttpError(401, "Unauthorized");
+    if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
     return validateRuntime(args.dockerImage);
 };
 

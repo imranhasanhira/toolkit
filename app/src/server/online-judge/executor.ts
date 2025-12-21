@@ -1,11 +1,13 @@
 
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import fs from "fs";
 import path from "path";
-import { promisify } from "util"; // Re-added promisify
+import { promisify } from "util";
 import { randomUUID } from "crypto";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+const MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB
 
 
 
@@ -29,6 +31,21 @@ export interface ExecutionResult {
 }
 
 export const prepareExecutionEnvironment = (code: string, runtime: RuntimeConfig): ExecutionContext => {
+    // Strict Validation (allows alphanumeric, ., -, _, :, /, @)
+    // Ref: https://github.com/distribution/distribution/blob/v2.7.1/docs/spec/api.md
+    if (!/^[a-zA-Z0-9.\-_:\/@]+$/.test(runtime.dockerImage)) {
+        throw new Error("Invalid docker image name");
+    }
+    if (!/^[a-zA-Z0-9._-]+$/.test(runtime.fileName)) {
+        throw new Error("Invalid file name");
+    }
+    if (typeof runtime.memoryLimit !== "number" || runtime.memoryLimit <= 0) {
+        throw new Error("Invalid memory limit");
+    }
+    if (typeof runtime.cpuLimit !== "number" || runtime.cpuLimit <= 0) {
+        throw new Error("Invalid cpu limit");
+    }
+
     const id = randomUUID();
     const tempDir = path.join("/tmp", `exec-${id}`);
 
@@ -59,39 +76,45 @@ export const executeTestCase = async (
 
     fs.writeFileSync(inputPath, input);
 
+    // Simplified approach: write the command to a separate file to avoid nested quoting issues
+    const cmdScriptPath = path.join(tempDir, "cmd.sh");
+    fs.writeFileSync(cmdScriptPath, runtime.runCommand);
+    fs.chmodSync(cmdScriptPath, 0o755);
+
     const runScriptPath = path.join(tempDir, "run.sh");
-    // We create a robust wrapper script to handle:
-    // 1. Shell differences (bash vs sh/time availability)
-    // 2. Complex quoting (avoiding nested quote hell in docker command)
-    // 3. Ensuring inputs/outputs are redirected correctly
     const runScript = `#!/bin/sh
-CMD="${runtime.runCommand.replace(/"/g, '\\"')}"
-if [ -x /bin/bash ]; then
-    # Debian/Ubuntu (has bash, time is builtin or in /usr/bin)
-    exec /bin/bash -c "time -p sh -c \\"\$CMD < input.txt > stdout.txt 2> stderr.txt\\" 2> time.txt"
+# Execute the user command with I/O redirection and timing
+if command -v time >/dev/null 2>&1; then
+    time -p sh cmd.sh < input.txt > stdout.txt 2> stderr.txt 2> time.txt
 else
-    # Alpine (busybox sh has time)
-    exec time -p sh -c "$CMD < input.txt > stdout.txt 2> stderr.txt" 2> time.txt
+    # Fallback if time is not available
+    sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
 fi
 `;
     fs.writeFileSync(runScriptPath, runScript);
 
-    // Command: docker run ... sh /app/run.sh
-    const dockerCmd = `docker run --rm --network none --memory ${runtime.memoryLimit}m --cpus ${runtime.cpuLimit} -v "${tempDir}":/app -w /app ${runtime.dockerImage} sh /app/run.sh`;
+    const dockerArgs = [
+        "run", "--rm", "--network", "none",
+        "--memory", `${runtime.memoryLimit}m`,
+        "--cpus", `${runtime.cpuLimit.toString()}`,
+        "-v", `${tempDir}:/app`,
+        "-w", "/app",
+        runtime.dockerImage,
+        "sh", "/app/run.sh"
+    ];
 
     const startTime = process.hrtime();
 
     try {
-        await execAsync(dockerCmd, {
+        await execFileAsync("docker", dockerArgs, {
             timeout: timeLimit * 1000,
-            maxBuffer: 1024 * 1024 // 1MB output limit (for Docker structure output, not user output anymore)
+            maxBuffer: MAX_OUTPUT_SIZE
         });
 
         // Read outputs from files
         // Paths already defined above.
 
         let actualOutput = "";
-        let stderrOutput = ""; // We can optionaly return this if needed for debugging users code
         let executionTime = 0; // ms
 
         if (fs.existsSync(stdoutPath)) {
@@ -146,14 +169,43 @@ fi
             };
         }
 
-        // For other errors, check if we have partial output or if it's a runtime error
-        // But usually exec error implies non-zero exit code.
+        // Check for file outputs first
+        let userStderr = "";
+        try {
+            if (fs.existsSync(stderrPath)) {
+                userStderr = fs.readFileSync(stderrPath, "utf-8").trim();
+            }
+        } catch (e) { /* ignore read error */ }
 
-        // If time.txt or stderr.txt exists, we might glean more info.
-        // For SIMPLICITY: Treat non-zero exit as RUNTIME_ERROR
+        let userStdout = "";
+        try {
+            if (fs.existsSync(stdoutPath)) {
+                userStdout = fs.readFileSync(stdoutPath, "utf-8").trim();
+            }
+        } catch (e) { /* ignore read error */ }
+
+        let timeDiagnostics = "";
+        try {
+            if (fs.existsSync(timePath)) {
+                const timeFileContent = fs.readFileSync(timePath, "utf-8").trim();
+                // If it contains timing data like "real 0.00", ignore it for error reporting
+                // Otherwise, it might contain shell errors that we should show
+                if (timeFileContent && !timeFileContent.includes("real ")) {
+                    timeDiagnostics = timeFileContent;
+                }
+            }
+        } catch (e) { /* ignore read error */ }
+
+        // Docker stderr (e.g. image missing, resource limits reached)
+        const dockerStderr = error.stderr ? error.stderr.toString().trim() : "";
+
+        // Construct a meaningful error message
+        // Priority: Container Stderr -> Timing/Setup Error -> Docker Stderr -> Stdout fallback
+        const finalOutput = userStderr || timeDiagnostics || dockerStderr || (userStdout ? `Process exited with error.\nStdout: ${userStdout}` : "") || "Runtime Error (No output)";
+
         return {
             status: "RUNTIME_ERROR",
-            stdout: error.stderr || (fs.existsSync(stderrPath) ? fs.readFileSync(stderrPath, "utf-8") : "") || error.message || "Runtime Error",
+            stdout: finalOutput,
             executionTime: Math.round(diff[0] * 1000 + diff[1] / 1e6)
         };
 
@@ -170,7 +222,7 @@ export type RuntimeStatus = {
 
 export const checkDockerAvailable = async (): Promise<boolean> => {
     try {
-        await execAsync("docker version");
+        await execFileAsync("docker", ["version"]);
         return true;
     } catch (e) {
         return false;
@@ -178,8 +230,12 @@ export const checkDockerAvailable = async (): Promise<boolean> => {
 };
 
 export const checkDockerImageExists = async (image: string): Promise<boolean> => {
+    // Basic validation before passing to execFile
+    if (!/^[a-zA-Z0-9.\-_:\/@]+$/.test(image)) {
+        return false;
+    }
     try {
-        await execAsync(`docker inspect --type=image ${image}`);
+        await execFileAsync("docker", ["inspect", "--type=image", image]);
         return true;
     } catch (e) {
         return false;
