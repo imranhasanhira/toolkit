@@ -25,6 +25,7 @@ export interface ExecutionResult {
     stdout: string;
     status: "ACCEPTED" | "WRONG_ANSWER" | "TIME_LIMIT_EXCEEDED" | "RUNTIME_ERROR" | "COMPILATION_ERROR";
     executionTime: number;
+    memoryUsage: number; // MB
 }
 
 export const prepareExecutionEnvironment = (code: string, runtime: RuntimeConfig): ExecutionContext => {
@@ -139,7 +140,8 @@ sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
         return {
             status,
             stdout: actualOutput,
-            executionTime
+            executionTime,
+            memoryUsage: 0 // Placeholder
         };
 
     } catch (error: any) {
@@ -152,7 +154,8 @@ sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
             return {
                 status: "TIME_LIMIT_EXCEEDED",
                 stdout: "",
-                executionTime: timeLimit * 1000
+                executionTime: timeLimit * 1000,
+                memoryUsage: 0 // Placeholder
             };
         }
 
@@ -169,7 +172,8 @@ sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
         return {
             status: "RUNTIME_ERROR",
             stdout: finalOutput,
-            executionTime
+            executionTime,
+            memoryUsage: 0 // Placeholder
         };
     } finally {
         if (container) {

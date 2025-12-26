@@ -44,6 +44,7 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
     const { problem, code } = submission;
     const testCases = problem.testCases;
     let allPassed = true;
+    let totalExecutionTime = 0;
 
     // Prepare Environment
     let execCtx;
@@ -72,6 +73,8 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
                 allPassed = false;
             }
 
+            totalExecutionTime += (result.executionTime || 0);
+
             await context.entities.SubmissionTestCaseResult.create({
                 data: {
                     submissionId: submission.id,
@@ -79,6 +82,7 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
                     status: result.status,
                     stdout: result.stdout,
                     executionTime: result.executionTime,
+                    memoryUsage: result.memoryUsage,
                     input: testCase.input,
                     expectedOutput: testCase.expectedOutput,
                 },
@@ -87,10 +91,16 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
 
         const finalStatus = allPassed ? "ACCEPTED" : "WRONG_ANSWER";
 
+        // Calculate average execution time
+        const avgExecutionTime = testCases.length > 0
+            ? Math.round(totalExecutionTime / testCases.length)
+            : 0;
+
         await context.entities.Submission.update({
             where: { id: submissionId },
             data: {
                 status: finalStatus,
+                executionTime: avgExecutionTime,
             },
         });
 
