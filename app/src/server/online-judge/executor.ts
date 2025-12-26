@@ -1,15 +1,12 @@
 
-import { exec, execFile } from "child_process";
 import fs from "fs";
 import path from "path";
-import { promisify } from "util";
 import { randomUUID } from "crypto";
+import Docker from "dockerode";
 
-const execAsync = promisify(exec);
-const execFileAsync = promisify(execFile);
-const MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB
-
-
+// Connect to default socket: /var/run/docker.sock
+// This works perfectly with the Dokku host mount
+const docker = new Docker();
 
 export interface RuntimeConfig {
     fileName: string;
@@ -32,7 +29,6 @@ export interface ExecutionResult {
 
 export const prepareExecutionEnvironment = (code: string, runtime: RuntimeConfig): ExecutionContext => {
     // Strict Validation (allows alphanumeric, ., -, _, :, /, @)
-    // Ref: https://github.com/distribution/distribution/blob/v2.7.1/docs/spec/api.md
     if (!/^[a-zA-Z0-9.\-_:\/@]+$/.test(runtime.dockerImage)) {
         throw new Error("Invalid docker image name");
     }
@@ -52,6 +48,7 @@ export const prepareExecutionEnvironment = (code: string, runtime: RuntimeConfig
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
     }
+    fs.chmodSync(tempDir, 0o777); // Ensure docker can read/write
 
     const filePath = path.join(tempDir, runtime.fileName);
     fs.writeFileSync(filePath, code);
@@ -75,72 +72,61 @@ export const executeTestCase = async (
     const timePath = path.join(tempDir, "time.txt");
 
     fs.writeFileSync(inputPath, input);
+    // Create empty output files with wide permissions so docker can write to them
+    fs.writeFileSync(stdoutPath, "");
+    fs.chmodSync(stdoutPath, 0o666);
+    fs.writeFileSync(stderrPath, "");
+    fs.chmodSync(stderrPath, 0o666);
 
-    // Simplified approach: write the command to a separate file to avoid nested quoting issues
+    // Simplified approach: write the command to a separate file
     const cmdScriptPath = path.join(tempDir, "cmd.sh");
     fs.writeFileSync(cmdScriptPath, runtime.runCommand);
     fs.chmodSync(cmdScriptPath, 0o755);
 
     const runScriptPath = path.join(tempDir, "run.sh");
     const runScript = `#!/bin/sh
-# Execute the user command with I/O redirection and timing
-if command -v time >/dev/null 2>&1; then
-    time -p sh cmd.sh < input.txt > stdout.txt 2> stderr.txt 2> time.txt
-else
-    # Fallback if time is not available
-    sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
-fi
+sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
 `;
     fs.writeFileSync(runScriptPath, runScript);
-
-    const dockerArgs = [
-        "run", "--rm", "--network", "none",
-        "--memory", `${runtime.memoryLimit}m`,
-        "--cpus", `${runtime.cpuLimit.toString()}`,
-        "-v", `${tempDir}:/app`,
-        "-w", "/app",
-        runtime.dockerImage,
-        "sh", "/app/run.sh"
-    ];
+    fs.chmodSync(runScriptPath, 0o755);
 
     const startTime = process.hrtime();
+    let container;
 
     try {
-        await execFileAsync("docker", dockerArgs, {
-            timeout: timeLimit * 1000,
-            maxBuffer: MAX_OUTPUT_SIZE
+        container = await docker.createContainer({
+            Image: runtime.dockerImage,
+            Cmd: ["sh", "/app/run.sh"],
+            Tty: false,
+            NetworkDisabled: true, // Security: No network access
+            HostConfig: {
+                Binds: [`${tempDir}:/app`],
+                Memory: runtime.memoryLimit * 1024 * 1024, // MB to bytes
+                NanoCpus: runtime.cpuLimit * 1e9, // CPUs to nanoCPUs
+                AutoRemove: false // We control removal
+            },
+            WorkingDir: "/app",
         });
 
-        // Read outputs from files
-        // Paths already defined above.
+        await container.start();
 
+        // Wait for container to finish or timeout
+        // dockerode doesn't have a simple timeout for wait(), so we race prompts
+        const waitPromise = container.wait();
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("GenericTimeout")), timeLimit * 1000)
+        );
+
+        await Promise.race([waitPromise, timeoutPromise]);
+
+        // Calculate execution time (rough estimate from host perspective)
+        const diff = process.hrtime(startTime);
+        const executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
+
+        // Read outputs
         let actualOutput = "";
-        let executionTime = 0; // ms
-
         if (fs.existsSync(stdoutPath)) {
             actualOutput = fs.readFileSync(stdoutPath, "utf-8").trim();
-        }
-
-        // Try to parse execution time from time.txt
-        // Format:
-        // real 0.00
-        // user 0.00
-        // sys 0.00
-        if (fs.existsSync(timePath)) {
-            const timeContent = fs.readFileSync(timePath, "utf-8");
-            const realTimeMatch = timeContent.match(/real\s+(\d+\.?\d*)/);
-            if (realTimeMatch && realTimeMatch[1]) {
-                // Convert seconds to ms
-                executionTime = Math.round(parseFloat(realTimeMatch[1]) * 1000);
-            } else {
-                // Fallback if parsing fails (shouldn't happen if time works)
-                const diff = process.hrtime(startTime);
-                executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
-            }
-        } else {
-            // Fallback if time.txt doesn't exist (e.g. killed by timeout or docker error)
-            const diff = process.hrtime(startTime);
-            executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
         }
 
         const expected = expectedOutput ? expectedOutput.trim() : null;
@@ -157,11 +143,12 @@ fi
         };
 
     } catch (error: any) {
-        // If the process timed out or errored
         const diff = process.hrtime(startTime);
+        const executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
 
-        // If it was a timeout from execAsync, it likely means valid TLE
-        if (error.signal === "SIGTERM" || error.cancelled) { // exec default timeout kill
+        // Handle Timeout
+        if (error.message === "GenericTimeout") {
+            try { await container?.kill(); } catch (e) { }
             return {
                 status: "TIME_LIMIT_EXCEEDED",
                 stdout: "",
@@ -169,50 +156,31 @@ fi
             };
         }
 
-        // Check for file outputs first
+        // Handle Other Errors
         let userStderr = "";
         try {
             if (fs.existsSync(stderrPath)) {
                 userStderr = fs.readFileSync(stderrPath, "utf-8").trim();
             }
-        } catch (e) { /* ignore read error */ }
+        } catch (e) { }
 
-        let userStdout = "";
-        try {
-            if (fs.existsSync(stdoutPath)) {
-                userStdout = fs.readFileSync(stdoutPath, "utf-8").trim();
-            }
-        } catch (e) { /* ignore read error */ }
-
-        let timeDiagnostics = "";
-        try {
-            if (fs.existsSync(timePath)) {
-                const timeFileContent = fs.readFileSync(timePath, "utf-8").trim();
-                // If it contains timing data like "real 0.00", ignore it for error reporting
-                // Otherwise, it might contain shell errors that we should show
-                if (timeFileContent && !timeFileContent.includes("real ")) {
-                    timeDiagnostics = timeFileContent;
-                }
-            }
-        } catch (e) { /* ignore read error */ }
-
-        // Docker stderr (e.g. image missing, resource limits reached)
-        const dockerStderr = error.stderr ? error.stderr.toString().trim() : "";
-
-        // Construct a meaningful error message
-        // Priority: Container Stderr -> Timing/Setup Error -> Docker Stderr -> Stdout fallback
-        const finalOutput = userStderr || timeDiagnostics || dockerStderr || (userStdout ? `Process exited with error.\nStdout: ${userStdout}` : "") || "Runtime Error (No output)";
+        const finalOutput = userStderr || error.message || "Runtime Error";
 
         return {
             status: "RUNTIME_ERROR",
             stdout: finalOutput,
-            executionTime: Math.round(diff[0] * 1000 + diff[1] / 1e6)
+            executionTime
         };
-
+    } finally {
+        if (container) {
+            try {
+                await container.remove({ force: true });
+            } catch (e) {
+                // Ignore removal errors
+            }
+        }
     }
 };
-
-// ... existing code ...
 
 export type RuntimeStatus = {
     dockerAvailable: boolean;
@@ -222,20 +190,22 @@ export type RuntimeStatus = {
 
 export const checkDockerAvailable = async (): Promise<boolean> => {
     try {
-        await execFileAsync("docker", ["version"]);
+        await docker.ping();
         return true;
     } catch (e) {
+        // console.error("Docker check failed:", e);
         return false;
     }
 };
 
 export const checkDockerImageExists = async (image: string): Promise<boolean> => {
-    // Basic validation before passing to execFile
+    // Basic validation
     if (!/^[a-zA-Z0-9.\-_:\/@]+$/.test(image)) {
         return false;
     }
     try {
-        await execFileAsync("docker", ["inspect", "--type=image", image]);
+        const imageObj = docker.getImage(image);
+        await imageObj.inspect();
         return true;
     } catch (e) {
         return false;
