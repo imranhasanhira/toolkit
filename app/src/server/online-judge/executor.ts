@@ -85,8 +85,12 @@ export const executeTestCase = async (
     fs.chmodSync(cmdScriptPath, 0o755);
 
     const runScriptPath = path.join(tempDir, "run.sh");
+    const exitCodePath = path.join(tempDir, "exit_code.txt");
+
+    // Capture exit code of the internal command explicitly
     const runScript = `#!/bin/sh
 sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
+echo $? > exit_code.txt
 `;
     fs.writeFileSync(runScriptPath, runScript);
     fs.chmodSync(runScriptPath, 0o755);
@@ -124,22 +128,64 @@ sh cmd.sh < input.txt > stdout.txt 2> stderr.txt
         const diff = process.hrtime(startTime);
         const executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
 
-        // Read outputs
-        let actualOutput = "";
-        if (fs.existsSync(stdoutPath)) {
-            actualOutput = fs.readFileSync(stdoutPath, "utf-8").trim();
+        // Read outputs with size limit
+        const MAX_OUTPUT_SIZE = 2 * 1024 * 1024; // 2MB
+
+        const readAndTruncate = (filePath: string): string => {
+            if (!fs.existsSync(filePath)) return "";
+            const stats = fs.statSync(filePath);
+            if (stats.size > MAX_OUTPUT_SIZE) {
+                // Read first 20KB
+                const buffer = Buffer.alloc(MAX_OUTPUT_SIZE);
+                const fd = fs.openSync(filePath, "r");
+                fs.readSync(fd, buffer, 0, MAX_OUTPUT_SIZE, 0);
+                fs.closeSync(fd);
+                return buffer.toString("utf-8").trim() + "\n...[Output Truncated]";
+            }
+            return fs.readFileSync(filePath, "utf-8").trim();
+        };
+
+        let actualOutput = readAndTruncate(stdoutPath);
+        let stderrOutput = readAndTruncate(stderrPath);
+
+        let exitCode = 0;
+        if (fs.existsSync(exitCodePath)) {
+            const exitCodeStr = fs.readFileSync(exitCodePath, "utf-8").trim();
+            exitCode = parseInt(exitCodeStr, 10);
+            if (isNaN(exitCode)) exitCode = 1; // Fallback if file corrupt
+        } else {
+            // If exit_code.txt doesn't exist, script might have crashed or timed out before writing
+            // Assume error if stderr has content, else 0? No, assume 1 if we expected it to write.
+            exitCode = (stderrOutput.length > 0) ? 1 : 0;
         }
 
         const expected = expectedOutput ? expectedOutput.trim() : null;
 
         let status: ExecutionResult["status"] = "ACCEPTED";
-        if (expected !== null && actualOutput !== expected) {
+        let finalStdout = actualOutput;
+
+        if (exitCode !== 0) {
+            // Heuristic to detect compilation errors
+            // Java: "error: ", "javac"
+            // C/C++: "error:", "gcc", "g++", "make"
+            // Python: "SyntaxError", "IndentationError"
+            const isCompilationError =
+                stderrOutput.includes("error:") ||
+                stderrOutput.includes("SyntaxError") ||
+                stderrOutput.includes("IndentationError") ||
+                stderrOutput.includes("javac") ||
+                stderrOutput.includes("gcc") ||
+                stderrOutput.includes("g++");
+
+            status = isCompilationError ? "COMPILATION_ERROR" : "RUNTIME_ERROR";
+            finalStdout = stderrOutput || "Process exited with error but no stderr output.";
+        } else if (expected !== null && actualOutput !== expected) {
             status = "WRONG_ANSWER";
         }
 
         return {
             status,
-            stdout: actualOutput,
+            stdout: finalStdout,
             executionTime,
             memoryUsage: 0 // Placeholder
         };

@@ -2,6 +2,14 @@
 set -euo pipefail
 
 # --- Configuration ---
+# Ensure SSH Agent is active and keys are added (prevents multiple passphrase prompts)
+if [ -z "${SSH_AUTH_SOCK:-}" ]; then
+    eval "$(ssh-agent -s)"
+    trap 'kill $SSH_AGENT_PID' EXIT
+fi
+# Check if keys are loaded, if not, add them (prompts once)
+ssh-add -l >/dev/null 2>&1 || ssh-add
+
 APP_BACKEND="toolkit"
 REMOTE_BACKEND="dokku@hubuntu.imranhira.com:${APP_BACKEND}"
 

@@ -45,6 +45,7 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
     const testCases = problem.testCases;
     let allPassed = true;
     let totalExecutionTime = 0;
+    let failedStatus: string | null = null; // Track the first error status
 
     // Prepare Environment
     let execCtx;
@@ -71,6 +72,9 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
 
             if (result.status !== "ACCEPTED") {
                 allPassed = false;
+                if (!failedStatus) {
+                    failedStatus = result.status; // Capture first failure
+                }
             }
 
             totalExecutionTime += (result.executionTime || 0);
@@ -87,9 +91,14 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
                     expectedOutput: testCase.expectedOutput,
                 },
             });
+
+            if (result.status === "COMPILATION_ERROR") {
+                // Stop further execution if compilation fails
+                break;
+            }
         }
 
-        const finalStatus = allPassed ? "ACCEPTED" : "WRONG_ANSWER";
+        const finalStatus = allPassed ? "ACCEPTED" : (failedStatus || "WRONG_ANSWER");
 
         // Calculate average execution time
         const avgExecutionTime = testCases.length > 0
@@ -99,7 +108,7 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
         await context.entities.Submission.update({
             where: { id: submissionId },
             data: {
-                status: finalStatus,
+                status: finalStatus as any,
                 executionTime: avgExecutionTime,
             },
         });
