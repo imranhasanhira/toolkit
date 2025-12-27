@@ -153,10 +153,11 @@ echo $? > exit_code.txt
         const downloadTarPath = path.join(tempDir, "../", `${path.basename(tempDir)}-out.tar`);
         const fileStream = fs.createWriteStream(downloadTarPath);
 
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             downloadStream.pipe(fileStream);
-            downloadStream.on("end", resolve);
-            fileStream.on("error", reject);
+            fileStream.on("finish", () => resolve()); // Wait for file flush
+            downloadStream.on("error", reject); // Catch read errors
+            fileStream.on("error", reject); // Catch write errors
         });
 
         // FORCE CLEANUP of local files before extraction to ensure we get fresh ones
@@ -211,6 +212,7 @@ echo $? > exit_code.txt
             actualStderrPath = path.join(subDirApp, "stderr.txt");
             actualExitCodePath = path.join(subDirApp, "exit_code.txt");
         }
+
 
 
         let actualOutput = readAndTruncate(actualStdoutPath);
