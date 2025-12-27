@@ -60,6 +60,8 @@ export const prepareExecutionEnvironment = (code: string, runtime: RuntimeConfig
     };
 };
 
+import { execSync } from "child_process";
+
 export const executeTestCase = async (
     context: ExecutionContext,
     input: string,
@@ -70,7 +72,7 @@ export const executeTestCase = async (
     const inputPath = path.join(tempDir, "input.txt");
     const stdoutPath = path.join(tempDir, "stdout.txt");
     const stderrPath = path.join(tempDir, "stderr.txt");
-    const timePath = path.join(tempDir, "time.txt");
+    // const timePath = path.join(tempDir, "time.txt"); // Unused
 
     fs.writeFileSync(inputPath, input);
     // Create empty output files with wide permissions so docker can write to them
@@ -95,6 +97,16 @@ echo $? > exit_code.txt
     fs.writeFileSync(runScriptPath, runScript);
     fs.chmodSync(runScriptPath, 0o755);
 
+    // --- Prepare Archive for Upload ---
+    // Create a tarball of the tempDir content
+    // We use tar -C tempDir . to tar the contents, not the directory itself
+    const uploadTarPath = path.join(tempDir, "../", `${path.basename(tempDir)}.tar`);
+    try {
+        execSync(`tar -cf ${uploadTarPath} -C ${tempDir} .`);
+    } catch (e) {
+        throw new Error("Failed to create input tar archive");
+    }
+
     const startTime = process.hrtime();
     let container;
 
@@ -105,7 +117,7 @@ echo $? > exit_code.txt
             Tty: false,
             NetworkDisabled: true, // Security: No network access
             HostConfig: {
-                Binds: [`${tempDir}:/app`],
+                // Binds: [`${tempDir}:/app`], // REMOVED: Bind mounts don't work well in DoD
                 Memory: runtime.memoryLimit * 1024 * 1024, // MB to bytes
                 NanoCpus: runtime.cpuLimit * 1e9, // CPUs to nanoCPUs
                 AutoRemove: false // We control removal
@@ -113,8 +125,13 @@ echo $? > exit_code.txt
             WorkingDir: "/app",
         });
 
+        // Upload files to container
+        await container.putArchive(uploadTarPath, { path: "/app" });
+
         await container.start();
 
+        // Wait for container to finish or timeout
+        // dockerode doesn't have a simple timeout for wait(), so we race prompts
         // Wait for container to finish or timeout
         // dockerode doesn't have a simple timeout for wait(), so we race prompts
         const waitPromise = container.wait();
@@ -124,9 +141,42 @@ echo $? > exit_code.txt
 
         await Promise.race([waitPromise, timeoutPromise]);
 
+
         // Calculate execution time (rough estimate from host perspective)
         const diff = process.hrtime(startTime);
         const executionTime = Math.round(diff[0] * 1000 + diff[1] / 1e6);
+
+        // --- Retrieve Results ---
+        // Get the entire /app directory back as a tar stream
+        const downloadStream = await container.getArchive({ path: "/app" });
+
+        const downloadTarPath = path.join(tempDir, "../", `${path.basename(tempDir)}-out.tar`);
+        const fileStream = fs.createWriteStream(downloadTarPath);
+
+        await new Promise((resolve, reject) => {
+            downloadStream.pipe(fileStream);
+            downloadStream.on("end", resolve);
+            fileStream.on("error", reject);
+        });
+
+        // FORCE CLEANUP of local files before extraction to ensure we get fresh ones
+        if (fs.existsSync(stdoutPath)) fs.unlinkSync(stdoutPath);
+        if (fs.existsSync(stderrPath)) fs.unlinkSync(stderrPath);
+        if (fs.existsSync(exitCodePath)) fs.unlinkSync(exitCodePath);
+
+        // Extract results back to tempDir (overwrite existing)
+        try {
+            execSync(`tar -xf ${downloadTarPath} -C ${tempDir}`);
+        } catch (e) {
+            console.error("Tar extraction warning:", e);
+            // Proceed anyway, maybe some files are partial
+        }
+
+        // Cleanup tar files
+        try {
+            if (fs.existsSync(uploadTarPath)) fs.unlinkSync(uploadTarPath);
+            if (fs.existsSync(downloadTarPath)) fs.unlinkSync(downloadTarPath);
+        } catch (e) { }
 
         // Read outputs with size limit
         const MAX_OUTPUT_SIZE = 2 * 1024 * 1024; // 2MB
@@ -145,12 +195,30 @@ echo $? > exit_code.txt
             return fs.readFileSync(filePath, "utf-8").trim();
         };
 
-        let actualOutput = readAndTruncate(stdoutPath);
-        let stderrOutput = readAndTruncate(stderrPath);
+        // Note: Files are now in tempDir because we extracted the tar there
+        // However, getArchive of "/app" might put them in a subdirectory named "app" or "." depending on docker version
+        // Usually getArchive({path: '/app'}) results in a tar where the root is 'app/'.
+        // Let's check if stdoutPath exists, if not check tempDir/app/stdout.txt
+
+        let actualStdoutPath = stdoutPath;
+        let actualStderrPath = stderrPath;
+        let actualExitCodePath = exitCodePath;
+
+        const subDirApp = path.join(tempDir, "app");
+        // Check if the 'app' subdirectory exists and use it if it does
+        if (fs.existsSync(subDirApp)) {
+            actualStdoutPath = path.join(subDirApp, "stdout.txt");
+            actualStderrPath = path.join(subDirApp, "stderr.txt");
+            actualExitCodePath = path.join(subDirApp, "exit_code.txt");
+        }
+
+
+        let actualOutput = readAndTruncate(actualStdoutPath);
+        let stderrOutput = readAndTruncate(actualStderrPath);
 
         let exitCode = 0;
-        if (fs.existsSync(exitCodePath)) {
-            const exitCodeStr = fs.readFileSync(exitCodePath, "utf-8").trim();
+        if (fs.existsSync(actualExitCodePath)) {
+            const exitCodeStr = fs.readFileSync(actualExitCodePath, "utf-8").trim();
             exitCode = parseInt(exitCodeStr, 10);
             if (isNaN(exitCode)) exitCode = 1; // Fallback if file corrupt
         } else {
@@ -208,8 +276,15 @@ echo $? > exit_code.txt
         // Handle Other Errors
         let userStderr = "";
         try {
-            if (fs.existsSync(stderrPath)) {
-                userStderr = fs.readFileSync(stderrPath, "utf-8").trim();
+            // Try to rescue output if possible (e.g. if partial archive)
+            let actualStderrPath = stderrPath;
+            const subDirApp = path.join(tempDir, "app");
+            if (!fs.existsSync(stderrPath) && fs.existsSync(subDirApp)) {
+                actualStderrPath = path.join(subDirApp, "stderr.txt");
+            }
+
+            if (fs.existsSync(actualStderrPath)) {
+                userStderr = fs.readFileSync(actualStderrPath, "utf-8").trim();
             }
         } catch (e) { }
 
@@ -229,6 +304,13 @@ echo $? > exit_code.txt
                 // Ignore removal errors
             }
         }
+        // Cleanup extra tar files if they exist and weren't cleaned
+        try {
+            const uploadTarPath = path.join(tempDir, "../", `${path.basename(tempDir)}.tar`);
+            const downloadTarPath = path.join(tempDir, "../", `${path.basename(tempDir)}-out.tar`);
+            if (fs.existsSync(uploadTarPath)) fs.unlinkSync(uploadTarPath);
+            if (fs.existsSync(downloadTarPath)) fs.unlinkSync(downloadTarPath);
+        } catch (e) { }
     }
 };
 

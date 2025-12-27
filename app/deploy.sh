@@ -20,7 +20,7 @@ REMOTE_FRONTEND="dokku@hubuntu.imranhira.com:${APP_FRONTEND}"
 API_URL="https://${APP_BACKEND}.naurinjahan.com/api"
 
 BRANCH="main"
-TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+TIMESTAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
 
 echo "========================================="
 echo "Starting Pre-Deployment Build & Validation"
