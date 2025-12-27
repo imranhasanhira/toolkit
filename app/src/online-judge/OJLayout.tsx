@@ -10,7 +10,7 @@ export default function OJLayout({ children }: { children: ReactNode }) {
 
     const tabs = [
         { name: "Problems", path: "/online-judge" },
-        { name: "Runtimes", path: "/online-judge/runtimes" },
+        ...(user?.isAdmin ? [{ name: "Runtimes", path: "/online-judge/runtimes" }] : []),
     ];
 
     return (
@@ -28,8 +28,8 @@ export default function OJLayout({ children }: { children: ReactNode }) {
                                 key={tab.name}
                                 to={tab.path}
                                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${isActive || (tab.path === "/online-judge" && currentPath.includes("/online-judge") && !currentPath.includes("runtimes"))
-                                        ? "border-blue-500 text-blue-600"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                    ? "border-blue-500 text-blue-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                                     }`}
                             >
                                 {tab.name}

@@ -1,10 +1,26 @@
 
 import { useQuery, getRuntimes, updateRuntime, createRuntime, checkRuntimeStatus } from "wasp/client/operations";
+import { useAuth } from "wasp/client/auth";
 import { useState, useEffect, useCallback } from "react";
 import Editor from "@monaco-editor/react";
 import OJLayout from "./OJLayout";
 
 export default function RuntimeListPage() {
+    const { data: user, isLoading: isAuthLoading } = useAuth();
+
+    if (isAuthLoading) return <div>Loading...</div>;
+
+    if (!user || !user.isAdmin) {
+        return (
+            <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
+                    <p className="text-gray-600">You do not have permission to view this page.</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <OJLayout>
             <RuntimeListContent />
