@@ -256,10 +256,10 @@ job gradeSubmission {
   entities: [Submission, SubmissionTestCaseResult, Problem, TestCase]
 }
 
-route CreateProblemRoute { path: "/admin/problems/create", to: CreateProblemPage }
+route CreateProblemRoute { path: "/online-judge/create", to: CreateProblemPage }
 page CreateProblemPage {
   authRequired: true,
-  component: import CreateProblemPage from "@src/online-judge/admin/CreateProblemPage"
+  component: import CreateProblemPage from "@src/online-judge/CreateProblemPage"
 }
 
 route ProblemListRoute { path: "/online-judge", to: ProblemListPage }

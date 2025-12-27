@@ -27,22 +27,29 @@ export const createProblem: CreateProblem<CreateProblemArgs, Problem> = async (
 
     const { title, slug, description, difficulty, testCases } = args;
 
-    return context.entities.Problem.create({
-        data: {
-            title,
-            slug,
-            description,
-            difficulty,
-            testCases: {
-                // Create new test cases
-                create: testCases.map((tc) => ({
-                    input: tc.input,
-                    expectedOutput: tc.expectedOutput,
-                    isSample: tc.isSample || false,
-                })),
+    try {
+        return await context.entities.Problem.create({
+            data: {
+                title,
+                slug,
+                description,
+                difficulty,
+                testCases: {
+                    // Create new test cases
+                    create: testCases.map((tc) => ({
+                        input: tc.input,
+                        expectedOutput: tc.expectedOutput,
+                        isSample: tc.isSample || false,
+                    })),
+                },
             },
-        },
-    });
+        });
+    } catch (e: any) {
+        if (e.code === 'P2002') {
+            throw new HttpError(400, "A problem with this slug already exists. Please choose a different slug.");
+        }
+        throw e;
+    }
 };
 
 type UpdateProblemArgs = {
@@ -70,25 +77,32 @@ export const updateProblem: UpdateProblem<UpdateProblemArgs, Problem> = async (
     // Updating test cases implementation skipped for brevity/simplicity in this step, focusing on problem fields.
     // In a real app, you'd handle test case updates carefully.
 
-    return context.entities.Problem.update({
-        where: { id },
-        data: {
-            title,
-            slug,
-            description,
-            difficulty,
-            testCases: {
-                // Hard delete all existing test cases first (relation in SubmissionTestCaseResult is SetNull)
-                deleteMany: {},
-                // Create new test cases
-                create: testCases.map((tc) => ({
-                    input: tc.input,
-                    expectedOutput: tc.expectedOutput,
-                    isSample: tc.isSample || false,
-                })),
+    try {
+        return await context.entities.Problem.update({
+            where: { id },
+            data: {
+                title,
+                slug,
+                description,
+                difficulty,
+                testCases: {
+                    // Hard delete all existing test cases first (relation in SubmissionTestCaseResult is SetNull)
+                    deleteMany: {},
+                    // Create new test cases
+                    create: testCases.map((tc) => ({
+                        input: tc.input,
+                        expectedOutput: tc.expectedOutput,
+                        isSample: tc.isSample || false,
+                    })),
+                },
             },
-        },
-    });
+        });
+    } catch (e: any) {
+        if (e.code === 'P2002') {
+            throw new HttpError(400, "A problem with this slug already exists. Please choose a different slug.");
+        }
+        throw e;
+    }
 };
 
 export const getProblems: GetProblems<void, Problem[]> = async (args, context) => {

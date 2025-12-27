@@ -1,6 +1,7 @@
 import { useAuth } from "wasp/client/auth";
 import { createProblem } from "wasp/client/operations";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 // import ReactMarkdown from "react-markdown"; // Assuming standard react-markdown, or use a simple textarea for now
 
 export default function CreateProblemPage() {
@@ -13,6 +14,7 @@ export default function CreateProblemPage() {
     const [slug, setSlug] = useState("");
     const [description, setDescription] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
+    const [error, setError] = useState<string | null>(null);
     const [testCases, setTestCases] = useState<{ input: string; expectedOutput: string; isSample: boolean }[]>([
         { input: "", expectedOutput: "", isSample: true }
     ]);
@@ -32,6 +34,7 @@ export default function CreateProblemPage() {
     };
 
     const handleSubmit = async () => {
+        setError(null);
         try {
             await createProblem({
                 title,
@@ -44,6 +47,7 @@ export default function CreateProblemPage() {
             // Optionally redirect
             window.location.href = "/online-judge";
         } catch (error: any) {
+            setError(error.message);
             console.error("Error creating problem: ", error);
         }
     };
@@ -52,16 +56,24 @@ export default function CreateProblemPage() {
 
     return (
         <div className="container mx-auto p-6 max-w-4xl">
+            <Link to="/online-judge" className="text-gray-500 hover:text-gray-700 mb-4 inline-block">
+                &larr; Back to Problems
+            </Link>
             <h1 className="text-3xl font-bold mb-6">Create New Problem</h1>
 
             <div className="grid gap-6">
+                {error && (
+                    <div className="bg-red-50 text-red-700 p-4 rounded border border-red-200">
+                        {error}
+                    </div>
+                )}
                 <div className="grid gap-2">
                     <label className="font-semibold">Title</label>
                     <input
                         className="border p-2 rounded"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Two Sum"
+                        placeholder="Add Two Numbers"
                     />
                 </div>
 
@@ -71,7 +83,7 @@ export default function CreateProblemPage() {
                         className="border p-2 rounded"
                         value={slug}
                         onChange={(e) => setSlug(e.target.value)}
-                        placeholder="two-sum"
+                        placeholder="add-two-numbers"
                     />
                 </div>
 
@@ -99,15 +111,7 @@ export default function CreateProblemPage() {
                 </div>
 
                 <div className="border-t pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">Test Cases</h2>
-                        <button
-                            onClick={addTestCase}
-                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        >
-                            + Add Test Case
-                        </button>
-                    </div>
+                    <h2 className="text-xl font-bold mb-4">Test Cases</h2>
 
                     {testCases.map((tc, index) => (
                         <div key={index} className="border p-4 rounded mb-4 bg-gray-50 relative">
@@ -149,6 +153,15 @@ export default function CreateProblemPage() {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                <div className="mb-8">
+                    <button
+                        onClick={addTestCase}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                        + Add Test Case
+                    </button>
                 </div>
 
                 <button

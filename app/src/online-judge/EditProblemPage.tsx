@@ -16,6 +16,7 @@ export default function EditProblemPage() {
     const [slug, setSlug] = useState("");
     const [description, setDescription] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
+    const [error, setError] = useState<string | null>(null);
     const [testCases, setTestCases] = useState<{ input: string; expectedOutput: string; isSample: boolean }[]>([
         { input: "", expectedOutput: "", isSample: true }
     ]);
@@ -59,6 +60,7 @@ export default function EditProblemPage() {
     };
 
     const handleSubmit = async () => {
+        setError(null);
         try {
             await updateProblem({
                 id: problem.id,
@@ -68,10 +70,9 @@ export default function EditProblemPage() {
                 difficulty,
                 testCases,
             });
-            // alert("Problem updated successfully!");
             navigate(`/online-judge/${slug}`);
         } catch (error: any) {
-            // alert("Error updating problem: " + error.message);
+            setError(error.message);
             console.error("Error updating problem: ", error);
         }
     };
@@ -81,13 +82,18 @@ export default function EditProblemPage() {
             <h1 className="text-3xl font-bold mb-6">Edit Problem</h1>
 
             <div className="grid gap-6">
+                {error && (
+                    <div className="bg-red-50 text-red-700 p-4 rounded border border-red-200">
+                        {error}
+                    </div>
+                )}
                 <div className="grid gap-2">
                     <label className="font-semibold">Title</label>
                     <input
                         className="border p-2 rounded"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Two Sum"
+                        placeholder="Add Two Numbers"
                     />
                 </div>
 
@@ -97,7 +103,7 @@ export default function EditProblemPage() {
                         className="border p-2 rounded"
                         value={slug}
                         onChange={(e) => setSlug(e.target.value)}
-                        placeholder="two-sum"
+                        placeholder="add-two-numbers"
                     />
                 </div>
 
