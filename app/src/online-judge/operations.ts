@@ -236,6 +236,7 @@ type RunCodeArgs = {
 };
 
 type RunCodeResult = {
+    overallStatus: string;
     results: {
         status: string;
         stdout: string;
@@ -246,6 +247,8 @@ type RunCodeResult = {
 };
 
 import { prepareExecutionEnvironment, executeTestCase, cleanupExecutionEnvironment, validateRuntime, type RuntimeStatus } from "../server/online-judge/executor";
+import { calculateOverallStatus } from "../shared/submissionUtils";
+
 
 export const checkRuntimeStatus = async (args: { dockerImage: string }, context: any): Promise<RuntimeStatus> => {
     if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
@@ -314,5 +317,9 @@ export const runCode = async (args: RunCodeArgs, context: any): Promise<RunCodeR
         }
     }
 
-    return { results };
+
+
+    const overallStatus = calculateOverallStatus(results);
+
+    return { results, overallStatus };
 };
