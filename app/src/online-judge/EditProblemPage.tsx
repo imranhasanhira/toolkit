@@ -1,6 +1,6 @@
 
 import { useAuth } from "wasp/client/auth";
-import { updateProblem, getProblem } from "wasp/client/operations";
+import { updateProblem, getProblem, deleteProblem } from "wasp/client/operations";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "wasp/client/operations";
@@ -189,6 +189,26 @@ export default function EditProblemPage() {
                 >
                     Update Problem
                 </button>
+
+                <div className="border-t pt-6 mt-6">
+                    <h3 className="text-lg font-bold text-red-600 mb-2">Danger Zone</h3>
+                    <p className="text-gray-600 mb-4 text-sm">Deleting a problem is irreversible and will remove all associated submissions and test cases.</p>
+                    <button
+                        onClick={async () => {
+                            if (window.confirm("Are you sure you want to delete this problem? This action cannot be undone and will delete all submissions and test cases.")) {
+                                try {
+                                    await deleteProblem({ id: problem.id });
+                                    navigate("/online-judge");
+                                } catch (e: any) {
+                                    setError("Failed to delete problem: " + e.message);
+                                }
+                            }
+                        }}
+                        className="bg-red-50 text-red-600 border border-red-200 px-6 py-3 rounded text-lg font-semibold hover:bg-red-100 w-full"
+                    >
+                        Delete Problem
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -319,6 +319,11 @@ action checkRuntimeStatus {
     entities: []
 }
 
+action deleteProblem {
+    fn: import { deleteProblem } from "@src/online-judge/operations",
+    entities: [Problem, TestCase, Submission, SubmissionTestCaseResult]
+}
+
 query getProblems {
   fn: import { getProblems } from "@src/online-judge/operations",
   entities: [Problem]

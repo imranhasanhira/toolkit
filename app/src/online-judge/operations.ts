@@ -105,6 +105,41 @@ export const updateProblem: UpdateProblem<UpdateProblemArgs, Problem> = async (
     }
 };
 
+type DeleteProblemArgs = { id: string };
+
+export const deleteProblem = async (args: DeleteProblemArgs, context: any) => {
+    if (!context.user || !context.user.isAdmin) {
+        throw new HttpError(401, "Unauthorized");
+    }
+
+    const { id } = args;
+
+    // Manual Cascade Deletion
+    // 1. Delete SubmissionTestCaseResults associated with submissions for this problem
+    await context.entities.SubmissionTestCaseResult.deleteMany({
+        where: {
+            submission: {
+                problemId: id,
+            },
+        },
+    });
+
+    // 2. Delete Submissions for this problem
+    await context.entities.Submission.deleteMany({
+        where: { problemId: id },
+    });
+
+    // 3. Delete TestCases for this problem
+    await context.entities.TestCase.deleteMany({
+        where: { problemId: id },
+    });
+
+    // 4. Delete the Problem itself
+    await context.entities.Problem.delete({
+        where: { id },
+    });
+};
+
 export const getProblems: GetProblems<void, Problem[]> = async (args, context) => {
     return context.entities.Problem.findMany({
         orderBy: { createdAt: "desc" },

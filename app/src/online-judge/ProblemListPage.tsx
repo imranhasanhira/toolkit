@@ -1,4 +1,5 @@
-import { getProblems } from "wasp/client/operations";
+import { getProblems, deleteProblem } from "wasp/client/operations";
+import { Trash2 } from "lucide-react";
 import { routes } from "wasp/client/router";
 import { Link } from "react-router-dom";
 import { useQuery } from "wasp/client/operations";
@@ -53,12 +54,37 @@ export default function ProblemListPage() {
                                             </span>
                                         </div>
                                     </div>
-                                    <Link
-                                        to={`/online-judge/${problem.slug}`}
-                                        className="text-blue-500 hover:text-blue-700 font-medium"
-                                    >
-                                        Solve Challenge &rarr;
-                                    </Link>
+                                    <div className="flex items-center gap-4">
+                                        <Link
+                                            to={`/online-judge/${problem.slug}`}
+                                            className="text-blue-500 hover:text-blue-700 font-medium"
+                                        >
+                                            Solve Challenge &rarr;
+                                        </Link>
+                                        {user?.isAdmin && (
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    if (window.confirm("Are you sure you want to delete this problem?")) {
+                                                        try {
+                                                            await deleteProblem({ id: problem.id });
+                                                            // Invalidate queries to refresh list
+                                                            // Ideally queryClient.invalidateQueries(['getProblems'])
+                                                            // but simplistic reload or relying on refetch works for now.
+                                                            // Wasp's useQuery usually refetches on window focus or we can force it.
+                                                            window.location.reload();
+                                                        } catch (err: any) {
+                                                            alert("Failed to delete problem: " + err.message);
+                                                        }
+                                                    }
+                                                }}
+                                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                                title="Delete Problem"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))
