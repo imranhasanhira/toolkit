@@ -13,5 +13,5 @@ export default function useColorMode() {
       : bodyClass.remove(className);
   }, [colorMode]);
 
-  return [colorMode, setColorMode];
+  return [colorMode, setColorMode] as const;
 }
