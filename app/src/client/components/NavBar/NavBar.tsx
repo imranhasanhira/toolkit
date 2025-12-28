@@ -1,6 +1,6 @@
 import { LogIn, Menu } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { Link as ReactRouterLink } from "react-router-dom";
+import { Link as ReactRouterLink, useLocation } from "react-router-dom";
 import { useAuth } from "wasp/client/auth";
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
 import {
@@ -31,6 +31,7 @@ export default function NavBar({
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const isLandingPage = useIsLandingPage();
+  const location = useLocation();
 
   useEffect(() => {
     const throttledHandler = throttleWithTrailingInvocation(() => {
@@ -87,7 +88,11 @@ export default function NavBar({
                     },
                   )}
                 >
-                  Your SaaS
+                  {(() => {
+                    const path = location.pathname;
+                    if (path.startsWith("/online-judge")) return "Toolkit / Online Judge";
+                    return "Toolkit";
+                  })()}
                 </span>
               </WaspRouterLink>
 
@@ -180,7 +185,7 @@ function NavBarMobileMenu({
           <SheetHeader>
             <SheetTitle className="flex items-center">
               <WaspRouterLink to={routes.LandingPageRoute.to}>
-                <span className="sr-only">Your SaaS</span>
+                <span className="sr-only">Toolkit</span>
                 <NavLogo isScrolled={false} />
               </WaspRouterLink>
             </SheetTitle>
