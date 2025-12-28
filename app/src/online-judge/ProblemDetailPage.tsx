@@ -209,6 +209,7 @@ export default function ProblemDetailPage() {
                             submissions={submissions}
                             isLoading={isLoadingSubmissions}
                             onSelect={(sub) => setShowSubmissionDetail(sub.id)}
+                            user={user}
                         />
                     </div>
                 )}
@@ -477,18 +478,21 @@ function ProblemDescription({ problem, user }: { problem: any, user: any }) {
     );
 }
 
-function SubmissionHistory({ submissions, isLoading, onSelect }: { submissions: any[], isLoading: boolean, onSelect: (sub: any) => void }) {
+function SubmissionHistory({ submissions, isLoading, onSelect, user }: { submissions: any[], isLoading: boolean, onSelect: (sub: any) => void, user: any }) {
     if (isLoading) return <div className="text-center text-muted-foreground mt-10">Loading submissions...</div>;
     if (!submissions || submissions.length === 0) return <div className="text-center text-muted-foreground mt-10 p-4 bg-muted rounded">No submissions yet. Be the first!</div>;
 
+    const showUserColumn = user?.isAdmin;
+
     return (
-        <div className="overflow-hidden border border-border rounded-lg">
-            <table className="w-full text-sm text-left">
+        <div className="overflow-x-auto border border-border rounded-lg">
+            <table className="w-full text-sm text-left min-w-[500px]">
                 <thead className="bg-muted text-muted-foreground font-medium border-b border-border">
                     <tr>
                         <th className="py-3 px-4">Status</th>
                         <th className="py-3 px-4">Language</th>
                         <th className="py-3 px-4">Time</th>
+                        {showUserColumn && <th className="py-3 px-4">User</th>}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -513,6 +517,7 @@ function SubmissionHistory({ submissions, isLoading, onSelect }: { submissions: 
                                 </td>
                                 <td className="py-3 px-4 text-muted-foreground">{sub.language}</td>
                                 <td className="py-3 px-4 text-muted-foreground text-xs">{new Date(sub.createdAt).toLocaleString()}</td>
+                                {showUserColumn && <td className="py-3 px-4 text-muted-foreground text-xs">{sub.user?.email || "Unknown"}</td>}
                             </tr>
                         );
                     })}

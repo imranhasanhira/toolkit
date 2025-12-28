@@ -208,14 +208,26 @@ export const getSubmissions = async (
         throw new HttpError(401, "Must be logged in");
     }
 
+    const whereClause: any = {
+        problemId: args.problemId,
+    };
+
+    if (!context.user.isAdmin) {
+        whereClause.userId = context.user.id;
+    }
+
     return context.entities.Submission.findMany({
-        where: {
-            problemId: args.problemId,
-            userId: context.user.id,
-        },
+        where: whereClause,
         orderBy: { createdAt: "desc" },
         include: {
             testCaseResults: true,
+            user: { // Include user details to see who submitted
+                select: {
+                    id: true,
+                    // username: true, // Assuming username exists or email if preferred
+                    email: true
+                }
+            }
         },
     });
 };
