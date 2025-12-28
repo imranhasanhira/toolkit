@@ -339,6 +339,11 @@ query getRuntimes {
     entities: [Runtime]
 }
 
+query getPublicRuntimes {
+    fn: import { getPublicRuntimes } from "@src/online-judge/operations",
+    entities: [Runtime]
+}
+
 query getSubmissions {
   fn: import { getSubmissions } from "@src/online-judge/operations",
   entities: [Submission, SubmissionTestCaseResult]

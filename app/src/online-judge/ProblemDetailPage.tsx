@@ -1,7 +1,6 @@
-
 import { useAuth } from "wasp/client/auth";
 import { useParams, Link } from "react-router-dom";
-import { useQuery, getProblem, submitCode, getSubmissions, runCode, getRuntimes } from "wasp/client/operations";
+import { useQuery, getProblem, submitCode, getSubmissions, runCode, getPublicRuntimes } from "wasp/client/operations";
 import useColorMode from "../client/hooks/useColorMode";
 import { useState, useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
@@ -30,7 +29,7 @@ function useIsMobile() {
 export default function ProblemDetailPage() {
     const { slug } = useParams();
     const { data: problem, isLoading: isLoadingProblem, error: errorProblem } = useQuery(getProblem, { slug: slug || "" });
-    const { data: runtimes, isLoading: isLoadingRuntimes } = useQuery(getRuntimes);
+    const { data: runtimes, isLoading: isLoadingRuntimes } = useQuery(getPublicRuntimes);
     const { data: user } = useAuth();
     const [colorMode] = useColorMode();
 

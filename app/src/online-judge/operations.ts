@@ -228,6 +228,18 @@ export const getRuntimes = async (args: void, context: any) => {
     });
 };
 
+export const getPublicRuntimes = async (args: void, context: any) => {
+    if (!context.user) throw new HttpError(401, "Unauthorized");
+
+    return context.entities.Runtime.findMany({
+        orderBy: { language: "asc" },
+        select: {
+            id: true,
+            language: true,
+        }
+    });
+};
+
 type UpdateRuntimeArgs = {
     id: string;
     defaultCode: string;
