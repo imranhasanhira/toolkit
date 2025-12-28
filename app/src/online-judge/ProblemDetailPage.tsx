@@ -13,6 +13,19 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Code, Terminal } from "lucide-react"; // Added icons for Code tab
+
+// Simple hook for mobile detection
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
+    return isMobile;
+}
 
 export default function ProblemDetailPage() {
     const { slug } = useParams();
@@ -27,8 +40,11 @@ export default function ProblemDetailPage() {
     const [isDirty, setIsDirty] = useState(false);
 
     // -- LAYOUT & TABS STATE --
+    // -- LAYOUT & TABS STATE --
     const [leftTab, setLeftTab] = useState<"problem" | "submissions">("problem");
+    const [mobileTab, setMobileTab] = useState<"problem" | "submissions" | "code">("problem"); // New state for mobile
     const [showSubmissionDetail, setShowSubmissionDetail] = useState<string | null>(null);
+    const isMobile = useIsMobile();
 
     // -- EXECUTION STATE --
     const [submitting, setSubmitting] = useState(false);
@@ -157,175 +173,120 @@ export default function ProblemDetailPage() {
     if (errorProblem) return <div className="p-8 text-center text-red-500">Error loading problem</div>;
     if (!problem) return <div className="p-8 text-center">Problem not found</div>;
 
+    // --- RENDER HELPERS ---
+
+    const renderLeftPanelContent = () => (
+        <div className="flex flex-col h-full bg-background text-foreground">
+            {/* Tabs Header (Desktop: Problem/Submissions only. Mobile: Handled nicely via main tab bar?) 
+                Actually, for desktop we keep this. For mobile we might want a different switcher.
+            */}
+            {!isMobile && (
+                <div className="flex border-b border-border">
+                    <button
+                        onClick={() => { setLeftTab("problem"); setShowSubmissionDetail(null); }}
+                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium ${leftTab === "problem" && !showSubmissionDetail ? "text-primary border-b-2 border-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"}`}
+                    >
+                        <FileText className="w-4 h-4" /> Problem
+                    </button>
+                    <button
+                        onClick={() => { setLeftTab("submissions"); setShowSubmissionDetail(null); }}
+                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium ${leftTab === "submissions" || showSubmissionDetail ? "text-primary border-b-2 border-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"}`}
+                    >
+                        <List className="w-4 h-4" /> Submissions
+                    </button>
+                </div>
+            )}
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto">
+                {/* On mobile, we use mobileTab to decide content. On desktop, leftTab. */}
+                {((isMobile && mobileTab === "problem") || (!isMobile && leftTab === "problem")) && !showSubmissionDetail && (
+                    <ProblemDescription problem={problem} user={user} />
+                )}
+
+                {((isMobile && mobileTab === "submissions") || (!isMobile && leftTab === "submissions")) && !showSubmissionDetail && (
+                    <div className="p-4">
+                        <SubmissionHistory
+                            submissions={submissions}
+                            isLoading={isLoadingSubmissions}
+                            onSelect={(sub) => setShowSubmissionDetail(sub.id)}
+                        />
+                    </div>
+                )}
+
+                {showSubmissionDetail && selectedSubmission && (
+                    <SubmissionDetail
+                        submission={selectedSubmission}
+                        onBack={() => setShowSubmissionDetail(null)}
+                    />
+                )}
+            </div>
+        </div>
+    );
+
+    const renderCodeWorkspace = () => (
+        <CodeWorkspace
+            language={language}
+            setLanguage={handleLanguageChange}
+            code={code}
+            setCode={(val) => { setCode(val); setIsDirty(true); }}
+            runtimes={runtimes}
+            running={running}
+            submitting={submitting}
+            onRun={handleRun}
+            onSubmit={handleSubmit}
+            colorMode={colorMode}
+            runResults={runResults}
+            activeTestCaseIndex={activeTestCaseIndex}
+            setActiveTestCaseIndex={setActiveTestCaseIndex}
+        />
+    );
+
+    if (isMobile) {
+        return (
+            <div className="flex flex-col h-[calc(100vh-64px)] w-full bg-background text-foreground font-sans">
+                {/* Mobile Tabs Header */}
+                <div className="flex border-b border-border overflow-x-auto">
+                    <button onClick={() => { setMobileTab("problem"); setShowSubmissionDetail(null); }} className={`flex-1 flex justify-center items-center gap-2 py-3 text-sm font-medium ${mobileTab === "problem" && !showSubmissionDetail ? "text-primary border-b-2 border-primary bg-primary/5" : "text-muted-foreground"}`}>
+                        <FileText className="w-4 h-4" /> Problem
+                    </button>
+                    <button onClick={() => { setMobileTab("submissions"); setShowSubmissionDetail(null); }} className={`flex-1 flex justify-center items-center gap-2 py-3 text-sm font-medium ${mobileTab === "submissions" || showSubmissionDetail ? "text-primary border-b-2 border-primary bg-primary/5" : "text-muted-foreground"}`}>
+                        <List className="w-4 h-4" /> Submits
+                    </button>
+                    <button onClick={() => setMobileTab("code")} className={`flex-1 flex justify-center items-center gap-2 py-3 text-sm font-medium ${mobileTab === "code" ? "text-primary border-b-2 border-primary bg-primary/5" : "text-muted-foreground"}`}>
+                        <Code className="w-4 h-4" /> Code
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-hidden relative">
+                    {/* 
+                      We render contents differently based on tab.
+                      If 'code' tab, we show the workspace.
+                      Otherwise we show the left panel content logic.
+                     */}
+                    {mobileTab === "code" ? (
+                        <div className="h-full w-full">{renderCodeWorkspace()}</div>
+                    ) : (
+                        renderLeftPanelContent()
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="h-[calc(100vh-64px)] w-full overflow-hidden bg-background text-foreground font-sans">
             <PanelGroup direction="horizontal">
                 {/* --- LEFT PANEL: Problem & Submissions --- */}
                 <Panel defaultSize={40} minSize={20}>
-                    <div className="flex flex-col h-full bg-background text-foreground">
-                        {/* Tabs Header */}
-                        <div className="flex border-b border-border">
-                            <button
-                                onClick={() => { setLeftTab("problem"); setShowSubmissionDetail(null); }}
-                                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium ${leftTab === "problem" && !showSubmissionDetail ? "text-primary border-b-2 border-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"}`}
-                            >
-                                <FileText className="w-4 h-4" /> Problem
-                            </button>
-                            <button
-                                onClick={() => { setLeftTab("submissions"); setShowSubmissionDetail(null); }}
-                                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium ${leftTab === "submissions" || showSubmissionDetail ? "text-primary border-b-2 border-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"}`}
-                            >
-                                <List className="w-4 h-4" /> Submissions
-                            </button>
-                        </div>
-
-                        {/* Panel Content */}
-                        <div className="flex-1 overflow-y-auto">
-                            {leftTab === "problem" && !showSubmissionDetail && (
-                                <ProblemDescription problem={problem} user={user} />
-                            )}
-
-                            {leftTab === "submissions" && !showSubmissionDetail && (
-                                <div className="p-4">
-                                    <SubmissionHistory
-                                        submissions={submissions}
-                                        isLoading={isLoadingSubmissions}
-                                        onSelect={(sub) => setShowSubmissionDetail(sub.id)}
-                                    />
-                                </div>
-                            )}
-
-                            {showSubmissionDetail && selectedSubmission && (
-                                <SubmissionDetail
-                                    submission={selectedSubmission}
-                                    onBack={() => setShowSubmissionDetail(null)}
-                                />
-                            )}
-                        </div>
-                    </div>
+                    {renderLeftPanelContent()}
                 </Panel>
 
                 <PanelResizeHandle className="w-1.5 bg-border hover:bg-primary transition-colors cursor-col-resize active:bg-primary" />
 
                 {/* --- RIGHT PANEL --- */}
                 <Panel minSize={30}>
-                    <PanelGroup direction="vertical">
-                        {/* TOP: Editor */}
-                        <Panel defaultSize={60} minSize={20}>
-                            <div className="flex flex-col h-full">
-                                {/* Toolbar */}
-                                <div className="flex justify-between items-center p-2 bg-muted border-b border-border">
-                                    <select
-                                        value={language}
-                                        onChange={(e) => handleLanguageChange(e.target.value)}
-                                        className="bg-background text-foreground text-sm py-1 px-3 rounded border border-border focus:ring-1 focus:ring-primary outline-none"
-                                    >
-                                        {runtimes && runtimes.map((rt: any) => (
-                                            <option key={rt.id} value={rt.language}>{rt.language}</option>
-                                        ))}
-                                    </select>
-
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={handleRun}
-                                            disabled={running || submitting}
-                                            className="flex items-center gap-2 px-4 py-1.5 rounded text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 transition-colors"
-                                        >
-                                            {running ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                                            Run
-                                        </button>
-                                        <button
-                                            onClick={handleSubmit}
-                                            disabled={submitting || running}
-                                            className="flex items-center gap-2 px-4 py-1.5 rounded text-sm font-semibold bg-green-600 hover:bg-green-500 text-white disabled:opacity-50 transition-colors shadow-sm"
-                                        >
-                                            {submitting ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                            Submit
-                                        </button>
-                                    </div>
-                                </div>
-                                {/* Monaco Editor */}
-                                <div className="flex-1">
-                                    <Editor
-                                        height="100%"
-                                        theme={colorMode === "dark" ? "vs-dark" : "light"}
-                                        language={language}
-                                        value={code}
-                                        onChange={(val) => { setCode(val || ""); setIsDirty(true); }}
-                                        options={{
-                                            minimap: { enabled: false },
-                                            fontSize: 14,
-                                            padding: { top: 16 },
-                                            scrollBeyondLastLine: false,
-                                            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace"
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </Panel>
-
-                        <PanelResizeHandle className="h-1.5 bg-border hover:bg-primary transition-colors cursor-row-resize active:bg-primary" />
-
-                        {/* BOTTOM: Output Console */}
-                        <Panel minSize={10} defaultSize={40}>
-                            <div className="h-full bg-background border-t border-border flex flex-col">
-                                <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm font-medium text-foreground">Console</span>
-                                        {runResults && runResults.overallStatus && (
-                                            <div className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-bold ${runResults.overallStatus === "ACCEPTED"
-                                                ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                                                : "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                                                }`}>
-                                                {runResults.overallStatus === "ACCEPTED" ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                                                <span>{runResults.overallStatus === "ACCEPTED" ? "ACCEPTED" : runResults.overallStatus.replace(/_/g, " ")}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {runResults && runResults.results && runResults.results.length > 0 && (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-500 mr-2">
-                                                Test Case {activeTestCaseIndex + 1} of {runResults.results.length}
-                                            </span>
-                                            <button
-                                                onClick={() => setActiveTestCaseIndex(Math.max(0, activeTestCaseIndex - 1))}
-                                                disabled={activeTestCaseIndex === 0}
-                                                className="p-1 hover:bg-gray-700 rounded disabled:opacity-30"
-                                            >
-                                                <ChevronLeft className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => setActiveTestCaseIndex(Math.min(runResults.results.length - 1, activeTestCaseIndex + 1))}
-                                                disabled={activeTestCaseIndex === runResults.results.length - 1}
-                                                className="p-1 hover:bg-gray-700 rounded disabled:opacity-30"
-                                            >
-                                                <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
-                                    {!runResults && !running && !submitting && (
-                                        <div className="text-gray-500 italic">Run your code to see output here...</div>
-                                    )}
-                                    {running && <div className="text-yellow-500">Compiling and executing...</div>}
-                                    {runResults && runResults.error && (
-                                        <div className="text-red-400 bg-red-900/20 p-4 rounded border border-red-900">
-                                            <span className="font-bold">Execution Error:</span>
-                                            <pre className="mt-2 text-xs whitespace-pre-wrap">{runResults.error}</pre>
-                                        </div>
-                                    )}
-
-                                    {/* Overall Status Removed from Body */}
-
-                                    {runResults && runResults.results && runResults.results.length > 0 && (
-                                        <TestCaseResultView result={runResults.results[activeTestCaseIndex] || runResults.results[0]} />
-                                    )}
-                                </div>
-                            </div>
-                        </Panel>
-                    </PanelGroup>
+                    {renderCodeWorkspace()}
                 </Panel>
             </PanelGroup>
         </div>
@@ -333,6 +294,145 @@ export default function ProblemDetailPage() {
 }
 
 // --- SUB-COMPONENTS ---
+
+
+interface CodeWorkspaceProps {
+    language: string;
+    setLanguage: (lang: string) => void;
+    code: string;
+    setCode: (code: string) => void;
+    runtimes: any[];
+    running: boolean;
+    submitting: boolean;
+    onRun: () => void;
+    onSubmit: () => void;
+    colorMode: string;
+    runResults: any;
+    activeTestCaseIndex: number;
+    setActiveTestCaseIndex: (idx: number) => void;
+}
+
+function CodeWorkspace({
+    language, setLanguage, code, setCode, runtimes, running, submitting, onRun, onSubmit, colorMode, runResults, activeTestCaseIndex, setActiveTestCaseIndex
+}: CodeWorkspaceProps) {
+    return (
+        <PanelGroup direction="vertical">
+            {/* TOP: Editor */}
+            <Panel defaultSize={60} minSize={20}>
+                <div className="flex flex-col h-full">
+                    {/* Toolbar */}
+                    <div className="flex justify-between items-center p-2 bg-muted border-b border-border">
+                        <select
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value)}
+                            className="bg-background text-foreground text-sm py-1 px-3 rounded border border-border focus:ring-1 focus:ring-primary outline-none"
+                        >
+                            {runtimes && runtimes.map((rt: any) => (
+                                <option key={rt.id} value={rt.language}>{rt.language}</option>
+                            ))}
+                        </select>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={onRun}
+                                disabled={running || submitting}
+                                className="flex items-center gap-2 px-4 py-1.5 rounded text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 transition-colors"
+                            >
+                                {running ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                                Run
+                            </button>
+                            <button
+                                onClick={onSubmit}
+                                disabled={submitting || running}
+                                className="flex items-center gap-2 px-4 py-1.5 rounded text-sm font-semibold bg-green-600 hover:bg-green-500 text-white disabled:opacity-50 transition-colors shadow-sm"
+                            >
+                                {submitting ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                    {/* Monaco Editor */}
+                    <div className="flex-1">
+                        <Editor
+                            height="100%"
+                            theme={colorMode === "dark" ? "vs-dark" : "light"}
+                            language={language}
+                            value={code}
+                            onChange={(val) => setCode(val || "")}
+                            options={{
+                                minimap: { enabled: false },
+                                fontSize: 14,
+                                padding: { top: 16 },
+                                scrollBeyondLastLine: false,
+                                fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace"
+                            }}
+                        />
+                    </div>
+                </div>
+            </Panel>
+
+            <PanelResizeHandle className="h-1.5 bg-border hover:bg-primary transition-colors cursor-row-resize active:bg-primary" />
+
+            {/* BOTTOM: Output Console */}
+            <Panel minSize={10} defaultSize={40}>
+                <div className="h-full bg-background border-t border-border flex flex-col">
+                    <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium text-foreground">Console</span>
+                            {runResults && runResults.overallStatus && (
+                                <div className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-bold ${runResults.overallStatus === "ACCEPTED"
+                                    ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                                    : "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                                    }`}>
+                                    {runResults.overallStatus === "ACCEPTED" ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                                    <span>{runResults.overallStatus === "ACCEPTED" ? "ACCEPTED" : runResults.overallStatus.replace(/_/g, " ")}</span>
+                                </div>
+                            )}
+                        </div>
+                        {runResults && runResults.results && runResults.results.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 mr-2">
+                                    Test Case {activeTestCaseIndex + 1} of {runResults.results.length}
+                                </span>
+                                <button
+                                    onClick={() => setActiveTestCaseIndex(Math.max(0, activeTestCaseIndex - 1))}
+                                    disabled={activeTestCaseIndex === 0}
+                                    className="p-1 hover:bg-gray-700 rounded disabled:opacity-30"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setActiveTestCaseIndex(Math.min(runResults.results.length - 1, activeTestCaseIndex + 1))}
+                                    disabled={activeTestCaseIndex === runResults.results.length - 1}
+                                    className="p-1 hover:bg-gray-700 rounded disabled:opacity-30"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
+                        {!runResults && !running && !submitting && (
+                            <div className="text-gray-500 italic">Run your code to see output here...</div>
+                        )}
+                        {running && <div className="text-yellow-500">Compiling and executing...</div>}
+                        {runResults && runResults.error && (
+                            <div className="text-red-400 bg-red-900/20 p-4 rounded border border-red-900">
+                                <span className="font-bold">Execution Error:</span>
+                                <pre className="mt-2 text-xs whitespace-pre-wrap">{runResults.error}</pre>
+                            </div>
+                        )}
+
+                        {runResults && runResults.results && runResults.results.length > 0 && (
+                            <TestCaseResultView result={runResults.results[activeTestCaseIndex] || runResults.results[0]} />
+                        )}
+                    </div>
+                </div>
+            </Panel>
+        </PanelGroup>
+    );
+}
 
 function ProblemDescription({ problem, user }: { problem: any, user: any }) {
     return (
