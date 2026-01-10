@@ -17,7 +17,7 @@ APP_FRONTEND="toolkit-ui"
 REMOTE_FRONTEND="dokku@hubuntu.imranhira.com:${APP_FRONTEND}"
 
 # Inferred API URL (Adjust if your Dokku configuration differs)
-API_URL="https://${APP_BACKEND}.naurinjahan.com/api"
+API_URL="https://toolkit-api.naurinjahan.com"
 
 BRANCH="main"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
@@ -43,6 +43,7 @@ cd .wasp/build/web-app
 
 # Set API URL for the build
 export REACT_APP_API_URL="${API_URL}"
+export WASP_SERVER_URL="${API_URL}"
 echo "  Using API URL: ${REACT_APP_API_URL}"
 
 # Install dependencies and build static assets
