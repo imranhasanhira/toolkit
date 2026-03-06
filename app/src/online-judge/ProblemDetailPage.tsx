@@ -1,5 +1,5 @@
 import { useAuth } from "wasp/client/auth";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router";
 import { useQuery, getProblem, submitCode, getSubmissions, runCode, getPublicRuntimes } from "wasp/client/operations";
 import useColorMode from "../client/hooks/useColorMode";
 import { useState, useEffect, useRef } from "react";

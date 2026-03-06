@@ -2,7 +2,7 @@
 import { useAuth } from "wasp/client/auth";
 import { updateProblem, getProblem, deleteProblem } from "wasp/client/operations";
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 
 export default function EditProblemPage() {

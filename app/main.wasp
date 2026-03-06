@@ -1,9 +1,13 @@
 app OpenSaaS {
   wasp: {
-    version: "^0.19.0"
+    version: "^0.21.0"
   },
 
   title: "Toolkit",
+
+  server: {
+    middlewareConfigFn: import { addMiddleware } from "@src/server/serverSetup"
+  },
 
   head: [
     "<link rel='icon' href='/favicon.ico' />",
@@ -84,10 +88,9 @@ app OpenSaaS {
   },
 
   emailSender: {
-    // NOTE: "Dummy" provider is just for local development purposes.
-    //   Make sure to check the server logs for the email confirmation url (it will not be sent to an address)!
-    //   Once you are ready for production, switch to e.g. "SendGrid" or "Mailgun" providers. Check out https://docs.opensaas.sh/guides/email-sending/ .
-    provider: SMTP,
+    // Dummy: emails are not sent; verification and password-reset links are printed in the server console.
+    // For production, switch to SMTP, SendGrid, or Mailgun. See https://docs.opensaas.sh/guides/email-sending/
+    provider: Dummy,
     defaultFrom: {
       name: "Open SaaS App",
       email: "me@example.com"
@@ -244,6 +247,327 @@ route AdminMessagesRoute { path: "/admin/messages", to: AdminMessagesPage }
 page AdminMessagesPage {
   authRequired: true,
   component: import AdminMessages from "@src/admin/dashboards/messages/MessagesPage"
+}
+//#endregion
+
+//#region SokaFilm
+query getFileByUuid {
+  fn: import { getFileByUuid } from "@src/sokafilm/operations",
+  entities: [User, File]
+}
+
+query getFileGenerationStatus {
+  fn: import { getFileGenerationStatus } from "@src/sokafilm/operations",
+  entities: [User, File]
+}
+
+api serveFile {
+  fn: import { serveFile } from "@src/server/serverSetup",
+  httpRoute: (GET, "/serve-file/:filename"),
+  auth: false
+}
+
+route SokaFilmRoute { path: "/sokafilm", to: SokaFilmHomepage }
+page SokaFilmHomepage {
+  authRequired: true,
+  component: import Homepage from "@src/sokafilm/Homepage"
+}
+
+route SokaFilmProjectRoute { path: "/sokafilm/project/:projectId", to: SokaFilmProjectOverview }
+page SokaFilmProjectOverview {
+  authRequired: true,
+  component: import ProjectOverview from "@src/sokafilm/ProjectOverview"
+}
+
+route SokaFilmProjectOverviewRoute { path: "/sokafilm/project/:projectId/overview", to: SokaFilmProjectDetails }
+page SokaFilmProjectDetails {
+  authRequired: true,
+  component: import ProjectDetails from "@src/sokafilm/ProjectDetails"
+}
+
+route SokaFilmStoryDetailsRoute { path: "/sokafilm/project/:projectId/story/:storyId", to: SokaFilmProjectDetails }
+
+action createProject {
+  fn: import { createProject } from "@src/sokafilm/operations",
+  entities: [User, Project]
+}
+
+action updateProject {
+  fn: import { updateProject } from "@src/sokafilm/operations",
+  entities: [User, Project]
+}
+
+action deleteProject {
+  fn: import { deleteProject } from "@src/sokafilm/operations",
+  entities: [User, Project]
+}
+
+query getAllProjectsByUser {
+  fn: import { getAllProjectsByUser } from "@src/sokafilm/operations",
+  entities: [User, Project]
+}
+
+query getProjectById {
+  fn: import { getProjectById } from "@src/sokafilm/operations",
+  entities: [User, Project]
+}
+
+query getDynamicAiModels {
+  fn: import { getDynamicAiModels } from "@src/sokafilm/operations",
+  entities: [User]
+}
+
+action createCharacter {
+  fn: import { createCharacter } from "@src/sokafilm/operations",
+  entities: [User, Project, Character]
+}
+
+action updateCharacter {
+  fn: import { updateCharacter } from "@src/sokafilm/operations",
+  entities: [User, Project, Character]
+}
+
+action deleteCharacter {
+  fn: import { deleteCharacter } from "@src/sokafilm/operations",
+  entities: [User, Project, Character]
+}
+
+action generateCharacterAI {
+  fn: import { generateCharacterAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Character]
+}
+
+query getCharactersByProject {
+  fn: import { getCharactersByProject } from "@src/sokafilm/operations",
+  entities: [User, Project, Character]
+}
+
+action createStory {
+  fn: import { createStory } from "@src/sokafilm/operations",
+  entities: [User, Project, Story]
+}
+
+action updateStory {
+  fn: import { updateStory } from "@src/sokafilm/operations",
+  entities: [User, Project, Story]
+}
+
+action deleteStory {
+  fn: import { deleteStory } from "@src/sokafilm/operations",
+  entities: [User, Project, Story]
+}
+
+query getStoriesByProject {
+  fn: import { getStoriesByProject } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, AspectRatio]
+}
+
+action addCharactersToStory {
+  fn: import { addCharactersToStory } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Character, StoryCharacter]
+}
+
+action removeCharacterFromStory {
+  fn: import { removeCharacterFromStory } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Character, StoryCharacter]
+}
+
+query getStoryCharacters {
+  fn: import { getStoryCharacters } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Character, StoryCharacter]
+}
+
+action updateStoryCharacter {
+  fn: import { updateStoryCharacter } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Character, StoryCharacter]
+}
+
+action addCharactersToScene {
+  fn: import { addCharactersToScene } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Character, SceneCharacter, StoryCharacter]
+}
+
+action removeCharacterFromScene {
+  fn: import { removeCharacterFromScene } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Character, SceneCharacter]
+}
+
+action createScene {
+  fn: import { createScene } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, SceneCharacter]
+}
+
+action updateScene {
+  fn: import { updateScene } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, SceneCharacter]
+}
+
+action deleteScene {
+  fn: import { deleteScene } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene]
+}
+
+action generateSceneAI {
+  fn: import { generateSceneAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene]
+}
+
+query getScenesByStory {
+  fn: import { getScenesByStory } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, SceneCharacter, Character, Shot, ShotImage, ShotCharacter, AspectRatio, StoryCharacter]
+}
+
+action createShot {
+  fn: import { createShot } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+action updateShot {
+  fn: import { updateShot } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+action deleteShot {
+  fn: import { deleteShot } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+action generateShotAI {
+  fn: import { generateShotAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+action generateShotTitlesAI {
+  fn: import { generateShotTitlesAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+action generateShotDetailsAI {
+  fn: import { generateShotDetailsAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+action reorderShots {
+  fn: import { reorderShots } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot]
+}
+
+query getShotsByScene {
+  fn: import { getShotsByScene } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot, ShotImage, AspectRatio]
+}
+
+action createDialog {
+  fn: import { createDialog } from "@src/sokafilm/operations",
+  entities: [User, Character, Scene, Dialog]
+}
+
+action updateDialog {
+  fn: import { updateDialog } from "@src/sokafilm/operations",
+  entities: [User, Character, Scene, Dialog]
+}
+
+action deleteDialog {
+  fn: import { deleteDialog } from "@src/sokafilm/operations",
+  entities: [User, Character, Scene, Dialog]
+}
+
+action generateDialogAI {
+  fn: import { generateDialogAI } from "@src/sokafilm/operations",
+  entities: [User, Character, Scene, Dialog]
+}
+
+query getDialogsByScene {
+  fn: import { getDialogsByScene } from "@src/sokafilm/operations",
+  entities: [User, Character, Scene, Dialog]
+}
+
+action enhanceScriptAI {
+  fn: import { enhanceScriptAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, StoryCharacter, Character]
+}
+
+action enhanceCharacterDescriptionAI {
+  fn: import { enhanceCharacterDescriptionAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Character]
+}
+
+action generateSceneTitlesAI {
+  fn: import { generateSceneTitlesAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story]
+}
+
+action generateSceneDetailsAI {
+  fn: import { generateSceneDetailsAI } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Character, StoryCharacter]
+}
+
+action generateSceneOverviewImage {
+  fn: import { generateSceneOverviewImage } from "@src/sokafilm/operations",
+  entities: [User, Scene, Story, Project, File]
+}
+
+action generateShotThumbnail {
+  fn: import { generateShotThumbnail } from "@src/sokafilm/operations",
+  entities: [User, Shot, Scene, Story, Project, File, ShotImage, AspectRatio]
+}
+
+action generateCharacterImage {
+  fn: import { generateCharacterImage } from "@src/sokafilm/operations",
+  entities: [User, Character, Project, File]
+}
+
+action generateStoryCharacterImage {
+  fn: import { generateStoryCharacterImage } from "@src/sokafilm/operations",
+  entities: [User, Character, StoryCharacter, Story, Project, File]
+}
+
+action importTsvData {
+  fn: import { importTsvData } from "@src/sokafilm/operations",
+  entities: [User, Project, Story, Scene, Shot, ShotCharacter, Character, StoryCharacter, SceneCharacter]
+}
+
+query getAspectRatios {
+  fn: import { getAspectRatios } from "@src/sokafilm/operations",
+  entities: [User, AspectRatio]
+}
+
+action createAspectRatio {
+  fn: import { createAspectRatio } from "@src/sokafilm/operations",
+  entities: [User, AspectRatio]
+}
+
+action updateAspectRatio {
+  fn: import { updateAspectRatio } from "@src/sokafilm/operations",
+  entities: [User, AspectRatio]
+}
+
+action deleteAspectRatio {
+  fn: import { deleteAspectRatio } from "@src/sokafilm/operations",
+  entities: [User, AspectRatio, ShotImage]
+}
+
+action updateStoryAspectRatio {
+  fn: import { updateStoryAspectRatio } from "@src/sokafilm/operations",
+  entities: [User, Story, AspectRatio]
+}
+
+query getAppSettings {
+  fn: import { getAppSettings } from "@src/sokafilm/operations",
+  entities: [User, AppSetting]
+}
+
+action updateAppSettings {
+  fn: import { updateAppSettings } from "@src/sokafilm/operations",
+  entities: [User, AppSetting]
+}
+
+job aiFileGenerationJob {
+  executor: PgBoss,
+  perform: {
+    fn: import { processAiFileGeneration } from "@src/server/jobs/aiFileGeneration"
+  },
+  entities: [User, File]
 }
 //#endregion
 

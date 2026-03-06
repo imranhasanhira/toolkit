@@ -1,7 +1,7 @@
 import { getProblems, deleteProblem } from "wasp/client/operations";
 import { Trash2 } from "lucide-react";
 import { routes } from "wasp/client/router";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
 

@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { type ReactNode } from "react";
 import { useAuth } from "wasp/client/auth";
 

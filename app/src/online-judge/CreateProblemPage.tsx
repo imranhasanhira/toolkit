@@ -1,7 +1,7 @@
 import { useAuth } from "wasp/client/auth";
 import { createProblem } from "wasp/client/operations";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 // import ReactMarkdown from "react-markdown"; // Assuming standard react-markdown, or use a simple textarea for now
 
 export default function CreateProblemPage() {

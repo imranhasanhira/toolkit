@@ -23,6 +23,9 @@ model User {
   credits                   Int             @default(3)
   contactFormMessages       ContactFormMessage[]
   submissions               Submission[]
+  projects                  Project[]
+  files                     File[]
+  aspectRatios              AspectRatio[]
 }
 
 
@@ -167,6 +170,231 @@ model Runtime {
   memoryLimit               Int             @default(128) // MB
   cpuLimit                  Float           @default(0.5) // CPUs
 
-  
   submissions               Submission[]
+}
+
+// === SokaFilm module ===
+
+model File {
+  uuid                      String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  fileName                  String
+  fileType                  String
+  fileUrl                   String?
+
+  taskType                  String?
+  pgBossJobId               String?
+
+  taskInput                 Json?
+  modelConfig               Json?
+
+  status                    String?
+  progress                  Float?
+  startedAt                 DateTime?
+  completedAt               DateTime?
+  errorMessage              String?
+}
+
+model Project {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  name                      String
+  description               String?
+  thumbnailUuid             String?
+
+  isArchived                Boolean         @default(false)
+  aiSettings                Json?
+
+  characters                Character[]
+  stories                   Story[]
+}
+
+model Character {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  project                   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId                 String
+
+  serial                    Int
+  name                      String
+  description               String?
+  refImageUuid              String?
+  refVoiceUuid              String?
+  finalImageUuid             String?
+
+  dialogs                   Dialog[]
+  sceneCharacters           SceneCharacter[]
+  storyCharacters           StoryCharacter[]
+  shotCharacters            ShotCharacter[]
+}
+
+model Story {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  project                   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId                 String
+
+  serial                    Int
+  title                     String
+  description               String?
+  script                    String?
+
+  aspectRatio               AspectRatio?    @relation(fields: [aspectRatioId], references: [id])
+  aspectRatioId             String?
+
+  scenes                    Scene[]
+  storyCharacters           StoryCharacter[]
+}
+
+model StoryCharacter {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  story                     Story           @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storyId                   String
+
+  character                 Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  characterId               String
+
+  customDescription         String?
+  customImageUuid           String?
+
+  @@unique([storyId, characterId])
+}
+
+model Scene {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  story                     Story           @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storyId                   String
+
+  serial                    Int
+  title                     String
+  description               String?
+  summary                   String?
+  overviewImageUuid         String?
+
+  shots                     Shot[]
+  sceneCharacters           SceneCharacter[]
+  dialogs                   Dialog[]
+}
+
+model Shot {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  scene                     Scene           @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  sceneId                   String
+
+  revision                  Int             @default(1)
+  sequence                  Int
+  title                     String
+  description               String?
+  motionDescription         String?
+  thumbnailUuid             String?
+
+  shotImages                ShotImage[]
+  shotCharacters            ShotCharacter[]
+}
+
+model ShotCharacter {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  shot                      Shot            @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  shotId                    String
+
+  character                 Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  characterId               String
+
+  @@unique([shotId, characterId])
+}
+
+model Dialog {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  character                 Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  characterId               String
+
+  scene                     Scene?          @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  sceneId                   String?
+
+  text                      String
+  startEpochMilliseconds    BigInt
+  soundUuid                 String?
+}
+
+model SceneCharacter {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  scene                     Scene           @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  sceneId                   String
+
+  character                 Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  characterId               String
+
+  @@unique([sceneId, characterId])
+}
+
+model AspectRatio {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  name                      String
+  width                     Int
+  height                    Int
+  isDefault                 Boolean         @default(false)
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  stories                   Story[]
+  shotImages                ShotImage[]
+
+  @@unique([userId, width, height])
+}
+
+model ShotImage {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  shot                      Shot            @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  shotId                    String
+
+  aspectRatio               AspectRatio     @relation(fields: [aspectRatioId], references: [id])
+  aspectRatioId             String
+
+  imageUuid                 String
+
+  @@unique([shotId, aspectRatioId])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
 }
