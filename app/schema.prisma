@@ -26,6 +26,15 @@ model User {
   projects                  Project[]
   files                     File[]
   aspectRatios              AspectRatio[]
+  appPermissions            UserAppPermission[]
+}
+
+model UserAppPermission {
+  id        String   @id @default(uuid())
+  userId    String
+  appKey    String   // e.g. 'sokafilm', 'online-judge'
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, appKey])
 }
 
 

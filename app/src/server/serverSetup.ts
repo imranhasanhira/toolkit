@@ -7,6 +7,8 @@ import { PrismaClient } from "@prisma/client";
 import { AppSettings, defaultAppSettings } from "../sokafilm/types/appSettings";
 import { AI_TOOL_KEYS } from "./ai/constants";
 import { AiService } from "./ai/AiService";
+import { hasAppAccess } from "./appPermissions";
+import { APP_KEYS } from "../shared/appKeys";
 
 const prisma = new PrismaClient();
 
@@ -166,6 +168,22 @@ export const serveFile = async (req: any, res: any, next: any) => {
     const filename = req.params.filename;
     if (!filename) {
       return res.status(400).json({ error: 'Filename is required' });
+    }
+
+    const uuid = path.basename(filename, path.extname(filename));
+    const file = await prisma.file.findUnique({
+      where: { uuid },
+      select: { userId: true },
+    });
+    if (file) {
+      const user = await prisma.user.findUnique({
+        where: { id: file.userId },
+        select: { isAdmin: true },
+      });
+      const allowed = await hasAppAccess(file.userId, APP_KEYS.SOKAFILM, user?.isAdmin ?? false);
+      if (!allowed) {
+        return res.status(403).json({ error: 'Access denied to this app' });
+      }
     }
 
     const storageDir = getStorageDirectory();

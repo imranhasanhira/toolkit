@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from "react";
-import { Outlet, useLocation } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
+import { useAuth } from "wasp/client/auth";
+import { getMyAppPermissions, useQuery } from "wasp/client/operations";
 import { routes } from "wasp/client/router";
 import { Toaster } from "../client/components/ui/toaster";
 import { Toaster as HotToaster } from "react-hot-toast";
@@ -18,15 +20,26 @@ import LandingPage from "../landing-page/LandingPage";
  */
 export default function App() {
   const location = useLocation();
+  const { data: user } = useAuth();
+  const { data: allowedAppKeys = [], isLoading: permissionsLoading } = useQuery(
+    getMyAppPermissions,
+    undefined,
+    { enabled: !!user }
+  );
+
   const isMarketingPage = useMemo(() => {
     return (
       location.pathname === "/" || location.pathname.startsWith("/pricing")
     );
   }, [location]);
 
-  const navigationItems = isMarketingPage
+  const baseNavItems = isMarketingPage
     ? marketingNavigationItems
     : demoNavigationitems;
+  const navigationItems = useMemo(() => {
+    if (!user) return [];
+    return baseNavItems.filter((item) => allowedAppKeys.includes(item.appKey));
+  }, [user, allowedAppKeys, baseNavItems]);
 
   const shouldDisplayAppNavBar = useMemo(() => {
     return (
@@ -62,6 +75,10 @@ export default function App() {
             <div className="mx-auto max-w-(--breakpoint-2xl)">
               {location.pathname === "/" ? (
                 <LandingPage />
+              ) : user && !permissionsLoading && location.pathname.startsWith("/sokafilm") && !allowedAppKeys.includes("sokafilm") ? (
+                <Navigate to={routes.AccountRoute.to} replace />
+              ) : user && !permissionsLoading && location.pathname.startsWith("/online-judge") && !allowedAppKeys.includes("online-judge") ? (
+                <Navigate to={routes.AccountRoute.to} replace />
               ) : (
                 <Outlet />
               )}

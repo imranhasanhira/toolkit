@@ -6,6 +6,7 @@ import {
   LayoutTemplate,
   Settings,
   Sheet,
+  Shield,
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
@@ -143,6 +144,26 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 </NavLink>
               </li>
               {/* <!-- Menu Item Users --> */}
+
+              {/* <!-- Menu Item App permissions --> */}
+              <li>
+                <NavLink
+                  to="/admin/app-permissions"
+                  end
+                  className={({ isActive }) =>
+                    cn(
+                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      {
+                        "bg-accent text-accent-foreground": isActive,
+                      },
+                    )
+                  }
+                >
+                  <Shield />
+                  App permissions
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item App permissions --> */}
 
               {/* <!-- Menu Item Settings --> */}
               <li>

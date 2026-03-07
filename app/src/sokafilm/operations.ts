@@ -49,6 +49,8 @@ import {
 import { aiFileGenerationJob } from 'wasp/server/jobs';
 import type { Project, Character, Story, Scene, Shot, Dialog, SceneCharacter, StoryCharacter, File, AspectRatio, ShotImage } from 'wasp/entities';
 import { HttpError } from 'wasp/server';
+import { requireAppAccess } from '../server/appPermissions';
+import { APP_KEYS } from '../shared/appKeys';
 import { AiService } from '../server/ai/AiService';
 import { defaultAiModels } from '../server/ai/constants';
 import { AiSettings } from '../server/ai/types';
@@ -105,6 +107,7 @@ export const getAllProjectsByUser: GetAllProjectsByUser<void, Project[]> = async
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   return context.entities.Project.findMany({
     where: { 
@@ -119,6 +122,7 @@ export const getProjectById: GetProjectById<{ projectId: string }, Project> = as
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const project = await context.entities.Project.findFirst({
     where: { 
@@ -138,6 +142,7 @@ export const createProject: CreateProject<{ name: string; description?: string; 
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.name || args.name.trim().length === 0) {
     throw new HttpError(400, 'Project name is required');
@@ -171,6 +176,7 @@ export const updateProject: UpdateProject<{ id: string; name?: string; descripti
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const project = await context.entities.Project.findFirst({
     where: { 
@@ -206,6 +212,7 @@ export const deleteProject: DeleteProject<{ id: string }, Project> = async (args
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const project = await context.entities.Project.findFirst({
     where: { 
@@ -228,6 +235,7 @@ export const getCharactersByProject: GetCharactersByProject<{ projectId: string 
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   return context.entities.Character.findMany({
     where: { 
@@ -241,6 +249,7 @@ export const createCharacter: CreateCharacter<{ projectId: string; name: string;
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.name || args.name.trim().length === 0) {
     throw new HttpError(400, 'Character name is required');
@@ -260,6 +269,7 @@ export const updateCharacter: UpdateCharacter<{ id: string; name?: string; descr
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const character = await context.entities.Character.findFirst({
     where: { id: args.id },
@@ -283,6 +293,7 @@ export const deleteCharacter: DeleteCharacter<{ id: string }, Character> = async
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const character = await context.entities.Character.findFirst({
     where: { id: args.id },
@@ -302,6 +313,7 @@ export const generateCharacterAI: GenerateCharacterAI<{ id: string }, Character>
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const character = await context.entities.Character.findFirst({
     where: { id: args.id },
@@ -326,6 +338,7 @@ export const getStoriesByProject: GetStoriesByProject<{ projectId: string }, Sto
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   return context.entities.Story.findMany({
     where: { projectId: args.projectId },
@@ -338,6 +351,7 @@ export const createStory: CreateStory<{ projectId: string; title: string; descri
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.title || args.title.trim().length === 0) {
     throw new HttpError(400, 'Story title is required');
@@ -358,6 +372,7 @@ export const updateStory: UpdateStory<{ id: string; title?: string; description?
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const story = await context.entities.Story.findFirst({
     where: { id: args.id },
@@ -382,6 +397,7 @@ export const deleteStory: DeleteStory<{ id: string }, Story> = async (args, cont
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const story = await context.entities.Story.findFirst({
     where: { id: args.id },
@@ -402,6 +418,7 @@ export const addCharactersToStory: AddCharactersToStory<{ storyId: string; chara
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const story = await context.entities.Story.findFirst({
     where: { id: args.storyId },
@@ -439,6 +456,7 @@ export const removeCharacterFromStory: RemoveCharacterFromStory<{ storyId: strin
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const story = await context.entities.Story.findFirst({
     where: { id: args.storyId },
@@ -464,6 +482,7 @@ export const getStoryCharacters: GetStoryCharacters<{ storyId: string }, Charact
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const story = await context.entities.Story.findFirst({
     where: { id: args.storyId },
@@ -493,6 +512,7 @@ export const updateStoryCharacter: UpdateStoryCharacter<{ storyCharacterId: stri
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const storyCharacter = await context.entities.StoryCharacter.findFirst({
     where: { id: args.storyCharacterId },
@@ -517,6 +537,7 @@ export const addCharactersToScene: AddCharactersToScene<{ sceneId: string; chara
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const scene = await context.entities.Scene.findFirst({
     where: { id: args.sceneId },
@@ -570,6 +591,7 @@ export const removeCharacterFromScene: RemoveCharacterFromScene<{ sceneId: strin
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const scene = await context.entities.Scene.findFirst({
     where: { id: args.sceneId },
@@ -600,6 +622,7 @@ export const getScenesByStory: GetScenesByStory<{ storyId: string }, Scene[]> = 
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   return context.entities.Scene.findMany({
     where: { 
@@ -645,6 +668,7 @@ export const createScene: CreateScene<{ storyId: string; title: string; descript
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.title || args.title.trim().length === 0) {
     throw new HttpError(400, 'Scene title is required');
@@ -679,6 +703,7 @@ export const updateScene: UpdateScene<{ id: string; title?: string; description?
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const scene = await context.entities.Scene.findFirst({
     where: { id: args.id },
@@ -751,6 +776,7 @@ export const deleteScene: DeleteScene<{ id: string }, Scene> = async (args, cont
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const scene = await context.entities.Scene.findFirst({
     where: { id: args.id },
@@ -774,6 +800,7 @@ export const generateSceneAI: GenerateSceneAI<{ id: string }, Scene> = async (ar
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const scene = await context.entities.Scene.findFirst({
     where: { id: args.id },
@@ -802,6 +829,7 @@ export const getShotsByScene: GetShotsByScene<{ sceneId: string }, Shot[]> = asy
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   return context.entities.Shot.findMany({
     where: { sceneId: args.sceneId },
@@ -820,6 +848,7 @@ export const createShot: CreateShot<{ sceneId: string; title: string; descriptio
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.title || args.title.trim().length === 0) {
     throw new HttpError(400, 'Shot title is required');
@@ -859,6 +888,7 @@ export const updateShot: UpdateShot<{ id: string; title?: string; description?: 
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const shot = await context.entities.Shot.findFirst({
     where: { id: args.id },
@@ -890,6 +920,7 @@ export const deleteShot: DeleteShot<{ id: string }, Shot> = async (args, context
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const shot = await context.entities.Shot.findFirst({
     where: { id: args.id },
@@ -934,6 +965,7 @@ export const generateShotAI: GenerateShotAI<{ id: string }, Shot> = async (args,
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const shot = await context.entities.Shot.findFirst({
     where: { id: args.id },
@@ -965,6 +997,7 @@ export const reorderShots = async (args: { sceneId: string; shotIds: string[] },
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Verify user owns the scene
   const scene = await context.entities.Scene.findFirst({
@@ -1014,6 +1047,7 @@ export const getDialogsByScene: GetDialogsByScene<{ sceneId: string }, Dialog[]>
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   return context.entities.Dialog.findMany({
     where: { sceneId: args.sceneId },
@@ -1026,6 +1060,7 @@ export const createDialog: CreateDialog<{ characterId: string; sceneId: string; 
   if (!context.user) {
     throw new HttpError(401, 'User not authenticated');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Check if the character exists and belongs to the user through project
   const character = await context.entities.Character.findFirst({
@@ -1062,6 +1097,7 @@ export const updateDialog: UpdateDialog<{ id: string; text?: string; startEpochM
   if (!context.user) {
     throw new HttpError(401, 'User not authenticated');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const dialog = await context.entities.Dialog.findFirst({
     where: { id: args.id },
@@ -1095,6 +1131,7 @@ export const deleteDialog: DeleteDialog<{ id: string }, Dialog> = async (args, c
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const dialog = await context.entities.Dialog.findFirst({
     where: { id: args.id },
@@ -1122,6 +1159,7 @@ export const generateDialogAI: GenerateDialogAI<{ id: string }, Dialog> = async 
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const dialog = await context.entities.Dialog.findFirst({
     where: { id: args.id },
@@ -1165,6 +1203,7 @@ export const enhanceScriptAI = async (args: {
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.storyId) {
     throw new HttpError(400, 'Story ID is required');
@@ -1254,6 +1293,7 @@ export const enhanceCharacterDescriptionAI = async (args: {
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Fetch project to get AI settings
   const project = await context.entities.Project.findFirst({
@@ -1327,6 +1367,7 @@ export const generateSceneTitlesAI: GenerateSceneTitlesAI = async (args, context
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Verify user owns the story and get project for AI settings
   const story = await context.entities.Story.findFirst({
@@ -1418,6 +1459,7 @@ export const generateSceneDetailsAI: GenerateSceneDetailsAI = async (args, conte
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!context.entities) {
     throw new HttpError(500, 'Database entities not available');
@@ -1496,6 +1538,7 @@ export const generateShotTitlesAI: GenerateShotTitlesAI = async (args, context) 
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Verify user owns the scene
   const scene = await context.entities.Scene.findFirst({
@@ -1552,6 +1595,7 @@ export const generateShotDetailsAI: GenerateShotDetailsAI = async (args, context
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Verify user owns the scene (no need to fetch shots since they don't exist in DB yet)
   const scene = await context.entities.Scene.findFirst({
@@ -1639,6 +1683,7 @@ const generateImageAsync = async (
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Validate required parameters
   if (!config.prompt || config.prompt.trim().length === 0) {
@@ -2026,6 +2071,7 @@ export const generateStoryCharacterImage = async (
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const storyCharacter = await context.entities.StoryCharacter.findFirst({
     where: { id: args.storyCharacterId },
@@ -2087,7 +2133,8 @@ export const getFileByUuid: GetFileByUuid<{ uuid: string }, File | null> = async
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
-  
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+
   const { uuid } = args;
   
   // First find the file by uuid, then check if user owns it
@@ -2112,6 +2159,7 @@ export const getFileGenerationStatus = async (args: { fileUuid: string }, contex
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const file = await context.entities.File.findFirst({
     where: {
@@ -2137,6 +2185,7 @@ export const getDynamicAiModels: GetDynamicAiModels<void, any> = async (_args, c
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   try {
     const aiService = AiService.getInstance();
@@ -2163,6 +2212,7 @@ export const getAppSettings: GetAppSettings<{ key: string }, any> = async (args,
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   try {
     const { key } = args;
@@ -2187,6 +2237,7 @@ export const updateAppSettings: UpdateAppSettings<{ key: string; value: any }, a
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   try {
     const { key, value } = args;
@@ -2219,6 +2270,7 @@ export const getAspectRatios: GetAspectRatios<void, AspectRatio[]> = async (_arg
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const ratios = await context.entities.AspectRatio.findMany({
     where: { userId: context.user.id },
@@ -2255,6 +2307,7 @@ export const createAspectRatio: CreateAspectRatio<{ name: string; width: number;
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   if (!args.name || args.name.trim().length === 0) {
     throw new HttpError(400, 'Aspect ratio name is required');
@@ -2295,6 +2348,7 @@ export const updateAspectRatio: UpdateAspectRatio<{ id: string; name?: string; w
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const ar = await context.entities.AspectRatio.findFirst({
     where: { id: args.id, userId: context.user.id }
@@ -2327,6 +2381,7 @@ export const deleteAspectRatio: DeleteAspectRatio<{ id: string }, AspectRatio> =
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const ar = await context.entities.AspectRatio.findFirst({
     where: { id: args.id, userId: context.user.id }
@@ -2350,6 +2405,7 @@ export const updateStoryAspectRatio: UpdateStoryAspectRatio<{ storyId: string; a
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   const story = await context.entities.Story.findFirst({
     where: { id: args.storyId },
@@ -2431,6 +2487,7 @@ export const importTsvData: ImportTsvData<ImportTsvDataArgs, ImportTsvDataResult
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   // Verify project ownership
   const project = await context.entities.Project.findFirst({

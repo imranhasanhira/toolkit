@@ -142,6 +142,21 @@ query getPaginatedUsers {
   entities: [User]
 }
 
+query getMyAppPermissions {
+  fn: import { getMyAppPermissions } from "@src/user/operations",
+  entities: [User, UserAppPermission]
+}
+
+query getUsersAppPermissions {
+  fn: import { getUsersAppPermissions } from "@src/user/operations",
+  entities: [User, UserAppPermission]
+}
+
+action setUserAppPermission {
+  fn: import { setUserAppPermission } from "@src/user/operations",
+  entities: [User, UserAppPermission]
+}
+
 action updateIsUserAdminById {
   fn: import { updateIsUserAdminById } from "@src/user/operations",
   entities: [User]
@@ -212,6 +227,12 @@ route AdminUsersRoute { path: "/admin/users", to: AdminUsersPage }
 page AdminUsersPage {
   authRequired: true,
   component: import AdminUsers from "@src/admin/dashboards/users/UsersDashboardPage"
+}
+
+route AdminAppPermissionsRoute { path: "/admin/app-permissions", to: AdminAppPermissionsPage }
+page AdminAppPermissionsPage {
+  authRequired: true,
+  component: import AdminAppPermissions from "@src/admin/dashboards/app-permissions/AppPermissionsPage"
 }
 
 route AdminSettingsRoute { path: "/admin/settings", to: AdminSettingsPage }

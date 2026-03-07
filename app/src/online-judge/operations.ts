@@ -8,6 +8,8 @@ import {
 import { type Problem, type TestCase, type Submission, type Runtime } from "wasp/entities";
 import { gradeSubmission } from "wasp/server/jobs";
 import { HttpError } from "wasp/server";
+import { requireAppAccess } from "../server/appPermissions";
+import { APP_KEYS } from "../shared/appKeys";
 
 type CreateProblemArgs = {
     title: string;
@@ -24,6 +26,7 @@ export const createProblem: CreateProblem<CreateProblemArgs, Problem> = async (
     if (!context.user) {
         throw new HttpError(401, "Unauthorized");
     }
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const { title, slug, description, difficulty, testCases } = args;
 
@@ -68,6 +71,7 @@ export const updateProblem: UpdateProblem<UpdateProblemArgs, Problem> = async (
     if (!context.user) {
         throw new HttpError(401, "Unauthorized");
     }
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const { id, title, slug, description, difficulty, testCases } = args;
 
@@ -111,6 +115,7 @@ export const deleteProblem = async (args: DeleteProblemArgs, context: any) => {
     if (!context.user || !context.user.isAdmin) {
         throw new HttpError(401, "Unauthorized");
     }
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const { id } = args;
 
@@ -141,6 +146,8 @@ export const deleteProblem = async (args: DeleteProblemArgs, context: any) => {
 };
 
 export const getProblems: GetProblems<void, Problem[]> = async (args, context) => {
+    if (!context.user) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
     return context.entities.Problem.findMany({
         orderBy: { createdAt: "desc" },
     });
@@ -155,6 +162,7 @@ export const getProblem: GetProblem<GetProblemArgs, Problem & { testCases: TestC
     if (!context.user) {
         throw new HttpError(401, "Must be logged in");
     }
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
     const problem = await context.entities.Problem.findUnique({
         where: { slug: args.slug },
         include: {
@@ -182,6 +190,7 @@ export const submitCode: SubmitCode<SubmitCodeArgs, void> = async (
     if (!context.user) {
         throw new HttpError(401, "Must be logged in");
     }
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const submission = await context.entities.Submission.create({
         data: {
@@ -207,6 +216,7 @@ export const getSubmissions = async (
     if (!context.user) {
         throw new HttpError(401, "Must be logged in");
     }
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const whereClause: any = {
         problemId: args.problemId,
@@ -234,6 +244,7 @@ export const getSubmissions = async (
 
 export const getRuntimes = async (args: void, context: any) => {
     if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     return context.entities.Runtime.findMany({
         orderBy: { language: "asc" },
@@ -242,6 +253,7 @@ export const getRuntimes = async (args: void, context: any) => {
 
 export const getPublicRuntimes = async (args: void, context: any) => {
     if (!context.user) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     return context.entities.Runtime.findMany({
         orderBy: { language: "asc" },
@@ -264,6 +276,7 @@ type UpdateRuntimeArgs = {
 
 export const updateRuntime = async (args: UpdateRuntimeArgs, context: any) => {
     if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     return context.entities.Runtime.update({
         where: { id: args.id },
@@ -290,6 +303,7 @@ type CreateRuntimeArgs = {
 
 export const createRuntime = async (args: CreateRuntimeArgs, context: any) => {
     if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     return context.entities.Runtime.create({
         data: {
@@ -327,11 +341,13 @@ import { calculateOverallStatus } from "../shared/submissionUtils";
 
 export const checkRuntimeStatus = async (args: { dockerImage: string }, context: any): Promise<RuntimeStatus> => {
     if (!context.user || !context.user.isAdmin) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
     return validateRuntime(args.dockerImage);
 };
 
 export const runCode = async (args: RunCodeArgs, context: any): Promise<RunCodeResult> => {
     if (!context.user) throw new HttpError(401, "Unauthorized");
+    await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const { code, language, testCases } = args;
     const timeLimit = 10; // Default 10s for "Run" to accommodate compilation (e.g. Java)

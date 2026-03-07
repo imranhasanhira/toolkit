@@ -1,6 +1,7 @@
 // import { getCustomerPortalUrl, useQuery } from "wasp/client/operations";
 // import { Link as WaspRouterLink, routes } from "wasp/client/router";
 import type { User } from "wasp/entities";
+import { getMyAppPermissions, useQuery } from "wasp/client/operations";
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import {
   parsePaymentPlanId,
   prettyPaymentPlanName,
 } from "../payment/plans";
+import { APP_DISPLAY_NAMES } from "../shared/appKeys";
 
 export default function AccountPage({ user }: { user: User }) {
   return (
@@ -91,9 +93,40 @@ export default function AccountPage({ user }: { user: User }) {
                 </div>
               </div>
             </div>
+            <Separator />
+            <div className="px-6 py-4">
+              <YourAppAccess />
+            </div>
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function YourAppAccess() {
+  const { data: allowedAppKeys = [], isLoading } = useQuery(getMyAppPermissions);
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
+        <div className="text-muted-foreground text-sm font-medium">
+          Your app access
+        </div>
+        <div className="text-muted-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
+          Loading…
+        </div>
+      </div>
+    );
+  }
+  const names = allowedAppKeys.map((key) => APP_DISPLAY_NAMES[key]).filter(Boolean);
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
+      <div className="text-muted-foreground text-sm font-medium">
+        Your app access
+      </div>
+      <div className="text-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
+        {names.length > 0 ? names.join(", ") : "None"}
+      </div>
     </div>
   );
 }
