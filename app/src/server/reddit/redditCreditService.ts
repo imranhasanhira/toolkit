@@ -35,6 +35,7 @@ export type RedditSettings = {
     engine: 'ollama' | 'openrouter';
     ollama: { baseUrl: string | null; model: string | null; disableThinking: boolean };
     openrouter: { baseUrl: string; model: string | null; apiKeyMasked: string | null; disableThinking: boolean };
+    maxPostsPerAnalysisRun: number;
   };
   bottleneck: {
     minTime: number;
@@ -109,6 +110,7 @@ export async function getSettings(entities: any): Promise<RedditSettings> {
           : null,
         disableThinking: jsonToBool(get(REDDIT_SETTINGS_KEYS.ai_openrouter_disableThinking)),
       },
+      maxPostsPerAnalysisRun: jsonToNum(get(REDDIT_SETTINGS_KEYS.ai_maxPostsPerAnalysisRun)) || 1000,
     },
     bottleneck: {
       minTime: jsonToNum(get(REDDIT_SETTINGS_KEYS.bottleneck_minTime)) || 10000,

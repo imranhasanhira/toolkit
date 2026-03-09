@@ -52,6 +52,7 @@ const updateRedditSettingsSchema = z.object({
   openrouterModel: z.string().nullable().optional(),
   ollamaDisableThinking: z.boolean().optional(),
   openrouterDisableThinking: z.boolean().optional(),
+  aiMaxPostsPerAnalysisRun: z.number().min(1).optional(),
   // bottleneck
   bottleneckMinTime: z.number().min(0).optional(),
   bottleneckMaxConcurrent: z.number().min(1).optional(),
@@ -118,6 +119,9 @@ export const updateRedditSettings = async (args: unknown, context: any) => {
   }
   if (d.openrouterDisableThinking !== undefined) {
     await setSetting(entities, REDDIT_SETTINGS_KEYS.ai_openrouter_disableThinking, d.openrouterDisableThinking);
+  }
+  if (d.aiMaxPostsPerAnalysisRun !== undefined) {
+    await setSetting(entities, REDDIT_SETTINGS_KEYS.ai_maxPostsPerAnalysisRun, d.aiMaxPostsPerAnalysisRun);
   }
   if (d.bottleneckMinTime !== undefined) {
     await setSetting(entities, REDDIT_SETTINGS_KEYS.bottleneck_minTime, d.bottleneckMinTime);

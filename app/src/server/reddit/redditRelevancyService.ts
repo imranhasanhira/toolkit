@@ -66,6 +66,9 @@ function parseRelevancyResponse(text: string): RelevancyResult {
  * Cached client instances keyed by a stable config fingerprint.
  * Avoids re-creating HTTP clients on every call within the same process.
  */
+const MAX_POST_CHARS = 3500; // ~1K tokens (1 token ≈ 3.5-4 chars for English text)
+const MAX_PRODUCT_CHARS = 2000;
+
 let cachedOllama: { key: string; instance: ChatOllama } | null = null;
 let cachedOpenAI: { key: string; instance: OpenAI } | null = null;
 
@@ -98,8 +101,8 @@ export async function evaluateRelevancy(
   postText: string,
   options: RelevancyOptions
 ): Promise<RelevancyResult> {
-  const trimmedProduct = (productDescription || '').trim().slice(0, 2000);
-  const trimmedPost = (postText || '').trim().slice(0, 4000);
+  const trimmedProduct = (productDescription || '').trim().slice(0, MAX_PRODUCT_CHARS);
+  const trimmedPost = (postText || '').trim().slice(0, MAX_POST_CHARS);
   const systemPrompt = SYSTEM_PROMPT.replace('{productDescription}', trimmedProduct);
   const userPrompt = `Reddit post (title and body):\n"""\n${trimmedPost}\n"""`;
 

@@ -374,7 +374,7 @@ export default function RedditBotProjectDetail() {
   useEffect(() => {
     if (!exportArgs || !exportData) return;
     const headers = ['title', 'content', 'postLink', 'authorName', 'authorLink', 'status', 'painPointSummary', 'matchedKeywords', 'subreddit', 'postedAt', 'fetchedAt'];
-    const escape = (v: unknown) => String(v ?? '').replace(/\t/g, ' ');
+    const escape = (v: unknown) => String(v ?? '').replace(/[\t\r\n]+/g, ' ');
     const row = (r: Record<string, unknown>) => [
       escape(r.title),
       escape(r.content).slice(0, 500),

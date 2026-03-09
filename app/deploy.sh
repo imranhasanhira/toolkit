@@ -21,44 +21,38 @@ API_URL="https://toolkit-api.naurinjahan.com"
 
 BRANCH="main"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+WASP_BUILD_DIR=".wasp/out"
 
 echo "========================================="
 echo "Starting Pre-Deployment Build & Validation"
 echo "========================================="
 
-# --- 1. Build Wasp Project (Backend) ---
+# --- 1. Build Wasp Project ---
 echo "✓ Building Wasp project..."
 wasp build
 
 # --- 2. Validate Backend Build ---
 echo "✓ Validating backend build..."
-if [ ! -d ".wasp/build" ]; then
-    echo "❌ Backend build failed: .wasp/build directory not found"
+if [ ! -d "${WASP_BUILD_DIR}" ]; then
+    echo "❌ Backend build failed: ${WASP_BUILD_DIR} directory not found"
     exit 1
 fi
 
-# --- 3. Build Frontend ---
+# --- 3. Build Frontend (Wasp 0.21+: vite build from project root) ---
 echo "✓ Building Frontend..."
-cd .wasp/build/web-app
 
-# Set API URL for the build
 export REACT_APP_API_URL="${API_URL}"
 export WASP_SERVER_URL="${API_URL}"
 echo "  Using API URL: ${REACT_APP_API_URL}"
 
-# Install dependencies and build static assets
-npm install
-npm run build
+npx vite build
 
 # --- 4. Validate Frontend Build ---
 echo "✓ Validating frontend build..."
-if [ ! -d "build" ]; then
-    echo "❌ Frontend build failed: build directory not found"
+if [ ! -d "${WASP_BUILD_DIR}/web-app/build" ]; then
+    echo "❌ Frontend build failed: ${WASP_BUILD_DIR}/web-app/build directory not found"
     exit 1
 fi
-
-# Return to root
-cd ../../..
 
 echo "========================================="
 echo "✓ All Builds Successful! Starting Deployment..."
@@ -69,7 +63,12 @@ TAG_NAME="release-${TIMESTAMP}"
 
 # --- 5. Deploy Backend ---
 echo "→ Deploying Backend (${APP_BACKEND})..."
-cd .wasp/build
+
+# Patch generated Dockerfile: add --legacy-peer-deps to avoid peer dependency conflicts
+sed -i.bak 's/RUN npm install && cd \(.*\) && npm install/RUN npm install --legacy-peer-deps \&\& cd \1 \&\& npm install --legacy-peer-deps/' "${WASP_BUILD_DIR}/Dockerfile"
+rm -f "${WASP_BUILD_DIR}/Dockerfile.bak"
+
+cd "${WASP_BUILD_DIR}"
 
 # Clean up any previous git repo to avoid conflicts
 rm -rf .git
@@ -86,11 +85,11 @@ ssh dokku@hubuntu.imranhira.com config:set "${APP_BACKEND}" RELEASE_TAG="${TAG_N
 echo "✓ Backend deployed successfully"
 
 # Return to root
-cd ../.. 
+cd ../..
 
 # --- 6. Deploy Frontend ---
 echo "→ Deploying Frontend (${APP_FRONTEND})..."
-cd .wasp/build/web-app
+cd "${WASP_BUILD_DIR}/web-app"
 
 # Create custom nginx config for SPA routing
 cat <<EOF > nginx.conf

@@ -58,17 +58,24 @@ export const processRedditExploration = async (
       const totalToProcess = await context.entities.RedditBotProjectPost.count({
         where: { jobId, aiAnalysisStatus: { in: ['NOT_REQUESTED', 'PENDING'] } },
       });
-      const run = await context.entities.RedditBotAiAnalysisRun.create({
-        data: {
-          projectId,
-          triggerSource: 'exploration',
-          explorationJobId: jobId,
-          status: 'RUNNING',
-          totalToProcess,
-          processedCount: 0,
-        },
-      });
-      await redditAiAnalysisJob.submit({ runId: run.id, jobId });
+      const maxPosts = settings.ai.maxPostsPerAnalysisRun;
+      if (totalToProcess > maxPosts) {
+        console.warn(
+          `[redditExploration] Skipping auto AI analysis for job ${jobId}: ${totalToProcess} posts exceed limit of ${maxPosts}. Run AI analysis manually with narrower filters.`
+        );
+      } else {
+        const run = await context.entities.RedditBotAiAnalysisRun.create({
+          data: {
+            projectId,
+            triggerSource: 'exploration',
+            explorationJobId: jobId,
+            status: 'RUNNING',
+            totalToProcess,
+            processedCount: 0,
+          },
+        });
+        await redditAiAnalysisJob.submit({ runId: run.id, jobId });
+      }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

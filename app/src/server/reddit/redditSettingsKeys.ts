@@ -16,6 +16,7 @@ export const REDDIT_SETTINGS_KEYS = {
   ai_openrouter_model: 'ai.openrouter.model',
   ai_ollama_disableThinking: 'ai.ollama.disableThinking',
   ai_openrouter_disableThinking: 'ai.openrouter.disableThinking',
+  ai_maxPostsPerAnalysisRun: 'ai.maxPostsPerAnalysisRun',
   // bottleneck.*
   bottleneck_minTime: 'bottleneck.minTime',
   bottleneck_maxConcurrent: 'bottleneck.maxConcurrent',
@@ -41,6 +42,7 @@ export const REDDIT_SETTINGS_DEFAULTS = {
   [REDDIT_SETTINGS_KEYS.ai_openrouter_model]: null as string | null,
   [REDDIT_SETTINGS_KEYS.ai_ollama_disableThinking]: true,
   [REDDIT_SETTINGS_KEYS.ai_openrouter_disableThinking]: true,
+  [REDDIT_SETTINGS_KEYS.ai_maxPostsPerAnalysisRun]: 1000,
   [REDDIT_SETTINGS_KEYS.bottleneck_minTime]: 10000,
   [REDDIT_SETTINGS_KEYS.bottleneck_maxConcurrent]: 1,
   [REDDIT_SETTINGS_KEYS.bottleneck_reservoir]: null as number | null,

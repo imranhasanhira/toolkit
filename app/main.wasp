@@ -88,9 +88,7 @@ app OpenSaaS {
   },
 
   emailSender: {
-    // Dummy: emails are not sent; verification and password-reset links are printed in the server console.
-    // For production, switch to SMTP, SendGrid, or Mailgun. See https://docs.opensaas.sh/guides/email-sending/
-    provider: Dummy,
+    provider: SMTP,
     defaultFrom: {
       name: "Open SaaS App",
       email: "me@example.com"

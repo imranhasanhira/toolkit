@@ -61,6 +61,7 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
   const [openrouterApiKey, setOpenrouterApiKey] = useState("");
   const [openrouterModel, setOpenrouterModel] = useState("");
   const [openrouterDisableThinking, setOpenrouterDisableThinking] = useState(true);
+  const [aiMaxPostsPerRun, setAiMaxPostsPerRun] = useState<string>("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [bottleneckMinTime, setBottleneckMinTime] = useState<string>("");
@@ -82,6 +83,7 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
       setOpenrouterBaseUrl(settings.ai?.openrouter?.baseUrl ?? "https://openrouter.ai/api/v1");
       setOpenrouterModel(settings.ai?.openrouter?.model ?? "");
       setOpenrouterDisableThinking(settings.ai?.openrouter?.disableThinking ?? true);
+      setAiMaxPostsPerRun(settings.ai?.maxPostsPerAnalysisRun?.toString() ?? "1000");
       setBottleneckMinTime(settings.bottleneck?.minTime?.toString() ?? "");
       setBottleneckMaxConcurrent(settings.bottleneck?.maxConcurrent?.toString() ?? "");
       setBottleneckReservoir(settings.bottleneck?.reservoir != null ? String(settings.bottleneck.reservoir) : "");
@@ -101,6 +103,7 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
   const effectiveDefault = defaultCredit !== "" ? defaultCredit : (settings?.credits?.defaultForNewUser ?? 100).toString();
   const effectivePerCall = creditPerCall !== "" ? creditPerCall : (settings?.credits?.perApiCall ?? 1).toString();
 
+  const effectiveMaxPostsPerRun = aiMaxPostsPerRun !== "" ? aiMaxPostsPerRun : "1000";
   const effectiveMinTime = bottleneckMinTime !== "" ? bottleneckMinTime : "10000";
   const effectiveMaxConcurrent = bottleneckMaxConcurrent !== "" ? bottleneckMaxConcurrent : "1";
   const effectiveRedisPort = bottleneckRedisPort !== "" ? bottleneckRedisPort : "6379";
@@ -110,6 +113,8 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
     const d = parseFloat(effectiveDefault);
     const c = parseFloat(effectivePerCall);
     if (isNaN(d) || d < 0 || isNaN(c) || c <= 0) return;
+    const maxPostsPerRun = parseInt(effectiveMaxPostsPerRun, 10);
+    if (isNaN(maxPostsPerRun) || maxPostsPerRun < 1) return;
     const minTime = parseInt(effectiveMinTime, 10);
     const maxConcurrent = parseInt(effectiveMaxConcurrent, 10);
     const redisPort = parseInt(effectiveRedisPort, 10);
@@ -132,6 +137,7 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
       openrouterModel: openrouterModel.trim() || null,
       openrouterApiKey: openrouterApiKey.trim() || undefined,
       openrouterDisableThinking,
+      aiMaxPostsPerAnalysisRun: maxPostsPerRun,
       bottleneckMinTime: minTime,
       bottleneckMaxConcurrent: maxConcurrent,
       bottleneckReservoir: reservoirVal,
@@ -381,6 +387,21 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
                     </div>
                   </div>
                 )}
+                <div className="flex flex-wrap items-end gap-6 pt-2">
+                  <div>
+                    <Label htmlFor="ai-max-posts-per-run" className="text-sm">Max posts per AI analysis run</Label>
+                    <Input
+                      id="ai-max-posts-per-run"
+                      type="number"
+                      min={1}
+                      value={effectiveMaxPostsPerRun}
+                      onChange={(e) => setAiMaxPostsPerRun(e.target.value)}
+                      className="mt-1 w-32"
+                      placeholder="1000"
+                    />
+                    <p className="text-muted-foreground text-xs mt-0.5">Bulk AI analysis will be rejected if the post count exceeds this limit.</p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4 border-t pt-4">
