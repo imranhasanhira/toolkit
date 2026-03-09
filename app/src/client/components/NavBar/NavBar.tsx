@@ -16,6 +16,7 @@ import { UserMenuItems } from "../../../user/UserMenuItems";
 import { useIsLandingPage } from "../../hooks/useIsLandingPage";
 import logo from "../../static/logo.webp";
 import { cn } from "../../utils";
+import AiCreditIndicator from "../AiCreditIndicator";
 import DarkModeSwitcher from "../DarkModeSwitcher";
 
 
@@ -118,6 +119,7 @@ function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
   return (
     <div className="hidden items-center justify-end gap-3 lg:flex lg:flex-1">
       <ul className="flex items-center justify-center gap-2 sm:gap-4">
+        <AiCreditIndicator />
         <DarkModeSwitcher />
       </ul>
       {isUserLoading ? null : !user ? (
@@ -211,7 +213,8 @@ function NavBarMobileMenu({
                   </ul>
                 )}
               </div>
-              <div className="py-6">
+              <div className="flex items-center gap-3 py-6">
+                <AiCreditIndicator />
                 <DarkModeSwitcher />
               </div>
             </div>

@@ -175,7 +175,7 @@ export const getMyAppPermissions: GetMyAppPermissions<void, AppKey[]> = async (
 
 const setUserAppPermissionSchema = z.object({
   userId: z.string().nonempty(),
-  appKey: z.enum(["sokafilm", "online-judge"]),
+  appKey: z.enum(["sokafilm", "online-judge", "reddit-bot"]),
   granted: z.boolean(),
 });
 

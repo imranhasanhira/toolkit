@@ -79,6 +79,8 @@ export default function App() {
                 <Navigate to={routes.AccountRoute.to} replace />
               ) : user && !permissionsLoading && location.pathname.startsWith("/online-judge") && !allowedAppKeys.includes("online-judge") ? (
                 <Navigate to={routes.AccountRoute.to} replace />
+              ) : user && !permissionsLoading && location.pathname.startsWith("/reddit-bot") && !allowedAppKeys.includes("reddit-bot") ? (
+                <Navigate to={routes.AccountRoute.to} replace />
               ) : (
                 <Outlet />
               )}

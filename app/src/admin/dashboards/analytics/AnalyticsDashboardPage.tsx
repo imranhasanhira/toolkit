@@ -32,27 +32,27 @@ const Dashboard = ({ user }: { user: AuthUser }) => {
       <div className="relative">
         <div
           className={cn({
-            "opacity-25": !stats,
+            "opacity-25": !stats?.dailyStats,
           })}
         >
           <div className="2xl:gap-7.5 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4">
             <TotalPageViewsCard
-              totalPageViews={stats?.dailyStats.totalViews}
+              totalPageViews={stats?.dailyStats?.totalViews}
               prevDayViewsChangePercent={
-                stats?.dailyStats.prevDayViewsChangePercent
+                stats?.dailyStats?.prevDayViewsChangePercent
               }
             />
             <TotalRevenueCard
-              dailyStats={stats?.dailyStats}
+              dailyStats={stats?.dailyStats ?? undefined}
               weeklyStats={stats?.weeklyStats}
               isLoading={isLoading}
             />
             <TotalPayingUsersCard
-              dailyStats={stats?.dailyStats}
+              dailyStats={stats?.dailyStats ?? undefined}
               isLoading={isLoading}
             />
             <TotalSignupsCard
-              dailyStats={stats?.dailyStats}
+              dailyStats={stats?.dailyStats ?? undefined}
               isLoading={isLoading}
             />
           </div>
@@ -69,7 +69,7 @@ const Dashboard = ({ user }: { user: AuthUser }) => {
           </div>
         </div>
 
-        {!stats && (
+        {!stats?.dailyStats && (
           <div className="bg-background/50 absolute inset-0 flex items-start justify-center">
             <div className="bg-card rounded-lg p-8 shadow-lg">
               <p className="text-foreground text-2xl font-bold">

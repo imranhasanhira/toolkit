@@ -1,0 +1,15 @@
+---
+description: Always run wasp compile after making code changes to verify there are no errors
+alwaysApply: true
+---
+
+# Wasp Compile Verification
+
+After making code changes (new files, edits to `.ts`/`.tsx`/`.wasp`/`.prisma` files), always run `wasp compile` from the `app/` directory to verify there are no TypeScript or Wasp compilation errors.
+
+```bash
+cd app && wasp compile
+```
+
+- Fix any errors before considering the task complete.
+- If compilation fails, read the error output carefully and address each issue before re-running.

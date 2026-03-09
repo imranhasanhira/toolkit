@@ -10,9 +10,11 @@ export interface NavItemWithApp extends NavigationItem {
 export const marketingNavigationItems: NavItemWithApp[] = [
   { name: "Online Judge", to: routes.ProblemListRoute.to, appKey: "online-judge" },
   { name: "SokaFilm", to: routes.SokaFilmRoute.to, appKey: "sokafilm" },
+  { name: "Reddit Bot", to: routes.RedditBotRoute.to, appKey: "reddit-bot" },
 ];
 
 export const demoNavigationitems: NavItemWithApp[] = [
   { name: "Online Judge", to: routes.ProblemListRoute.to, appKey: "online-judge" },
   { name: "SokaFilm", to: routes.SokaFilmRoute.to, appKey: "sokafilm" },
+  { name: "Reddit Bot", to: routes.RedditBotRoute.to, appKey: "reddit-bot" },
 ];

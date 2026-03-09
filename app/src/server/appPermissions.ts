@@ -1,5 +1,6 @@
 import { HttpError, prisma } from 'wasp/server';
 import type { AppKey } from '../shared/appKeys';
+import { APP_KEYS_LIST } from '../shared/appKeys';
 
 /**
  * App permission checks (UserAppPermission) are NOT enforced by any global middleware.
@@ -51,7 +52,7 @@ export async function getAllowedAppKeys(
   isAdmin?: boolean
 ): Promise<AppKey[]> {
   if (isAdmin) {
-    return ['sokafilm', 'online-judge'] as AppKey[];
+    return APP_KEYS_LIST;
   }
   const rows = await prisma.userAppPermission.findMany({
     where: { userId },

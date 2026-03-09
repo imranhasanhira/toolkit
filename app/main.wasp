@@ -241,6 +241,12 @@ page AdminSettingsPage {
   component: import AdminSettings from "@src/admin/elements/settings/SettingsPage"
 }
 
+route AdminRedditBotSettingsRoute { path: "/admin/reddit-bot-settings", to: AdminRedditBotSettingsPage }
+page AdminRedditBotSettingsPage {
+  authRequired: true,
+  component: import AdminRedditBotSettingsPage from "@src/admin/dashboards/reddit-bot-settings/RedditBotSettingsPage"
+}
+
 route AdminCalendarRoute { path: "/admin/calendar", to: AdminCalendarPage }
 page AdminCalendarPage {
   authRequired: true,
@@ -268,6 +274,170 @@ route AdminMessagesRoute { path: "/admin/messages", to: AdminMessagesPage }
 page AdminMessagesPage {
   authRequired: true,
   component: import AdminMessages from "@src/admin/dashboards/messages/MessagesPage"
+}
+//#endregion
+
+//#region Reddit Bot
+query getRedditBotProjects {
+  fn: import { getRedditBotProjects } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject]
+}
+query getRedditBotProjectById {
+  fn: import { getRedditBotProjectById } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject]
+}
+query getRedditBotProjectCreditUsed {
+  fn: import { getRedditBotProjectCreditUsed } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotJob]
+}
+action createRedditBotProject {
+  fn: import { createRedditBotProject } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject]
+}
+action updateRedditBotProject {
+  fn: import { updateRedditBotProject } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject]
+}
+action deleteRedditBotProject {
+  fn: import { deleteRedditBotProject } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject]
+}
+query getRedditBotProjectPosts {
+  fn: import { getRedditBotProjectPosts } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost, RedditBotAuthor]
+}
+query getRedditBotProjectPostsForExport {
+  fn: import { getRedditBotProjectPostsForExport } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost, RedditBotAuthor]
+}
+query getRedditBotProjectPostFilterCounts {
+  fn: import { getRedditBotProjectPostFilterCounts } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost]
+}
+action markRedditBotProjectPostsAsExported {
+  fn: import { markRedditBotProjectPostsAsExported } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProjectPost, RedditBotProject]
+}
+action updateRedditBotProjectPostStatus {
+  fn: import { updateRedditBotProjectPostStatus } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProjectPost, RedditBotProject]
+}
+action analyzeRedditBotProjectPost {
+  fn: import { analyzeRedditBotProjectPost } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProjectPost, RedditBotProject, RedditBotPost, RedditSettings]
+}
+query getRedditBotSchedulesByProject {
+  fn: import { getRedditBotSchedulesByProject } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotSchedule]
+}
+action createRedditBotSchedule {
+  fn: import { createRedditBotSchedule } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotSchedule]
+}
+action updateRedditBotSchedule {
+  fn: import { updateRedditBotSchedule } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotSchedule, RedditBotProject]
+}
+action deleteRedditBotSchedule {
+  fn: import { deleteRedditBotSchedule } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotSchedule, RedditBotProject]
+}
+query getRedditBotJobsByProject {
+  fn: import { getRedditBotJobsByProject } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotJob]
+}
+query getRedditBotAiAnalysisRunsByProject {
+  fn: import { getRedditBotAiAnalysisRunsByProject } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotAiAnalysisRun]
+}
+action runRedditBotExploration {
+  fn: import { runRedditBotExploration } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotJob]
+}
+action killRedditBotJob {
+  fn: import { killRedditBotJob } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotJob]
+}
+query getRedditAiAnalysisProspectiveCount {
+  fn: import { getRedditAiAnalysisProspectiveCount } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost]
+}
+action triggerRedditAiAnalysis {
+  fn: import { triggerRedditAiAnalysis } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotAiAnalysisRun]
+}
+action killRedditAiAnalysisRun {
+  fn: import { killRedditAiAnalysisRun } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotAiAnalysisRun]
+}
+
+query getMyRedditCredit {
+  fn: import { getMyRedditCredit } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditCreditAccount, RedditSettings]
+}
+query getRedditAiConfigStatus {
+  fn: import { getRedditAiConfigStatus } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditSettings]
+}
+query getOpenRouterAiCredit {
+  fn: import { getOpenRouterAiCredit } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditSettings]
+}
+query getRedditSettings {
+  fn: import { getRedditSettings } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditSettings]
+}
+action updateRedditSettings {
+  fn: import { updateRedditSettings } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditSettings]
+}
+action topUpRedditCredit {
+  fn: import { topUpRedditCredit } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditCreditAccount, RedditCreditTransaction]
+}
+query getRedditCreditUsersWithBalances {
+  fn: import { getRedditCreditUsersWithBalances } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditCreditAccount, RedditCreditTransaction]
+}
+query getRedditCreditAdminStats {
+  fn: import { getRedditCreditAdminStats } from "@src/reddit-bot/redditBotSettings",
+  entities: [User, RedditBotJob, RedditCreditTransaction, RedditCreditAccount]
+}
+
+job redditExplorationJob {
+  executor: PgBoss,
+  perform: {
+    fn: import { processRedditExploration } from "@src/server/jobs/redditExploration"
+  },
+  entities: [User, RedditBotProject, RedditBotJob, RedditBotPost, RedditBotAuthor, RedditBotProjectPost, RedditBotAiAnalysisRun, RedditSettings, RedditCreditAccount, RedditCreditTransaction]
+}
+job redditAiAnalysisJob {
+  executor: PgBoss,
+  perform: {
+    fn: import { processRedditAiAnalysis } from "@src/server/jobs/redditAiAnalysis"
+  },
+  entities: [User, RedditBotProjectPost, RedditBotProject, RedditBotPost, RedditBotJob, RedditBotAiAnalysisRun, RedditSettings]
+}
+job redditScheduleRunnerJob {
+  executor: PgBoss,
+  perform: {
+    fn: import { processRedditScheduleRunner } from "@src/server/jobs/redditScheduleRunner"
+  },
+  schedule: {
+    cron: "0 * * * *"
+  },
+  entities: [User, RedditBotSchedule, RedditBotProject, RedditBotJob]
+}
+
+route RedditBotRoute { path: "/reddit-bot", to: RedditBotHomepage }
+page RedditBotHomepage {
+  authRequired: true,
+  component: import RedditBotHomepage from "@src/reddit-bot/Homepage"
+}
+route RedditBotProjectRoute { path: "/reddit-bot/project/:projectId", to: RedditBotProjectPage }
+page RedditBotProjectPage {
+  authRequired: true,
+  component: import RedditBotProject from "@src/reddit-bot/ProjectDetail"
 }
 //#endregion
 
