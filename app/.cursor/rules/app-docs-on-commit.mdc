@@ -1,0 +1,22 @@
+---
+description: Before committing, update app-specific docs when changes touch an application (e.g. Reddit bot, Online Judge, Soka Film).
+alwaysApply: true
+---
+
+# App-specific docs before commit
+
+Documentation is **per application** (e.g. Reddit bot, Online Judge, Soka Film), not per individual feature.
+
+Before you make any commit:
+
+1. **Check if the change is app-specific**  
+   See if the modified files belong to a particular application in this project.
+
+2. **If yes, update that application’s doc**  
+   App docs live under `app/docs/` (e.g. `app/docs/reddit-bot.md`). Update the doc for the application you changed.
+
+3. **Docs must stay coherent**  
+   Do not only append bullets or paragraphs. After adding or changing content:
+   - Fix or remove any outdated sections.
+   - Keep structure clear (titles, sections, lists).
+   - Ensure the doc still reads as a single, sensible guide for that application.
