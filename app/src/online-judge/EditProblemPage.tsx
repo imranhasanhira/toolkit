@@ -1,7 +1,7 @@
 
 import { useAuth } from "wasp/client/auth";
 import { updateProblem, getProblem, deleteProblem } from "wasp/client/operations";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 
@@ -21,25 +21,40 @@ export default function EditProblemPage() {
         { input: "", expectedOutput: "", isSample: true }
     ]);
 
-    // Populate form when problem data is loaded
+    // Reload form from server when the form is shown (same problem id), but never
+    // overwrite while the user is editing (e.g. on refetch). When they leave and
+    // come back, we treat as "form shown again" and reload (ref reset on unmount).
+    const initializedProblemIdRef = useRef<string | null>(null);
+
     useEffect(() => {
-        if (problem) {
-            setTitle(problem.title);
-            setSlug(problem.slug);
-            setDescription(problem.description);
-            setDifficulty(problem.difficulty);
-            if (problem.testCases && problem.testCases.length > 0) {
-                // Map existing test cases to form format
-                setTestCases(problem.testCases.map((tc: any) => ({
+        if (!problem) return;
+        if (initializedProblemIdRef.current === problem.id) return;
+
+        initializedProblemIdRef.current = problem.id;
+        setTitle(problem.title);
+        setSlug(problem.slug);
+        setDescription(problem.description);
+        setDifficulty(problem.difficulty);
+        if (problem.testCases && problem.testCases.length > 0) {
+            setTestCases(
+                problem.testCases.map((tc: any) => ({
                     input: tc.input,
                     expectedOutput: tc.expectedOutput,
-                    isSample: tc.isSample
-                })));
-            } else {
-                setTestCases([{ input: "", expectedOutput: "", isSample: true }]);
-            }
+                    isSample: tc.isSample,
+                }))
+            );
+        } else {
+            setTestCases([{ input: "", expectedOutput: "", isSample: true }]);
         }
-    }, [problem]);
+    }, [problem?.id, problem]);
+
+    // On unmount (navigate away), forget we initialized so next time the form is
+    // shown we reload from server instead of showing stale or half-filled state.
+    useEffect(() => {
+        return () => {
+            initializedProblemIdRef.current = null;
+        };
+    }, []);
 
     if (isAuthLoading || isProblemLoading) return <div>Loading...</div>;
     if (problemError) return <div>Error loading problem: {problemError.message}</div>;
