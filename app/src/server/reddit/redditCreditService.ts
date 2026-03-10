@@ -45,8 +45,9 @@ export type RedditSettings = {
     redis: {
       clusteringEnabled: boolean;
       host: string | null;
-      port: number;
-      /** Authentication for Redis. May come from settings or REDIS_URL; settings take precedence. */
+      /** Port. When returned for client/UI, null if not set in DB (no default). Server uses 6379 or REDIS_URL when not set. */
+      port: number | null;
+      /** Authentication for Redis. May come from settings or REDIS_URL; settings take precedence. Never sent to client. */
       password: string | null;
       username: string | null;
     };
@@ -104,7 +105,10 @@ export async function getDecryptedOpenRouterApiKey(entities: any): Promise<strin
   return decryptKey(stored);
 }
 
-export async function getSettings(entities: any): Promise<RedditSettings> {
+export async function getSettings(
+  entities: any,
+  opts?: { forClient?: boolean }
+): Promise<RedditSettings> {
   const rows = await entities.RedditSettings.findMany();
   const map: Record<string, unknown> = {};
   for (const r of rows as { key: string; value: unknown }[]) {
@@ -112,6 +116,9 @@ export async function getSettings(entities: any): Promise<RedditSettings> {
   }
   const defaults: Record<string, unknown> = { ...REDDIT_SETTINGS_DEFAULTS };
   const get = (key: string): unknown => map[key] ?? defaults[key];
+  /** Raw value from DB only (no default). Use for client so UI shows empty when not set. */
+  const getRaw = (key: string): unknown => map[key];
+  const forClient = opts?.forClient === true;
   const aiEngine = get(REDDIT_SETTINGS_KEYS.ai_engine);
   const engine: 'ollama' | 'openrouter' =
     aiEngine === 'openrouter' ? 'openrouter' : 'ollama';
@@ -157,6 +164,20 @@ export async function getSettings(entities: any): Promise<RedditSettings> {
         return Number.isFinite(n) ? n : undefined;
       })(),
       redis: (() => {
+        const clusteringEnabled = jsonToBool(get(REDDIT_SETTINGS_KEYS.bottleneck_clustering_enabled));
+        if (forClient) {
+          // Client/UI: only what is stored in DB. No REDIS_URL merge, no default port — so empty fields stay empty.
+          const rawHost = jsonToStrOrNull(getRaw(REDDIT_SETTINGS_KEYS.bottleneck_redis_host));
+          const rawPort = getRaw(REDDIT_SETTINGS_KEYS.bottleneck_redis_port);
+          const portNum = rawPort != null ? jsonToNum(rawPort) : 0;
+          return {
+            clusteringEnabled,
+            host: rawHost?.trim() || null,
+            port: rawPort != null && Number.isFinite(portNum) && portNum >= 1 ? portNum : null,
+            username: jsonToStrOrNull(getRaw(REDDIT_SETTINGS_KEYS.bottleneck_redis_username))?.trim() || null,
+            password: null, // Never send password to client; UI shows empty, user re-enters to change.
+          };
+        }
         const settingsHost = jsonToStrOrNull(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_host));
         const settingsPort = jsonToNum(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_port)) || 6379;
         const settingsUsername = jsonToStrOrNull(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_username));
@@ -165,11 +186,10 @@ export async function getSettings(entities: any): Promise<RedditSettings> {
         // Prefer settings; if host not set, use REDIS_URL from env. If clustering is on and neither has host, limiter will fail when connecting.
         const host = settingsHost?.trim() || fromEnv?.host || null;
         const port = settingsHost?.trim() ? settingsPort : (fromEnv?.port ?? 6379);
-        // Auth: settings (username/password) override REDIS_URL; REDIS_URL used as fallback.
         const username = settingsUsername?.trim() || fromEnv?.username || null;
         const password = settingsPassword?.trim() || fromEnv?.password || null;
         return {
-          clusteringEnabled: jsonToBool(get(REDDIT_SETTINGS_KEYS.bottleneck_clustering_enabled)),
+          clusteringEnabled,
           host,
           port,
           password,

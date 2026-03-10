@@ -37,7 +37,7 @@ export const getRedditAiConfigStatus = async (_args: void, context: any) => {
 
 export const getRedditSettings = async (_args: void, context: any) => {
   if (!context.user?.isAdmin) throw new HttpError(403, 'Admin only');
-  return getSettings(context.entities);
+  return getSettings(context.entities, { forClient: true });
 };
 
 const updateRedditSettingsSchema = z.object({

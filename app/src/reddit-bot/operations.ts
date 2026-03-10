@@ -373,7 +373,12 @@ export const analyzeRedditBotProjectPost = async (
   const productDescription = (projectPost.project as { productDescription?: string })?.productDescription ?? '';
 
   try {
-    const result = await evaluateRelevancy(productDescription, postText, relevancyOptions);
+    const result = await evaluateRelevancy(
+      productDescription,
+      postText,
+      relevancyOptions,
+      projectPost.post?.postLink
+    );
     await context.entities.RedditBotProjectPost.update({
       where: { id: args.projectPostId },
       data: {

@@ -167,7 +167,7 @@ export const processRedditAiAnalysis = async (
     });
     const post = await entities.RedditBotPost.findUnique({
       where: { id: projectPost.postId },
-      select: { title: true, content: true },
+      select: { title: true, content: true, postLink: true },
     });
 
     if (!project || !post) {
@@ -192,7 +192,8 @@ export const processRedditAiAnalysis = async (
       const result = await evaluateRelevancy(
         project.productDescription ?? '',
         postText,
-        relevancyOptions
+        relevancyOptions,
+        post.postLink
       );
 
       await entities.RedditBotProjectPost.update({

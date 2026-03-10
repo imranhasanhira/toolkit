@@ -99,8 +99,10 @@ function getOpenAIClient(baseUrl: string, apiKey: string): OpenAI {
 export async function evaluateRelevancy(
   productDescription: string,
   postText: string,
-  options: RelevancyOptions
+  options: RelevancyOptions,
+  postUrl?: string
 ): Promise<RelevancyResult> {
+  if (postUrl) console.info('Reddit AI relevancy:', options.engine, options.model, postUrl);
   const trimmedProduct = (productDescription || '').trim().slice(0, MAX_PRODUCT_CHARS);
   const trimmedPost = (postText || '').trim().slice(0, MAX_POST_CHARS);
   const systemPrompt = SYSTEM_PROMPT.replace('{productDescription}', trimmedProduct);

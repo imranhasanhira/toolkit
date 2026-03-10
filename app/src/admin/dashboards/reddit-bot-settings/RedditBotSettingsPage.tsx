@@ -92,7 +92,7 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
       setBottleneckReservoirRefreshInterval(settings.bottleneck?.reservoirRefreshInterval != null ? String(settings.bottleneck.reservoirRefreshInterval) : "");
       setBottleneckClusteringEnabled(settings.bottleneck?.redis?.clusteringEnabled ?? false);
       setBottleneckRedisHost(settings.bottleneck?.redis?.host ?? "");
-      setBottleneckRedisPort(settings.bottleneck?.redis?.port?.toString() ?? "");
+      setBottleneckRedisPort(settings.bottleneck?.redis?.port != null ? String(settings.bottleneck.redis.port) : "");
       setBottleneckRedisUsername(settings.bottleneck?.redis?.username ?? "");
       // Do not echo password back; always keep as empty for security. Admin must re-enter to change.
       setBottleneckRedisPassword("");
@@ -151,8 +151,8 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
       bottleneckRedisHost: bottleneckRedisHost.trim() || null,
       bottleneckRedisPort: redisPort,
       bottleneckRedisUsername: bottleneckRedisUsername.trim() || null,
-      // Only send password if user entered something; null means \"leave unchanged\" on the server.
-      bottleneckRedisPassword: bottleneckRedisPassword.trim() === \"\" ? null : bottleneckRedisPassword,
+      // Only send password if user entered something; null means leave unchanged on the server.
+      bottleneckRedisPassword: bottleneckRedisPassword.trim() === '' ? null : bottleneckRedisPassword,
     };
     try {
       const result = await updateSettingsAction(payload);
@@ -480,6 +480,7 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
                   </div>
                   {bottleneckClusteringEnabled && (
                     <>
+                      <p className="text-muted-foreground text-xs mt-1">Host, port, username, and password below. Leave host/port empty to use REDIS_URL from env.</p>
                       <div className="flex flex-wrap items-end gap-6">
                         <div>
                           <Label htmlFor="bottleneck-redis-host" className="text-sm">Redis host (optional, or use REDIS_URL)</Label>

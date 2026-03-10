@@ -34,6 +34,7 @@ async function fetchWithTimeout(
     externalSignal.addEventListener('abort', onExternalAbort, { once: true });
   }
 
+  console.info('Reddit API:', url);
   try {
     const method = options.method || 'GET';
     const headers = options.headers as Record<string, string> | undefined;
