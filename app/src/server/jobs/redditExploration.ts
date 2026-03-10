@@ -1,5 +1,5 @@
 import { runExploration } from '../reddit/explorationRunner';
-import { getSettings } from '../reddit/redditCreditService';
+import { getSettings, getDecryptedOpenRouterApiKey } from '../reddit/redditCreditService';
 import { redditAiAnalysisJob } from 'wasp/server/jobs';
 
 export type RedditExplorationJobPayload = {
@@ -27,6 +27,7 @@ export const processRedditExploration = async (
     where: { id: projectId },
   });
   if (!project) {
+    console.error(`[redditExploration] Project ${projectId} not found for job ${jobId}`);
     await context.entities.RedditBotJob.update({
       where: { id: jobId },
       data: { status: 'FAILED', errorMessage: 'Project not found', completedAt: new Date() },
@@ -39,6 +40,7 @@ export const processRedditExploration = async (
       select: { isAdmin: true },
     });
     if (!user?.isAdmin) {
+      console.error(`[redditExploration] Access denied for user ${args.userId} on project ${projectId}`);
       await context.entities.RedditBotJob.update({
         where: { id: jobId },
         data: { status: 'FAILED', errorMessage: 'Access denied', completedAt: new Date() },
@@ -50,11 +52,13 @@ export const processRedditExploration = async (
   try {
     await runExploration(projectId, jobId, options, context, args.userId);
     const settings = await getSettings(context.entities);
-    if (
+    const openrouterKey = await getDecryptedOpenRouterApiKey(context.entities);
+    const aiReady =
       settings.ai.enabled &&
-      settings.ai.ollama.baseUrl?.trim() &&
-      settings.ai.ollama.model?.trim()
-    ) {
+      (settings.ai.engine === 'openrouter'
+        ? !!openrouterKey?.trim() && !!settings.ai.openrouter.model?.trim()
+        : !!settings.ai.ollama.baseUrl?.trim() && !!settings.ai.ollama.model?.trim());
+    if (aiReady) {
       const totalToProcess = await context.entities.RedditBotProjectPost.count({
         where: { jobId, aiAnalysisStatus: { in: ['NOT_REQUESTED', 'PENDING'] } },
       });
@@ -77,12 +81,20 @@ export const processRedditExploration = async (
         await redditAiAnalysisJob.submit({ runId: run.id, jobId });
       }
     }
-  } catch (err) {
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error(`[redditExploration] Job ${jobId} failed:`, err);
     await context.entities.RedditBotJob.update({
       where: { id: jobId },
-      data: { status: 'FAILED', errorMessage: message, completedAt: new Date() },
+      data: {
+        status: 'FAILED',
+        errorMessage: message.slice(0, 1000),
+        completedAt: new Date(),
+      },
     });
-    throw err;
+    // Do not rethrow: we've recorded failure in our DB. Resolving here ensures PgBoss
+    // marks this job as done and frees the worker so the next job (e.g. a second
+    // exploration) is picked up. Rethrowing can leave this job stuck "active" and
+    // block the queue.
   }
 };

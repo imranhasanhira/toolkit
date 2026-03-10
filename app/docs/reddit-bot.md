@@ -15,7 +15,6 @@ Lead-generation tool that discovers Reddit posts by subreddit and keyword, class
 7. [Frontend pages](#7-frontend-pages)
 8. [User flows](#8-user-flows)
 9. [Admin settings](#9-admin-settings)
-10. [Troubleshooting](#10-troubleshooting)
 
 ---
 
@@ -638,33 +637,3 @@ Settings are stored as key-value pairs in `RedditSettings`. Full key list in [re
 
 **Rate limiting:** All Reddit API requests go through Bottleneck. When Redis clustering is enabled, rate limits are shared across processes/instances.
 
----
-
-## 10. Troubleshooting
-
-### Reddit API 403 Blocked
-
-Reddit requires a unique, descriptive User-Agent. Missing or generic values are blocked with 403.
-
-**Fix:** Set the `REDDIT_API_USER_AGENT` environment variable:
-
-```
-REDDIT_API_USER_AGENT="platform:app_id:version (by /u/YourRedditUsername)"
-```
-
-Example: `server:toolkit-leadgen:1.0 (by /u/yourname)`. See [redditClient.ts](../src/server/reddit/redditClient.ts).
-
-### AI analysis produces empty results
-
-- Verify the AI engine is enabled and configured in admin settings.
-- For Ollama: ensure the service is running and the model is pulled.
-- For OpenRouter: verify the API key is valid and the model name matches OpenRouter's catalog.
-- Check `aiAnalysisErrorMessage` on failed posts for specific error details.
-
-### Credits run out mid-exploration
-
-The job fails with an "Insufficient credit" error. Top up the user's balance in admin settings and re-run the exploration.
-
-### Stale server after code changes
-
-If code changes aren't reflected, run `wasp clean && wasp compile` then restart `wasp start` to ensure the server bundle is rebuilt from scratch.

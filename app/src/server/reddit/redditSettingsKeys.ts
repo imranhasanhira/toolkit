@@ -25,6 +25,8 @@ export const REDDIT_SETTINGS_KEYS = {
   bottleneck_clustering_enabled: 'bottleneck.clustering.enabled',
   bottleneck_redis_host: 'bottleneck.redis.host',
   bottleneck_redis_port: 'bottleneck.redis.port',
+  bottleneck_redis_username: 'bottleneck.redis.username',
+  bottleneck_redis_password: 'bottleneck.redis.password',
 } as const;
 
 export type RedditSettingsKey = (typeof REDDIT_SETTINGS_KEYS)[keyof typeof REDDIT_SETTINGS_KEYS];
@@ -50,4 +52,6 @@ export const REDDIT_SETTINGS_DEFAULTS = {
   [REDDIT_SETTINGS_KEYS.bottleneck_clustering_enabled]: false,
   [REDDIT_SETTINGS_KEYS.bottleneck_redis_host]: null as string | null,
   [REDDIT_SETTINGS_KEYS.bottleneck_redis_port]: 6379,
+  [REDDIT_SETTINGS_KEYS.bottleneck_redis_username]: null as string | null,
+  [REDDIT_SETTINGS_KEYS.bottleneck_redis_password]: null as string | null,
 } as const;

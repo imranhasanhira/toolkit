@@ -46,6 +46,9 @@ export type RedditSettings = {
       clusteringEnabled: boolean;
       host: string | null;
       port: number;
+      /** Authentication for Redis. May come from settings or REDIS_URL; settings take precedence. */
+      password: string | null;
+      username: string | null;
     };
   };
 };
@@ -64,6 +67,32 @@ function jsonToStrOrNull(val: unknown): string | null {
   if (val == null) return null;
   const s = String(val);
   return s.trim() || null;
+}
+
+/**
+ * Parse REDIS_URL (e.g. redis://host:6379, redis://:password@host:6379, redis://user:password@host:6379).
+ * Used for host/port fallback and for auth when Redis requires it (NOAUTH).
+ */
+function parseRedisUrl(
+  url: string | undefined
+): { host: string; port: number; password: string | null; username: string | null } | null {
+  if (!url || typeof url !== 'string' || !url.trim()) return null;
+  try {
+    const u = new URL(url.trim());
+    const host = u.hostname?.trim();
+    if (!host) return null;
+    const port = u.port ? parseInt(u.port, 10) : 6379;
+    const password = u.password ? decodeURIComponent(u.password) : null;
+    const username = u.username ? decodeURIComponent(u.username) : null;
+    return {
+      host,
+      port: Number.isFinite(port) && port > 0 ? port : 6379,
+      password: password?.trim() || null,
+      username: username?.trim() || null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** Returns decrypted OpenRouter API key for server-side use only. Never send to client. */
@@ -127,11 +156,26 @@ export async function getSettings(entities: any): Promise<RedditSettings> {
         const n = Number(v);
         return Number.isFinite(n) ? n : undefined;
       })(),
-      redis: {
-        clusteringEnabled: jsonToBool(get(REDDIT_SETTINGS_KEYS.bottleneck_clustering_enabled)),
-        host: jsonToStrOrNull(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_host)),
-        port: jsonToNum(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_port)) || 6379,
-      },
+      redis: (() => {
+        const settingsHost = jsonToStrOrNull(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_host));
+        const settingsPort = jsonToNum(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_port)) || 6379;
+        const settingsUsername = jsonToStrOrNull(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_username));
+        const settingsPassword = jsonToStrOrNull(get(REDDIT_SETTINGS_KEYS.bottleneck_redis_password));
+        const fromEnv = parseRedisUrl(process.env.REDIS_URL);
+        // Prefer settings; if host not set, use REDIS_URL from env. If clustering is on and neither has host, limiter will fail when connecting.
+        const host = settingsHost?.trim() || fromEnv?.host || null;
+        const port = settingsHost?.trim() ? settingsPort : (fromEnv?.port ?? 6379);
+        // Auth: settings (username/password) override REDIS_URL; REDIS_URL used as fallback.
+        const username = settingsUsername?.trim() || fromEnv?.username || null;
+        const password = settingsPassword?.trim() || fromEnv?.password || null;
+        return {
+          clusteringEnabled: jsonToBool(get(REDDIT_SETTINGS_KEYS.bottleneck_clustering_enabled)),
+          host,
+          port,
+          password,
+          username,
+        };
+      })(),
     },
   };
 }

@@ -895,10 +895,12 @@ export const killRedditBotJob = async (
   ensureProjectAccess(job.project, context.user.id, context.user.isAdmin);
   if (job.status !== 'RUNNING') throw new HttpError(400, 'Job is not running');
 
+  const now = new Date();
   await context.entities.RedditBotJob.update({
     where: { id: args.jobId },
-    data: { stopRequestedAt: new Date() },
+    data: { stopRequestedAt: now, status: 'KILLED', completedAt: now },
   });
+  // Marking KILLED immediately so the UI updates even if the worker is no longer running (e.g. after deploy).
 };
 
 export const killRedditAiAnalysisRun = async (
@@ -916,10 +918,12 @@ export const killRedditAiAnalysisRun = async (
   ensureProjectAccess(run.project, context.user.id, context.user.isAdmin);
   if (run.status !== 'RUNNING') throw new HttpError(400, 'Run is not running');
 
+  const now = new Date();
   await context.entities.RedditBotAiAnalysisRun.update({
     where: { id: args.runId },
-    data: { stopRequestedAt: new Date() },
+    data: { stopRequestedAt: now, status: 'KILLED' },
   });
+  // Marking KILLED immediately so the UI updates even if the worker is no longer running (e.g. after deploy).
 };
 
 export const getRedditAiAnalysisProspectiveCount = async (

@@ -10,6 +10,8 @@ export const processRedditScheduleRunner = async (_args: any, context: any) => {
     include: { project: true },
   });
 
+  console.log(`[scheduleRunner] Found ${schedules.length} due schedule(s) at ${now.toISOString()}`);
+
   for (const schedule of schedules) {
     const config = (schedule.config as Record<string, unknown>) || {};
     const subreddits = (config.subreddits as string[]) ?? (schedule.project.subreddits as string[]) ?? [];
@@ -39,6 +41,7 @@ export const processRedditScheduleRunner = async (_args: any, context: any) => {
       },
     });
 
+    console.log(`[scheduleRunner] Submitting exploration for schedule ${schedule.id} -> job ${job.id} (project=${schedule.projectId}, user=${schedule.userId})`);
     await redditExplorationJob.submit({
       projectId: schedule.projectId,
       userId: schedule.userId,

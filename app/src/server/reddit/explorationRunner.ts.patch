@@ -1,0 +1,49 @@
+--- /Users/imranhasanhira/cocur/git/toolkit/app/src/server/reddit/explorationRunner.ts
++++ /Users/imranhasanhira/cocur/git/toolkit/app/src/server/reddit/explorationRunner.ts
+@@ -142,22 +142,23 @@
+         let safetyTimeoutId: ReturnType<typeof setTimeout> | null = null;
+ 
+         try {
+-          const pagePromise = limiter.schedule(() =>
+-            fetchPage(after, attemptController.signal)
+-          );
+-          // Swallow the dangling rejection if we abort via safety timeout and
+-          // race away — otherwise Node emits an unhandled-rejection warning.
+-          pagePromise.catch(() => {});
+-
+-          const safetyPromise = new Promise<never>((_, reject) => {
+-            safetyTimeoutId = setTimeout(() => {
+-              attemptController.abort();
+-              reject(
+-                new Error(
+-                  `Reddit API request timed out (safety: ${SAFETY_TIMEOUT_MS / 1000}s). The fetch may have hung without triggering its own AbortController.`
+-                )
+-              );
+-            }, SAFETY_TIMEOUT_MS);
+-          });
+-
+-          listing = await Promise.race([pagePromise, safetyPromise]);
++          listing = await limiter.schedule<any>(async () => {
++            // The function inside schedule() executes only when Bottleneck grants the slot.
++            // We start the safety timer NOW, not when it's waiting in the queue.
++            const safetyPromise = new Promise<never>((_, reject) => {
++              safetyTimeoutId = setTimeout(() => {
++                attemptController.abort();
++                reject(
++                  new Error(
++                    `Reddit API request timed out (safety: ${SAFETY_TIMEOUT_MS / 1000}s). The fetch may have hung without triggering its own AbortController.`
++                  )
++                );
++              }, SAFETY_TIMEOUT_MS);
++            });
++
++            // Race the actual fetch against the safety timeout INSIDE the Bottleneck lock!
++            // If the timeout wins, the returned promise rejects -> Bottleneck frees the slot.
++            return await Promise.race([
++              fetchPage(after, attemptController.signal),
++              safetyPromise
++            ]);
++          });
+           if (safetyTimeoutId) clearTimeout(safetyTimeoutId);
+           break;
+         } catch (err) {

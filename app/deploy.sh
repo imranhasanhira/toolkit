@@ -20,7 +20,8 @@ REMOTE_FRONTEND="dokku@hubuntu.imranhira.com:${APP_FRONTEND}"
 API_URL="https://toolkit-api.naurinjahan.com"
 
 BRANCH="main"
-TIMESTAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+# Use Amsterdam time for release tags (Europe/Amsterdam)
+TIMESTAMP=$(TZ="Europe/Amsterdam" date +%Y-%m-%dT%H-%M-%S)
 WASP_BUILD_DIR=".wasp/out"
 
 echo "========================================="
@@ -67,6 +68,11 @@ echo "→ Deploying Backend (${APP_BACKEND})..."
 # Patch generated Dockerfile: add --legacy-peer-deps to avoid peer dependency conflicts
 sed -i.bak 's/RUN npm install && cd \(.*\) && npm install/RUN npm install --legacy-peer-deps \&\& cd \1 \&\& npm install --legacy-peer-deps/' "${WASP_BUILD_DIR}/Dockerfile"
 rm -f "${WASP_BUILD_DIR}/Dockerfile.bak"
+# Bake RELEASE_TAG into image so we don't need config:set after push (avoids second rollout)
+sed -i.bak2 "/^WORKDIR \/app\/.wasp\/out\/server$/a\\
+ENV RELEASE_TAG=${TAG_NAME}
+" "${WASP_BUILD_DIR}/Dockerfile"
+rm -f "${WASP_BUILD_DIR}/Dockerfile.bak2"
 
 cd "${WASP_BUILD_DIR}"
 
@@ -79,10 +85,7 @@ git commit -qm "deploy backend ${TIMESTAMP} [${TAG_NAME}]"
 git remote add dokku "${REMOTE_BACKEND}"
 git push -f dokku "${BRANCH}"
 
-# Set release tag as Dokku environment variable
-ssh dokku@hubuntu.imranhira.com config:set "${APP_BACKEND}" RELEASE_TAG="${TAG_NAME}"
-
-echo "✓ Backend deployed successfully"
+echo "✓ Backend deployed successfully (RELEASE_TAG baked into image)"
 
 # Return to root
 cd ../..
@@ -103,9 +106,10 @@ server {
 }
 EOF
 
-# Create Dockerfile for Nginx
+# Create Dockerfile for Nginx (RELEASE_TAG baked in to avoid config:set second rollout)
 cat <<EOF > Dockerfile
 FROM nginx:alpine
+ENV RELEASE_TAG=${TAG_NAME}
 COPY build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
@@ -122,10 +126,7 @@ git commit -qm "deploy frontend ${TIMESTAMP} [${TAG_NAME}]"
 git remote add dokku "${REMOTE_FRONTEND}"
 git push -f dokku "${BRANCH}"
 
-# Set release tag as Dokku environment variable
-ssh dokku@hubuntu.imranhira.com config:set "${APP_FRONTEND}" RELEASE_TAG="${TAG_NAME}"
-
-echo "✓ Frontend deployed successfully"
+echo "✓ Frontend deployed successfully (RELEASE_TAG baked into image)"
 
 # Return to project root
 cd ../../..
@@ -141,6 +142,8 @@ echo "🚀 Deployment Complete!"
 echo "========================================="
 echo "Release Tag: ${TAG_NAME}"
 echo ""
-echo "Check deployment version:"
-echo "  ssh dokku@hubuntu.imranhira.com config:get ${APP_BACKEND} RELEASE_TAG"
-echo "  ssh dokku@hubuntu.imranhira.com config:get ${APP_FRONTEND} RELEASE_TAG"
+echo "Release tag ${TAG_NAME} is baked into both images (single rollout per app)."
+echo ""
+echo "To verify baked-in release tag on the server (run from your machine):"
+echo "  Backend:  ssh dokku@hubuntu.imranhira.com run toolkit sh -c 'printenv RELEASE_TAG'"
+echo "  Frontend: ssh dokku@hubuntu.imranhira.com run toolkit-ui sh -c 'printenv RELEASE_TAG'"

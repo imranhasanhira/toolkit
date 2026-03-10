@@ -60,7 +60,9 @@ const updateRedditSettingsSchema = z.object({
   bottleneckReservoirRefreshInterval: z.number().min(0).nullable().optional(),
   bottleneckClusteringEnabled: z.boolean().optional(),
   bottleneckRedisHost: z.string().nullable().optional(),
-  bottleneckRedisPort: z.number().min(1).optional(),
+  bottleneckRedisPort: z.number().min(1).nullable().optional(),
+  bottleneckRedisUsername: z.string().nullable().optional(),
+  bottleneckRedisPassword: z.string().nullable().optional(),
 });
 
 async function setSetting(
@@ -143,6 +145,12 @@ export const updateRedditSettings = async (args: unknown, context: any) => {
   }
   if (d.bottleneckRedisPort !== undefined) {
     await setSetting(entities, REDDIT_SETTINGS_KEYS.bottleneck_redis_port, d.bottleneckRedisPort);
+  }
+  if (d.bottleneckRedisUsername !== undefined) {
+    await setSetting(entities, REDDIT_SETTINGS_KEYS.bottleneck_redis_username, d.bottleneckRedisUsername);
+  }
+  if (d.bottleneckRedisPassword !== undefined) {
+    await setSetting(entities, REDDIT_SETTINGS_KEYS.bottleneck_redis_password, d.bottleneckRedisPassword);
   }
 
   const result = await getSettings(entities);

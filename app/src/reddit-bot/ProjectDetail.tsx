@@ -313,6 +313,7 @@ export default function RedditBotProjectDetail() {
   const [analyzingPostId, setAnalyzingPostId] = useState<string | null>(null);
   const [aiAnalysisMessage, setAiAnalysisMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [runAiDialogOpen, setRunAiDialogOpen] = useState(false);
+  const [exploreWithRunningJobDialogOpen, setExploreWithRunningJobDialogOpen] = useState(false);
   const [runAiForceIncludeProcessed, setRunAiForceIncludeProcessed] = useState(false);
 
   const { data: aiProspectiveCount } = useQuery(
@@ -482,9 +483,10 @@ export default function RedditBotProjectDetail() {
     strictKeywordSearch: f.strictKeywordSearch,
   });
 
-  const handleRunExplore = async () => {
+  const runExploreNow = async () => {
     if (!projectId || !project) return;
     setExploring(true);
+    setExploreWithRunningJobDialogOpen(false);
     try {
       const config = buildConfigFromFilters(exploreFilters);
       await runExplore({
@@ -502,6 +504,14 @@ export default function RedditBotProjectDetail() {
       console.error(e);
     } finally {
       setExploring(false);
+    }
+  };
+
+  const handleRunExplore = () => {
+    if (isJobRunning) {
+      setExploreWithRunningJobDialogOpen(true);
+    } else {
+      runExploreNow();
     }
   };
 
@@ -692,7 +702,8 @@ export default function RedditBotProjectDetail() {
                   <div className="flex flex-wrap gap-3 pt-2 border-t">
                     <Button
                       onClick={handleRunExplore}
-                      disabled={exploring || isJobRunning || (credit != null && Number(credit.balance) < Number(credit.creditPerApiCall ?? 1))}
+                      disabled={exploring || (credit != null && Number(credit.balance) < Number(credit.creditPerApiCall ?? 1))}
+                      title={isJobRunning ? 'A job is already running; you can start another after confirming' : undefined}
                     >
                       {exploring ? (
                         <>
@@ -965,14 +976,24 @@ export default function RedditBotProjectDetail() {
                         {pp.post?.postedAt ? new Date(pp.post.postedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                       </td>
                       <td className="p-2 max-w-xs truncate" onClick={(e) => e.stopPropagation()}>
-                        <a
-                          href={pp.post?.postLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {pp.post?.title}
-                        </a>
+                        <div className="flex items-center gap-1.5">
+                          <a
+                            href={pp.post?.postLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {pp.post?.title}
+                          </a>
+                          {pp.lastExportedAt && (
+                            <span
+                              className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                              title="This post has been exported"
+                            >
+                              Exported
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-2" onClick={(e) => e.stopPropagation()}>
                         <a
@@ -1266,7 +1287,7 @@ export default function RedditBotProjectDetail() {
                                   variant="destructive"
                                   size="sm"
                                   disabled={!!j.stopRequestedAt}
-                                  onClick={() => killJob(j.id).then(() => { refetchJobs(); refetchAiRuns(); })}
+                                  onClick={() => killJob({ jobId: j.id }).then(() => { refetchJobs(); refetchAiRuns(); })}
                                 >
                                   <Square className="mr-1 h-3 w-3" />
                                   {j.stopRequestedAt ? 'Stopping…' : 'Kill'}
@@ -1562,6 +1583,38 @@ export default function RedditBotProjectDetail() {
                   Start
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={exploreWithRunningJobDialogOpen} onOpenChange={setExploreWithRunningJobDialogOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Already a running job</DialogTitle>
+              <DialogDescription asChild>
+                <span>
+                  There is already an exploration job running.{' '}
+                  <Button
+                    variant="link"
+                    className="h-auto p-0 text-primary underline"
+                    onClick={() => {
+                      setExploreWithRunningJobDialogOpen(false);
+                      setActiveTabWithUrl('jobs');
+                    }}
+                  >
+                    View jobs
+                  </Button>
+                  {' '}Do you still want to start a new one?
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setExploreWithRunningJobDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={runExploreNow}>
+                Run anyway
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

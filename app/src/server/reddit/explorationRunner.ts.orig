@@ -36,6 +36,9 @@ export async function runExploration(
   },
   userId: string
 ): Promise<void> {
+  // Log immediately (before any await) so we can see if the worker entered runExploration; if this never appears, the failure is in processRedditExploration before runExploration().
+  console.log(`[exploration] job=${jobId} runExploration started (project=${projectId})`);
+
   const { entities } = context;
   const now = new Date();
   const { startUtc, endUtc } = resolveRelativeDateRange(
@@ -67,15 +70,17 @@ export async function runExploration(
       ? !!openrouterKey?.trim() && !!settings.ai.openrouter.model?.trim()
       : !!settings.ai.ollama.baseUrl?.trim() && !!settings.ai.ollama.model?.trim());
 
+  console.log(`[exploration] job=${jobId} subreddits=[${subreddits}] keywords=[${keywords}] dateRange=[${startUtc}..${endUtc}] strictSearch=${strictKeywordSearch} aiEnabled=${aiEnabled}`);
+
   // Reddit /new and search?sort=new return newest-first. We page with `after` to walk backward in time.
   // We process posts in [startUtc, endUtc] and stop when we see a post older than startUtc (past the window).
   for (const subreddit of subreddits) {
     const fetchPage =
       strictKeywordSearch && keywords.length > 0
         ? (after: string | null, signal?: AbortSignal) =>
-          fetchSubredditSearch(subreddit, keywords.join(' OR '), after, 100, signal)
+            fetchSubredditSearch(subreddit, keywords.join(' OR '), after, 100, signal)
         : (after: string | null, signal?: AbortSignal) =>
-          fetchSubredditNew(subreddit, after, 100, signal);
+            fetchSubredditNew(subreddit, after, 100, signal);
 
     let after: string | null = null;
     let hasMore = true;
@@ -127,6 +132,7 @@ export async function runExploration(
         throw err;
       }
 
+      console.log(`[exploration] job=${jobId} fetching page (after=${after ?? 'null'})`);
       let listing;
       const maxAttempts = 3;
       let attempt = 0;
@@ -134,34 +140,27 @@ export async function runExploration(
         attempt += 1;
         const attemptController = new AbortController();
         let safetyTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
         try {
-          // The function inside schedule() executes only when Bottleneck grants the slot.
-          const schedulePromise = limiter.schedule<any>(async () => {
+          const pagePromise = limiter.schedule(() =>
+            fetchPage(after, attemptController.signal)
+          );
+          // Swallow the dangling rejection if we abort via safety timeout and
+          // race away — otherwise Node emits an unhandled-rejection warning.
+          pagePromise.catch(() => {});
 
-            const safetyPromise = new Promise<never>((_, reject) => {
-              safetyTimeoutId = setTimeout(() => {
-                attemptController.abort();
-                reject(
-                  new Error(
-                    `Reddit API request timed out (safety: ${SAFETY_TIMEOUT_MS / 1000}s). The fetch may have hung without triggering its own AbortController.`
-                  )
-                );
-              }, SAFETY_TIMEOUT_MS);
-            });
-
-            // Race the actual fetch against the safety timeout INSIDE the Bottleneck lock
-            // If the timeout wins, the returned promise rejects -> Bottleneck frees the slot.
-            const pagePromise = fetchPage(after, attemptController.signal);
-
-            // Swallow dangling rejections if safety timeout wins (avoids Node warnings)
-            pagePromise.catch(() => { });
-
-            return await Promise.race([pagePromise, safetyPromise]);
+          const safetyPromise = new Promise<never>((_, reject) => {
+            safetyTimeoutId = setTimeout(() => {
+              attemptController.abort();
+              reject(
+                new Error(
+                  `Reddit API request timed out (safety: ${SAFETY_TIMEOUT_MS / 1000}s). The fetch may have hung without triggering its own AbortController.`
+                )
+              );
+            }, SAFETY_TIMEOUT_MS);
           });
 
-          // Wait for either the queueing process or the execution itself to finish/fail
-          listing = await schedulePromise;
-
+          listing = await Promise.race([pagePromise, safetyPromise]);
           if (safetyTimeoutId) clearTimeout(safetyTimeoutId);
           break;
         } catch (err) {
@@ -197,6 +196,10 @@ export async function runExploration(
           const baseDelayMs = 1000 * Math.pow(2, attempt - 1);
           const jitterMs = Math.floor(Math.random() * 500);
           const delayMs = baseDelayMs + jitterMs;
+          console.warn(
+            `[exploration] job=${jobId} transient error on attempt ${attempt}/${maxAttempts} (will retry after ${delayMs}ms): ${message}`,
+            err
+          );
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       }
@@ -214,6 +217,7 @@ export async function runExploration(
       const children = listing?.data?.children ?? [];
       after = listing?.data?.after ?? null;
       if (!children.length) hasMore = false;
+      console.log(`[exploration] job=${jobId} got ${children.length} posts, after=${after ?? 'null'}, hasMore=${hasMore}`);
 
       for (const { data: post } of children) {
         const created = post.created_utc;
@@ -312,9 +316,9 @@ export async function runExploration(
             totalProcessed: (jobRow?.totalProcessed ?? 0) + 1,
             ...(isNewLink
               ? {
-                uniqueCount: (jobRow?.uniqueCount ?? 0) + 1,
-                keywordMatchCount: isMatched ? (jobRow?.keywordMatchCount ?? 0) + 1 : (jobRow?.keywordMatchCount ?? 0),
-              }
+                  uniqueCount: (jobRow?.uniqueCount ?? 0) + 1,
+                  keywordMatchCount: isMatched ? (jobRow?.keywordMatchCount ?? 0) + 1 : (jobRow?.keywordMatchCount ?? 0),
+                }
               : {}),
           },
         });
@@ -341,6 +345,11 @@ export async function runExploration(
     }
   }
 
+  const finalJob = await entities.RedditBotJob.findUnique({
+    where: { id: jobId },
+    select: { uniqueCount: true, keywordMatchCount: true, totalProcessed: true },
+  });
+  console.log(`[exploration] job=${jobId} completed: ${finalJob?.totalProcessed ?? 0} processed, ${finalJob?.uniqueCount ?? 0} unique, ${finalJob?.keywordMatchCount ?? 0} matched`);
   await entities.RedditBotJob.update({
     where: { id: jobId },
     data: { status: 'COMPLETED', completedAt: new Date() },

@@ -71,6 +71,8 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
   const [bottleneckClusteringEnabled, setBottleneckClusteringEnabled] = useState(false);
   const [bottleneckRedisHost, setBottleneckRedisHost] = useState("");
   const [bottleneckRedisPort, setBottleneckRedisPort] = useState<string>("");
+  const [bottleneckRedisUsername, setBottleneckRedisUsername] = useState<string>("");
+  const [bottleneckRedisPassword, setBottleneckRedisPassword] = useState<string>("");
 
   // Sync settings from server when settings load (never sync API key)
   useEffect(() => {
@@ -91,6 +93,9 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
       setBottleneckClusteringEnabled(settings.bottleneck?.redis?.clusteringEnabled ?? false);
       setBottleneckRedisHost(settings.bottleneck?.redis?.host ?? "");
       setBottleneckRedisPort(settings.bottleneck?.redis?.port?.toString() ?? "");
+      setBottleneckRedisUsername(settings.bottleneck?.redis?.username ?? "");
+      // Do not echo password back; always keep as empty for security. Admin must re-enter to change.
+      setBottleneckRedisPassword("");
     }
   }, [settings]);
 
@@ -106,7 +111,6 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
   const effectiveMaxPostsPerRun = aiMaxPostsPerRun !== "" ? aiMaxPostsPerRun : "1000";
   const effectiveMinTime = bottleneckMinTime !== "" ? bottleneckMinTime : "10000";
   const effectiveMaxConcurrent = bottleneckMaxConcurrent !== "" ? bottleneckMaxConcurrent : "1";
-  const effectiveRedisPort = bottleneckRedisPort !== "" ? bottleneckRedisPort : "6379";
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +121,8 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
     if (isNaN(maxPostsPerRun) || maxPostsPerRun < 1) return;
     const minTime = parseInt(effectiveMinTime, 10);
     const maxConcurrent = parseInt(effectiveMaxConcurrent, 10);
-    const redisPort = parseInt(effectiveRedisPort, 10);
+    const redisPortRaw = bottleneckRedisPort.trim() === "" ? null : parseInt(bottleneckRedisPort, 10);
+    const redisPort = redisPortRaw != null && !isNaN(redisPortRaw) && redisPortRaw >= 1 ? redisPortRaw : null;
     const reservoirVal = bottleneckReservoir.trim() === "" ? null : parseInt(bottleneckReservoir, 10);
     const reservoirIntervalVal = bottleneckReservoirRefreshInterval.trim() === "" ? null : parseInt(bottleneckReservoirRefreshInterval, 10);
     if (isNaN(minTime) || minTime < 0 || isNaN(maxConcurrent) || maxConcurrent < 1) return;
@@ -144,7 +149,10 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
       bottleneckReservoirRefreshInterval: reservoirIntervalVal,
       bottleneckClusteringEnabled,
       bottleneckRedisHost: bottleneckRedisHost.trim() || null,
-      bottleneckRedisPort: isNaN(redisPort) ? 6379 : redisPort,
+      bottleneckRedisPort: redisPort,
+      bottleneckRedisUsername: bottleneckRedisUsername.trim() || null,
+      // Only send password if user entered something; null means \"leave unchanged\" on the server.
+      bottleneckRedisPassword: bottleneckRedisPassword.trim() === \"\" ? null : bottleneckRedisPassword,
     };
     try {
       const result = await updateSettingsAction(payload);
@@ -472,28 +480,52 @@ const RedditBotSettingsPage = ({ user }: { user: AuthUser }) => {
                   </div>
                   {bottleneckClusteringEnabled && (
                     <>
-                      <div>
-                        <Label htmlFor="bottleneck-redis-host" className="text-sm">Redis host</Label>
-                        <Input
-                          id="bottleneck-redis-host"
-                          type="text"
-                          placeholder="localhost"
-                          value={bottleneckRedisHost}
-                          onChange={(e) => setBottleneckRedisHost(e.target.value)}
-                          className="mt-1 w-40"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="bottleneck-redis-port" className="text-sm">Redis port</Label>
-                        <Input
-                          id="bottleneck-redis-port"
-                          type="number"
-                          min={1}
-                          value={effectiveRedisPort}
-                          onChange={(e) => setBottleneckRedisPort(e.target.value)}
-                          className="mt-1 w-24"
-                          placeholder="6379"
-                        />
+                      <div className="flex flex-wrap items-end gap-6">
+                        <div>
+                          <Label htmlFor="bottleneck-redis-host" className="text-sm">Redis host (optional, or use REDIS_URL)</Label>
+                          <Input
+                            id="bottleneck-redis-host"
+                            type="text"
+                            placeholder="e.g. localhost or leave empty for REDIS_URL"
+                            value={bottleneckRedisHost}
+                            onChange={(e) => setBottleneckRedisHost(e.target.value)}
+                            className="mt-1 w-40"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="bottleneck-redis-port" className="text-sm">Redis port (optional, or use REDIS_URL)</Label>
+                          <Input
+                            id="bottleneck-redis-port"
+                            type="number"
+                            min={1}
+                            value={bottleneckRedisPort}
+                            onChange={(e) => setBottleneckRedisPort(e.target.value)}
+                            className="mt-1 w-24"
+                            placeholder="6379"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="bottleneck-redis-username" className="text-sm">Redis username (optional)</Label>
+                          <Input
+                            id="bottleneck-redis-username"
+                            type="text"
+                            value={bottleneckRedisUsername}
+                            onChange={(e) => setBottleneckRedisUsername(e.target.value)}
+                            className="mt-1 w-40"
+                            placeholder="ACL username or leave empty"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="bottleneck-redis-password" className="text-sm">Redis password (optional)</Label>
+                          <Input
+                            id="bottleneck-redis-password"
+                            type="password"
+                            value={bottleneckRedisPassword}
+                            onChange={(e) => setBottleneckRedisPassword(e.target.value)}
+                            className="mt-1 w-40"
+                            placeholder="Not shown once saved"
+                          />
+                        </div>
                       </div>
                     </>
                   )}
