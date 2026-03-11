@@ -1,10 +1,5 @@
 import { type DailyStats } from "wasp/entities";
 import { type DailyStatsJob } from "wasp/server/jobs";
-import {
-  getDailyPageViews,
-  getSources,
-} from "./providers/plausibleAnalyticsUtils";
-// import { getDailyPageViews, getSources } from './providers/googleAnalyticsUtils';
 import { paymentProcessor } from "../payment/paymentProcessor";
 import { SubscriptionStatus } from "../payment/plans";
 // import { assertUnreachable } from "../shared/utils";
@@ -67,7 +62,8 @@ export const calculateDailyStats: DailyStatsJob<never, void> = async (
     //     assertUnreachable(paymentProcessor.id);
     // }
 
-    const { totalViews, prevDayViewsChangePercent } = await getDailyPageViews();
+    const totalViews = 0;
+    const prevDayViewsChangePercent = "0";
 
     let dailyStats = await context.entities.DailyStats.findUnique({
       where: {
@@ -106,33 +102,7 @@ export const calculateDailyStats: DailyStatsJob<never, void> = async (
         },
       });
     }
-    const sources = await getSources();
-
-    for (const source of sources) {
-      let visitors = source.visitors;
-      if (typeof source.visitors !== "number") {
-        visitors = parseInt(source.visitors);
-      }
-      await context.entities.PageViewSource.upsert({
-        where: {
-          date_name: {
-            date: nowUTC,
-            name: source.source,
-          },
-        },
-        create: {
-          date: nowUTC,
-          name: source.source,
-          visitors,
-          dailyStatsId: dailyStats.id,
-        },
-        update: {
-          visitors,
-        },
-      });
-    }
-
-    console.table({ dailyStats });
+    // No external analytics sources configured.
   } catch (error: any) {
     console.error("Error calculating daily stats: ", error);
     await context.entities.Logs.create({

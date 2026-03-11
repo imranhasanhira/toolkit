@@ -60,3 +60,16 @@ export function throttleWithTrailingInvocation(
 
   return throttledFn as typeof throttledFn & { cancel: () => void };
 }
+
+export function formatDuration(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return `${ms}ms`;
+  if (ms < 1000) return `${ms}ms`;
+  const sec = ms / 1000;
+  if (sec < 60) return `${sec.toFixed(1)}s`;
+  const minutes = Math.floor(sec / 60);
+  const remainingSec = Math.round(sec % 60);
+  if (minutes < 60) return `${minutes}m ${remainingSec}s`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMin = minutes % 60;
+  return `${hours}h ${remainingMin}m ${remainingSec}s`;
+}

@@ -8,6 +8,7 @@
 import { ChatOllama } from '@langchain/ollama';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import OpenAI from 'openai';
+import { formatDuration } from '../../shared/utils';
 
 export interface RelevancyResult {
   relevant: boolean;
@@ -102,6 +103,7 @@ export async function evaluateRelevancy(
   options: RelevancyOptions,
   postUrl?: string
 ): Promise<RelevancyResult> {
+  const startedAt = Date.now();
   if (postUrl) console.info('Reddit AI relevancy:', options.engine, options.model, postUrl);
   const trimmedProduct = (productDescription || '').trim().slice(0, MAX_PRODUCT_CHARS);
   const trimmedPost = (postText || '').trim().slice(0, MAX_POST_CHARS);
@@ -117,6 +119,8 @@ export async function evaluateRelevancy(
         new HumanMessage(userPrompt),
       ]);
       const text = typeof response.content === 'string' ? response.content : String(response.content ?? '');
+      const ms = Date.now() - startedAt;
+      console.info('Reddit AI relevancy duration:', options.engine, options.model, formatDuration(ms), postUrl ?? '(no-url)');
       return parseRelevancyResponse(text);
     }
 
@@ -133,9 +137,13 @@ export async function evaluateRelevancy(
       ...(disableThinking ? { reasoning: { effort: 'none' } } : {}),
     } as any);
     const text = completion.choices[0]?.message?.content ?? '';
+    const ms = Date.now() - startedAt;
+    console.info('Reddit AI relevancy duration:', options.engine, options.model, formatDuration(ms), postUrl ?? '(no-url)');
     return parseRelevancyResponse(text);
   } catch (err) {
     console.error('Reddit relevancy evaluation error:', err);
+    const ms = Date.now() - startedAt;
+    console.info('Reddit AI relevancy duration (error):', options.engine, (options as any).model, formatDuration(ms), postUrl ?? '(no-url)');
     return { relevant: false, painPointSummary: null, reasoning: null };
   }
 }

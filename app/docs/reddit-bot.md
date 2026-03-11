@@ -462,7 +462,7 @@ Located in `src/server/reddit/`.
 Three sections:
 
 1. **Stats** — Total API calls, total credit issued, total credit used.
-2. **Settings** — Credit defaults, AI engine config (Ollama/OpenRouter with disable-thinking toggles), Bottleneck rate limiting (with optional Redis clustering).
+2. **Settings** — Credit defaults, AI engine config (Ollama/OpenRouter with disable-thinking toggles), Bottleneck rate limiting (optional Redis: host, port, username, password; leave host/port empty to use `REDIS_URL`).
 3. **Users & Credits** — User table with balances, per-user top-up button.
 
 ---
@@ -629,11 +629,15 @@ Settings are stored as key-value pairs in `RedditSettings`. Full key list in [re
 | **AI — Ollama** | `ai.ollama.baseUrl`, `ai.ollama.model`, `ai.ollama.disableThinking` | `http://localhost:11434`, `""`, true |
 | **AI — OpenRouter** | `ai.openrouter.baseUrl`, `ai.openrouter.model`, `ai.openrouter.apiKey`, `ai.openrouter.disableThinking` | `https://openrouter.ai/api/v1`, `""`, `""`, true |
 | **Bottleneck** | `bottleneck.minTime`, `bottleneck.maxConcurrent`, `bottleneck.reservoir`, `bottleneck.reservoirRefreshInterval` | 1000, 1, null, null |
-| **Bottleneck — Redis** | `bottleneck.redis.clusteringEnabled`, `bottleneck.redis.host`, `bottleneck.redis.port` | false, `"localhost"`, 6379 |
+| **Bottleneck — Redis** | `bottleneck.redis.clusteringEnabled`, `bottleneck.redis.host`, `bottleneck.redis.port`, `bottleneck.redis.username`, `bottleneck.redis.password` | false; host/port/username/password stored only (UI shows empty when not set; server falls back to `REDIS_URL` and default port 6379 when connecting) |
+
+**Redis connection:** The admin UI shows only values stored in the DB. Leave host/port empty to use `REDIS_URL` from the environment; the server merges `REDIS_URL` when settings are empty. Username and password are optional and can be set in the UI (settings override auth from `REDIS_URL`). Password is never echoed back after save.
 
 **AI engine options:**
 - **Ollama** — Local LLM via LangChain's `ChatOllama`. The `disableThinking` toggle controls the `think` parameter (when disabled, `think: false` is sent to suppress reasoning tokens).
 - **OpenRouter** — Cloud LLM via the `openai` SDK pointed at OpenRouter's API. The `disableThinking` toggle adds `reasoning: { effort: 'none' }` to suppress extended thinking. API key is encrypted at rest when `REDDIT_OPENROUTER_KEY_ENCRYPTION_SECRET` is set.
 
 **Rate limiting:** All Reddit API requests go through Bottleneck. When Redis clustering is enabled, rate limits are shared across processes/instances.
+
+**Logging:** Each Reddit API request logs one info line with the request URL. Each AI relevancy check logs one info line with engine, model, and post URL.
 

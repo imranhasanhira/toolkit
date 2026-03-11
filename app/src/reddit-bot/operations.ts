@@ -410,6 +410,8 @@ const getExportPostsSchema = z.object({
   fetchedBefore: z.string().datetime().optional(),
   onlyUnexported: z.boolean().optional(),
   relevantOnly: z.boolean().optional(),
+  // When provided, export only these specific project post ids (ignores filters).
+  projectPostIds: z.array(z.string()).optional(),
 });
 
 export const getRedditBotProjectPostsForExport = async (
@@ -424,6 +426,32 @@ export const getRedditBotProjectPostsForExport = async (
     where: { id: args.projectId },
   });
   ensureProjectAccess(project, context.user.id, context.user.isAdmin);
+
+  // If explicit ids are provided, export only those posts for this project.
+  if (args.projectPostIds && args.projectPostIds.length > 0) {
+    const list = await context.entities.RedditBotProjectPost.findMany({
+      where: {
+        id: { in: args.projectPostIds },
+        projectId: args.projectId,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { post: { include: { author: true } } },
+    });
+    return list.map((pp: any) => ({
+      id: pp.id,
+      title: pp.post?.title ?? '',
+      content: pp.post?.content ?? '',
+      postLink: pp.post?.postLink ?? '',
+      authorName: pp.post?.author?.redditUsername ?? '',
+      authorLink: pp.post?.author?.profileUrl ?? '',
+      status: pp.status,
+      painPointSummary: pp.painPointSummary ?? '',
+      matchedKeywords: Array.isArray(pp.matchedKeywords) ? pp.matchedKeywords.join(', ') : '',
+      subreddit: pp.post?.subreddit ?? '',
+      postedAt: pp.post?.postedAt ?? '',
+      fetchedAt: pp.createdAt,
+    }));
+  }
 
   const onlyUnexported = args.onlyUnexported !== false;
   const relevantOnly = args.relevantOnly !== false;
@@ -1069,4 +1097,33 @@ export const triggerRedditAiAnalysis = async (
   });
 
   return { runId: run.id, totalToProcess };
+};
+
+const deleteProjectPostsSchema = z.object({
+  projectId: z.string(),
+  projectPostIds: z.array(z.string()).min(1),
+});
+
+export const deleteRedditBotProjectPosts = async (
+  rawArgs: z.infer<typeof deleteProjectPostsSchema>,
+  context: any
+) => {
+  if (!context.user) throw new HttpError(401, 'Not authorized');
+  await requireAppAccess(context.user.id, APP_KEYS.REDDIT_BOT, context.user.isAdmin);
+
+  const args = ensureArgsSchemaOrThrowHttpError(deleteProjectPostsSchema, rawArgs);
+
+  const project = await context.entities.RedditBotProject.findUnique({
+    where: { id: args.projectId },
+  });
+  ensureProjectAccess(project, context.user.id, context.user.isAdmin);
+
+  await context.entities.RedditBotProjectPost.deleteMany({
+    where: {
+      id: { in: args.projectPostIds },
+      projectId: args.projectId,
+    },
+  });
+
+  return { deletedCount: args.projectPostIds.length };
 };

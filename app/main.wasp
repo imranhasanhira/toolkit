@@ -26,12 +26,6 @@ app OpenSaaS {
     "<meta name='twitter:image:width' content='800' />",
     "<meta name='twitter:image:height' content='400' />",
     "<meta name='twitter:card' content='summary_large_image' />",
-    // TODO: You can put your Plausible analytics scripts below (https://docs.opensaas.sh/guides/analytics/):
-    // NOTE: Plausible does not use Cookies, so you can simply add the scripts here.
-    // Google, on the other hand, does, so you must instead add the script dynamically
-    // via the Cookie Consent component after the user clicks the "Accept" cookies button.
-    "<script defer data-domain='<your-site-id>' src='https://plausible.io/js/script.js'></script>",  // for production
-    "<script defer data-domain='<your-site-id>' src='https://plausible.io/js/script.local.js'></script>",  // for development
   ],
 
   // 🔐 Auth out of the box! https://wasp.sh/docs/auth/overview
@@ -363,6 +357,10 @@ query getRedditAiAnalysisProspectiveCount {
 action triggerRedditAiAnalysis {
   fn: import { triggerRedditAiAnalysis } from "@src/reddit-bot/operations",
   entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotAiAnalysisRun]
+}
+action deleteRedditBotProjectPosts {
+  fn: import { deleteRedditBotProjectPosts } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost]
 }
 action killRedditAiAnalysisRun {
   fn: import { killRedditAiAnalysisRun } from "@src/reddit-bot/operations",

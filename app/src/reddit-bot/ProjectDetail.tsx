@@ -23,6 +23,7 @@ import {
   getMyRedditCredit,
   getRedditAiConfigStatus,
   updateRedditBotProject,
+  deleteRedditBotProjectPosts,
 } from 'wasp/client/operations';
 import { routes } from 'wasp/client/router';
 import { Button } from '../client/components/ui/button';
@@ -52,9 +53,11 @@ import {
 } from '../client/components/ui/select';
 import { Switch } from '../client/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../client/components/ui/tabs';
+import { Checkbox } from '../client/components/ui/checkbox';
 import { ChevronDown, ChevronRight, ChevronUp, Loader2, Play, Square, Download, Trash2, Calendar, List, Clock, LayoutGrid, Pencil, Sparkles, Check, X } from 'lucide-react';
 import { useState, useEffect, useRef, Fragment, useMemo } from 'react';
 import { useAutoRefresh, AutoRefreshToggle } from './useAutoRefresh';
+import { formatDuration } from '../shared/utils';
 
 import ExplorationFiltersForm, { type ExplorationFiltersValue } from './ExplorationFiltersForm';
 
@@ -62,12 +65,7 @@ function formatJobDuration(createdAt: string | Date, completedAt: string | Date 
   if (!completedAt) return null;
   const ms = new Date(completedAt).getTime() - new Date(createdAt).getTime();
   if (ms < 0) return null;
-  const sec = Math.floor(ms / 1000);
-  const min = Math.floor(sec / 60);
-  const hour = Math.floor(min / 60);
-  if (hour > 0) return `${hour}h ${min % 60}m`;
-  if (min > 0) return `${min}m ${sec % 60}s`;
-  return `${sec}s`;
+  return formatDuration(ms);
 }
 
 type JobConfig = {
@@ -250,6 +248,7 @@ export default function RedditBotProjectDetail() {
     fetchedBefore?: string;
     onlyUnexported?: boolean;
     relevantOnly?: boolean;
+    projectPostIds?: string[];
   };
   const [exportArgs, setExportArgs] = useState<ExportArgs | null>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -315,6 +314,7 @@ export default function RedditBotProjectDetail() {
   const [runAiDialogOpen, setRunAiDialogOpen] = useState(false);
   const [exploreWithRunningJobDialogOpen, setExploreWithRunningJobDialogOpen] = useState(false);
   const [runAiForceIncludeProcessed, setRunAiForceIncludeProcessed] = useState(false);
+  const [selectedPostIds, setSelectedPostIds] = useState<string[]>([]);
 
   const { data: aiProspectiveCount } = useQuery(
     getRedditAiAnalysisProspectiveCount,
@@ -357,6 +357,11 @@ export default function RedditBotProjectDetail() {
       return () => clearInterval(t);
     }
   }, [autoRefresh, activeTab, hasPendingOrInProgressAi, refetchPosts]);
+
+  // Clear selected posts when filters or pagination change
+  useEffect(() => {
+    setSelectedPostIds([]);
+  }, [filters.status, filters.subreddits, filters.keywords, filters.postedFrom, filters.postedTo, postsSortBy, postsOrder, postsCursor]);
 
   // Default Home filters to full project subreddits/keywords when project loads or changes
   useEffect(() => {
@@ -526,22 +531,38 @@ export default function RedditBotProjectDetail() {
   };
 
   const handleExportClick = () => {
-    setExportDialogOpen(true);
+    if (!projectId) return;
+    if (selectedPostIds.length > 0) {
+      // Export exactly the selected posts (current selection), bypassing the dialog.
+      setExportArgs({
+        projectId,
+        projectPostIds: selectedPostIds,
+      });
+    } else {
+      setExportDialogOpen(true);
+    }
   };
   const handleConfirmExport = () => {
     if (!projectId) return;
-    setExportArgs({
-      projectId,
-      status: filters.status,
-      subreddits: filters.subreddits?.length ? filters.subreddits : undefined,
-      keywords: filters.keywords?.length ? filters.keywords : undefined,
-      postedAfter: filters.postedFrom ? `${filters.postedFrom}T00:00:00.000Z` : undefined,
-      postedBefore: filters.postedTo ? `${filters.postedTo}T23:59:59.999Z` : undefined,
-      fetchedAfter: undefined,
-      fetchedBefore: undefined,
-      onlyUnexported: exportOnlyUnexported,
-      relevantOnly: exportRelevantOnly,
-    });
+    if (selectedPostIds.length > 0) {
+      setExportArgs({
+        projectId,
+        projectPostIds: selectedPostIds,
+      });
+    } else {
+      setExportArgs({
+        projectId,
+        status: filters.status,
+        subreddits: filters.subreddits?.length ? filters.subreddits : undefined,
+        keywords: filters.keywords?.length ? filters.keywords : undefined,
+        postedAfter: filters.postedFrom ? `${filters.postedFrom}T00:00:00.000Z` : undefined,
+        postedBefore: filters.postedTo ? `${filters.postedTo}T23:59:59.999Z` : undefined,
+        fetchedAfter: undefined,
+        fetchedBefore: undefined,
+        onlyUnexported: exportOnlyUnexported,
+        relevantOnly: exportRelevantOnly,
+      });
+    }
     setExportDialogOpen(false);
   };
 
@@ -895,10 +916,41 @@ export default function RedditBotProjectDetail() {
                   variant="outline"
                   size="sm"
                   disabled={runningAiAnalysis || !projectId || aiConfig?.configured === false}
-                  onClick={() => setRunAiDialogOpen(true)}
+                  onClick={async () => {
+                    if (!projectId) return;
+                    if (selectedPostIds.length === 1) {
+                      setAiAnalysisMessage(null);
+                      setRunningAiAnalysis(true);
+                      try {
+                        const id = selectedPostIds[0];
+                        await analyzePost({ projectPostId: id });
+                        await refetchPosts();
+                        await refetchAiRuns();
+                        setAiAnalysisMessage({
+                          type: 'success',
+                          text: 'AI analysis completed for the selected post.',
+                        });
+                        setTimeout(() => setAiAnalysisMessage(null), 5000);
+                      } catch (err: unknown) {
+                        const message =
+                          err && typeof err === 'object' && 'message' in err
+                            ? String((err as { message: string }).message)
+                            : 'Failed to run AI analysis on the selected post.';
+                        setAiAnalysisMessage({ type: 'error', text: message });
+                      } finally {
+                        setRunningAiAnalysis(false);
+                      }
+                    } else if (selectedPostIds.length > 1) {
+                      // Multiple selected -> run via background job using current filters.
+                      setRunAiDialogOpen(true);
+                    } else {
+                      // No selection -> run job based on filters as before.
+                      setRunAiDialogOpen(true);
+                    }
+                  }}
                 >
                   {runningAiAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Run AI analysis
+                  {selectedPostIds.length === 1 ? 'Run AI on selected' : 'Run AI analysis'}
                 </Button>
                 {aiAnalysisMessage && (
                   <span className={aiAnalysisMessage.type === 'error' ? 'text-destructive text-sm' : 'text-muted-foreground text-sm'}>
@@ -930,6 +982,28 @@ export default function RedditBotProjectDetail() {
               <table className="w-full text-sm table-fixed" style={{ tableLayout: 'fixed' }}>
                 <thead>
                   <tr className="border-b">
+                    <th className="p-2 w-8">
+                      <Checkbox
+                        aria-label="Select all posts on this page"
+                        checked={
+                          posts.length === 0
+                            ? false
+                            : posts.every((pp: any) => selectedPostIds.includes(pp.id))
+                            ? true
+                            : posts.some((pp: any) => selectedPostIds.includes(pp.id))
+                            ? 'indeterminate'
+                            : false
+                        }
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedPostIds(Array.from(new Set([...selectedPostIds, ...posts.map((pp: any) => pp.id)])));
+                          } else {
+                            const currentIds = new Set(posts.map((pp: any) => pp.id));
+                            setSelectedPostIds((ids) => ids.filter((id) => !currentIds.has(id)));
+                          }
+                        }}
+                      />
+                    </th>
                     <th className="text-left p-2 whitespace-nowrap">
                       <button
                         type="button"
@@ -972,6 +1046,17 @@ export default function RedditBotProjectDetail() {
                         className={`border-b ${expandedPostId === pp.id ? 'bg-muted/30' : ''} cursor-pointer hover:bg-muted/50`}
                         onClick={() => setExpandedPostId((id) => (id === pp.id ? null : pp.id))}
                       >
+                      <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          aria-label="Select post"
+                          checked={selectedPostIds.includes(pp.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedPostIds((ids) =>
+                              checked ? [...ids, pp.id] : ids.filter((id) => id !== pp.id)
+                            );
+                          }}
+                        />
+                      </td>
                       <td className="p-2 text-muted-foreground whitespace-nowrap text-xs tabular-nums">
                         {pp.post?.postedAt ? new Date(pp.post.postedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                       </td>
@@ -1085,7 +1170,7 @@ export default function RedditBotProjectDetail() {
                     </tr>
                     {expandedPostId === pp.id && (
                       <tr className="border-b bg-muted/20">
-                        <td colSpan={8} className="p-4 align-top">
+                        <td colSpan={9} className="p-4 align-top">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm max-w-full">
                             <div className="min-w-0">
                               <h4 className="font-medium mb-1">Post</h4>
@@ -1131,8 +1216,35 @@ export default function RedditBotProjectDetail() {
               <div className="flex items-center justify-between gap-4 py-3 border-t text-sm text-muted-foreground">
                 <span className="tabular-nums">
                   Showing {posts.length === 0 ? 0 : postsStartIndex + 1}–{postsEndIndex} of {postsTotal}
+                  {selectedPostIds.length > 0 && ` · ${selectedPostIds.length} selected`}
                 </span>
                 <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={selectedPostIds.length === 0 || !projectId}
+                    onClick={async () => {
+                      if (!projectId || selectedPostIds.length === 0) return;
+                      const confirmed = window.confirm(
+                        `Delete ${selectedPostIds.length} selected post(s) from this project? This cannot be undone.`
+                      );
+                      if (!confirmed) return;
+                      try {
+                        await deleteRedditBotProjectPosts({
+                          projectId,
+                          projectPostIds: selectedPostIds,
+                        });
+                        setSelectedPostIds([]);
+                        await refetchPosts();
+                      } catch (err) {
+                        console.error('Failed to delete selected posts', err);
+                        alert('Failed to delete selected posts. See console for details.');
+                      }
+                    }}
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    Delete selected
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -1334,6 +1446,8 @@ export default function RedditBotProjectDetail() {
                               )}
                               <span className="text-muted-foreground truncate">
                                 {r.processedCount} / {r.totalToProcess}
+                                {formatJobDuration(r.createdAt, (r as any).completedAt) != null &&
+                                  ` · ${formatJobDuration(r.createdAt, (r as any).completedAt)}`}
                               </span>
                             </span>
                             <span className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
