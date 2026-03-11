@@ -36,7 +36,7 @@ export default function NavBar({
 
   useEffect(() => {
     const throttledHandler = throttleWithTrailingInvocation(() => {
-      setIsScrolled(window.scrollY > 0);
+      setIsScrolled(window.scrollY > 8);
     }, 50);
 
     window.addEventListener("scroll", throttledHandler);
@@ -53,7 +53,6 @@ export default function NavBar({
       <header
         className={cn(
           "sticky top-0 z-50 transition-all duration-300",
-          isScrolled && "top-4",
         )}
       >
         <div
@@ -114,7 +113,7 @@ export default function NavBar({
 }
 
 function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
-  const { data: user, isLoading: isUserLoading } = useAuth();
+  const { data: user } = useAuth();
 
   return (
     <div className="hidden items-center justify-end gap-3 lg:flex lg:flex-1">
@@ -122,7 +121,7 @@ function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
         <AiCreditIndicator />
         <DarkModeSwitcher />
       </ul>
-      {isUserLoading ? null : !user ? (
+      {!user ? (
         <WaspRouterLink
           to={routes.LoginRoute.to}
           className={cn(
@@ -160,7 +159,7 @@ function NavBarMobileMenu({
   isScrolled: boolean;
   navigationItems: NavigationItem[];
 }) {
-  const { data: user, isLoading: isUserLoading } = useAuth();
+  const { data: user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -198,7 +197,7 @@ function NavBarMobileMenu({
                 {renderNavigationItems(navigationItems, setMobileMenuOpen)}
               </ul>
               <div className="py-6">
-                {isUserLoading ? null : !user ? (
+                {!user ? (
                   <WaspRouterLink to={routes.LoginRoute.to}>
                     <div className="text-foreground hover:text-primary flex items-center justify-end transition-colors duration-300 ease-in-out">
                       Log in <LogIn size="1.1rem" className="ml-1" />
