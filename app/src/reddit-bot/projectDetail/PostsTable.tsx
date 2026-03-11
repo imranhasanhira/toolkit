@@ -8,9 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../client/components/ui/select';
-import { ChevronDown, ChevronUp, Loader2, Sparkles, Check, X, Trash2 } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp, Download, Loader2, Sparkles, Check, X, Trash2 } from 'lucide-react';
 import { PAGE_SIZE_OPTIONS, POST_STATUS_COLOR } from './projectDetailConstants';
 import { PostRowExpansion } from './PostRowExpansion';
+import { RedditBotProjectPostStatus, RedditBotAiAnalysisStatus } from '@prisma/client';
 
 type Props = {
   posts: any[];
@@ -22,7 +23,7 @@ type Props = {
   setPostsSortBy: (v: 'postedAt' | 'createdAt') => void;
   postsOrder: 'asc' | 'desc';
   setPostsOrder: React.Dispatch<React.SetStateAction<'asc' | 'desc'>>;
-  updateStatus: (args: { projectPostId: string; status: 'DOWNLOADED' | 'MATCH' | 'RELEVANT' | 'DISCARDED' }) => Promise<unknown>;
+  updateStatus: (args: { projectPostId: string; status: RedditBotProjectPostStatus }) => Promise<unknown>;
   refetchPosts: () => void;
   analyzingPostId: string | null;
   setAnalyzingPostId: (v: string | null) => void;
@@ -73,18 +74,20 @@ export function PostsTable({
 }: Props) {
   const selectedCount = selectedPostIds.length;
   const tableToolbar = (borderClass: 'border-b' | 'border-t') => (
-    <div className={`flex items-center justify-between gap-4 py-3 ${borderClass} text-sm text-muted-foreground`}>
-      <span className="tabular-nums flex items-center gap-1">
-        <span>
+    <div
+      className={`flex flex-wrap items-center justify-between gap-3 py-3 ${borderClass} text-sm text-muted-foreground min-w-0`}
+    >
+      <span className="tabular-nums flex items-center gap-1 min-w-0 flex-1 basis-full sm:basis-auto sm:flex-initial">
+        <span className="min-w-0">
           Showing {posts.length === 0 ? 0 : postsStartIndex + 1}–{postsEndIndex} of {postsTotal}
         </span>
-        <span className="min-w-[6rem] tabular-nums">
+        <span className="min-w-[6rem] tabular-nums shrink-0">
           {selectedCount > 0 ? `· ${selectedCount} selected` : '\u00A0'}
         </span>
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap">
         <Select value={String(postsPageSize)} onValueChange={(v) => setPostsPageSize(parseInt(v, 10))}>
-          <SelectTrigger className="w-20">
+          <SelectTrigger className="w-20 shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -117,8 +120,10 @@ export function PostsTable({
             setPostsCursorHistory((h) => h.slice(0, -1));
             setPostsCursor(prev === '' || prev == null ? null : prev);
           }}
+        title="Previous page"
         >
-          Previous
+          <span className="hidden sm:inline">Previous</span>
+          <span className="sm:hidden">Prev</span>
         </Button>
         <Button
           variant="outline"
@@ -128,6 +133,7 @@ export function PostsTable({
             setPostsCursorHistory((h) => [...h, postsCursor ?? '']);
             setPostsCursor(postsNextCursor);
           }}
+          title="Next page"
         >
           Next
         </Button>
@@ -138,11 +144,11 @@ export function PostsTable({
   return (
     <>
       {postsTotal > 0 && tableToolbar('border-b')}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm table-fixed" style={{ tableLayout: 'fixed' }}>
+      <div className="overflow-x-auto min-w-0 w-full">
+        <table className="w-full text-sm min-w-[48rem] md:min-w-0 border-collapse">
           <thead>
-            <tr className="border-b">
-              <th className="p-2 w-8">
+            <tr className="border-b [&>th:last-child]:border-r-0">
+              <th className="p-2 w-8 border-r border-border overflow-hidden min-w-0">
                 <Checkbox
                   aria-label="Select all posts on this page"
                   checked={
@@ -164,10 +170,10 @@ export function PostsTable({
                   }}
                 />
               </th>
-              <th className="text-left p-2 whitespace-nowrap">
+              <th className="text-left p-2 whitespace-nowrap border-r border-border overflow-hidden min-w-0">
                 <button
                   type="button"
-                  className="flex items-center gap-0.5 hover:text-foreground"
+                  className="flex items-center gap-0.5 hover:text-foreground min-w-0 truncate"
                   onClick={() => {
                     if (postsSortBy === 'postedAt') setPostsOrder((o) => (o === 'desc' ? 'asc' : 'desc'));
                     else {
@@ -181,16 +187,20 @@ export function PostsTable({
                     (postsOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
                 </button>
               </th>
-              <th className="text-left p-2">Title</th>
-              <th className="text-left p-2">Author</th>
-              <th className="text-left p-2">Subreddit</th>
-              <th className="text-left p-2">Status</th>
-              <th className="text-left p-2">Matched</th>
-              <th className="text-left p-2">AI</th>
-              <th className="text-left p-2 whitespace-nowrap">
+              <th className="text-left p-2 border-r border-border overflow-hidden min-w-0">Title</th>
+              <th className="text-left p-2 border-r border-border">Author</th>
+              <th className="text-left p-2 border-r border-border">Subreddit</th>
+              <th className="text-left p-2 border-r border-border">Status</th>
+              <th className="text-left p-2 border-r border-border">Matched</th>
+              <th className="text-left p-2 w-9 border-r border-border overflow-hidden min-w-0" title="Exported">
+                <span className="sr-only">Exported</span>
+                <Download className="h-4 w-4 inline-block text-muted-foreground" aria-hidden />
+              </th>
+              <th className="text-left p-2 border-r border-border overflow-hidden min-w-0">AI</th>
+              <th className="hidden sm:table-cell text-left p-2 whitespace-nowrap border-r border-border overflow-hidden min-w-0">
                 <button
                   type="button"
-                  className="flex items-center gap-0.5 hover:text-foreground"
+                  className="flex items-center gap-0.5 hover:text-foreground min-w-0 truncate"
                   onClick={() => {
                     if (postsSortBy === 'createdAt') setPostsOrder((o) => (o === 'desc' ? 'asc' : 'desc'));
                     else {
@@ -210,10 +220,10 @@ export function PostsTable({
             {posts.map((pp: any) => (
               <Fragment key={pp.id}>
                 <tr
-                  className={`border-b ${expandedPostId === pp.id ? 'bg-muted/30' : ''} cursor-pointer hover:bg-muted/50`}
+                  className={`border-b [&>td:last-child]:border-r-0 ${expandedPostId === pp.id ? 'bg-muted/30' : ''} cursor-pointer hover:bg-muted/50`}
                   onClick={() => setExpandedPostId((id) => (id === pp.id ? null : pp.id))}
                 >
-                  <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                  <td className="p-2 border-r border-border" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       aria-label="Select post"
                       checked={selectedPostIds.includes(pp.id)}
@@ -224,45 +234,39 @@ export function PostsTable({
                       }}
                     />
                   </td>
-                  <td className="p-2 text-muted-foreground whitespace-nowrap text-xs tabular-nums">
-                    {pp.post?.postedAt
-                      ? new Date(pp.post.postedAt).toLocaleString(undefined, {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        })
-                      : '—'}
+                  <td className="p-2 text-muted-foreground text-xs tabular-nums border-r border-border overflow-hidden min-w-0">
+                    <span className="block min-w-0 truncate" title={pp.post?.postedAt ? new Date(pp.post.postedAt).toLocaleString() : undefined}>
+                      {pp.post?.postedAt
+                        ? new Date(pp.post.postedAt).toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })
+                        : '—'}
+                    </span>
                   </td>
-                  <td className="p-2 max-w-xs truncate" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-1.5">
-                      <a
-                        href={pp.post?.postLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {pp.post?.title}
-                      </a>
-                      {pp.lastExportedAt && (
-                        <span
-                          className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
-                          title="This post has been exported"
-                        >
-                          Exported
-                        </span>
-                      )}
-                    </div>
+                  <td className="p-2 border-r border-border overflow-hidden min-w-0" onClick={(e) => e.stopPropagation()}>
+                    <a
+                      href={pp.post?.postLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline block min-w-0 truncate md:whitespace-normal md:overflow-visible"
+                      title={pp.post?.title}
+                    >
+                      {pp.post?.title}
+                    </a>
                   </td>
-                  <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                  <td className="p-2 border-r border-border" onClick={(e) => e.stopPropagation()}>
                     <a
                       href={pp.post?.author?.profileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      className="text-primary hover:underline block min-w-0 truncate"
+                      title={pp.post?.author?.redditUsername}
                     >
                       {pp.post?.author?.redditUsername}
                     </a>
                   </td>
-                  <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                  <td className="p-2 border-r border-border" onClick={(e) => e.stopPropagation()}>
                     {pp.post?.subreddit ? (
                       <a
                         href={
@@ -272,47 +276,57 @@ export function PostsTable({
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                        className="text-primary hover:underline block min-w-0 truncate"
+                        title={`r/${pp.post.subreddit}`}
                       >
                         r/{pp.post.subreddit}
                       </a>
                     ) : (
-                      '—'
+                      <span className="block min-w-0 truncate">—</span>
                     )}
                   </td>
-                  <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                  <td className="p-2 border-r border-border overflow-hidden min-w-0" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={pp.status}
                       onValueChange={(v) =>
                         updateStatus({
                           projectPostId: pp.id,
-                          status: v as 'DOWNLOADED' | 'MATCH' | 'RELEVANT' | 'DISCARDED',
+                          status: v as RedditBotProjectPostStatus,
                         }).then(() => refetchPosts())
                       }
                     >
-                      <SelectTrigger className={`w-28 h-8 ${POST_STATUS_COLOR[pp.status] ?? ''}`}>
+                      <SelectTrigger className={`w-28 max-w-full h-8 min-w-0 ${POST_STATUS_COLOR[pp.status] ?? ''}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DOWNLOADED">Downloaded</SelectItem>
-                        <SelectItem value="MATCH">Match</SelectItem>
-                        <SelectItem value="RELEVANT">Relevant</SelectItem>
-                        <SelectItem value="DISCARDED">Discarded</SelectItem>
+                        <SelectItem value={RedditBotProjectPostStatus.DOWNLOADED}>Downloaded</SelectItem>
+                        <SelectItem value={RedditBotProjectPostStatus.MATCH}>Match</SelectItem>
+                        <SelectItem value={RedditBotProjectPostStatus.RELEVANT}>Relevant</SelectItem>
+                        <SelectItem value={RedditBotProjectPostStatus.DISCARDED}>Discarded</SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
-                  <td className="p-2">
-                    {Array.isArray(pp.matchedKeywords) && pp.matchedKeywords.length > 0
-                      ? pp.matchedKeywords.join(', ')
-                      : '—'}
+                  <td className="p-2 border-r border-border overflow-hidden min-w-0">
+                    <span className="block min-w-0 truncate" title={Array.isArray(pp.matchedKeywords) && pp.matchedKeywords.length > 0 ? pp.matchedKeywords.join(', ') : undefined}>
+                      {Array.isArray(pp.matchedKeywords) && pp.matchedKeywords.length > 0
+                        ? pp.matchedKeywords.join(', ')
+                        : '—'}
+                    </span>
                   </td>
-                  <td className="p-2" onClick={(e) => e.stopPropagation()}>
-                    <span className="inline-flex items-center gap-1.5">
+                  <td className="p-2 w-9 text-center border-r border-border overflow-hidden min-w-0" title={pp.lastExportedAt ? 'Exported' : undefined}>
+                    {pp.lastExportedAt ? (
+                      <CheckCircle className="h-4 w-4 inline-block text-green-600" aria-hidden />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  <td className="p-2 border-r border-border overflow-hidden min-w-0" onClick={(e) => e.stopPropagation()}>
+                    <span className="inline-flex items-center gap-1.5 min-w-0">
                       {analyzingPostId === pp.id ? (
                         <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-                      ) : pp.aiAnalysisStatus === 'PENDING' || pp.aiAnalysisStatus === 'IN_PROGRESS' ? (
+                      ) : pp.aiAnalysisStatus === RedditBotAiAnalysisStatus.PENDING || pp.aiAnalysisStatus === RedditBotAiAnalysisStatus.IN_PROGRESS ? (
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      ) : pp.aiAnalysisStatus === 'COMPLETED' ? (
+                      ) : pp.aiAnalysisStatus === RedditBotAiAnalysisStatus.COMPLETED ? (
                         pp.painPointSummary ? (
                           <span title="AI summary">
                             <Check className="h-4 w-4 shrink-0 text-green-600" />
@@ -322,7 +336,7 @@ export function PostsTable({
                             <X className="h-4 w-4 shrink-0 text-muted-foreground" />
                           </span>
                         )
-                      ) : pp.aiAnalysisStatus === 'FAILED' ? (
+                      ) : pp.aiAnalysisStatus === RedditBotAiAnalysisStatus.FAILED ? (
                         <span title={pp.aiAnalysisErrorMessage ?? 'Analysis failed'}>
                           <X className="h-4 w-4 shrink-0 text-destructive" />
                         </span>
@@ -346,13 +360,15 @@ export function PostsTable({
                       )}
                     </span>
                   </td>
-                  <td className="p-2 text-muted-foreground whitespace-nowrap text-xs tabular-nums">
-                    {pp.createdAt
-                      ? new Date(pp.createdAt).toLocaleString(undefined, {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        })
-                      : '—'}
+                  <td className="hidden sm:table-cell p-2 text-muted-foreground text-xs tabular-nums border-r border-border overflow-hidden min-w-0">
+                    <span className="block min-w-0 truncate" title={pp.createdAt ? new Date(pp.createdAt).toLocaleString() : undefined}>
+                      {pp.createdAt
+                        ? new Date(pp.createdAt).toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })
+                        : '—'}
+                    </span>
                   </td>
                 </tr>
                 {expandedPostId === pp.id && <PostRowExpansion post={pp} />}

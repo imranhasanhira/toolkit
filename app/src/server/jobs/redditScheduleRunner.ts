@@ -37,6 +37,7 @@ export const processRedditScheduleRunner = async (_args: any, context: any) => {
         status: 'RUNNING',
         uniqueCount: 0,
         keywordMatchCount: 0,
+        aiAnalysisSkippedCount: 0,
         config: jobConfig,
       },
     });

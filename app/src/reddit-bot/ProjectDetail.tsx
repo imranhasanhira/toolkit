@@ -342,8 +342,8 @@ export default function RedditBotProjectDetail() {
   const keywords = (project.keywords as string[]) || [];
 
   return (
-    <div className="py-10">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="py-10 min-w-0 overflow-x-hidden">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 min-w-0">
         <ProjectDetailShell
           project={project}
           projectCredit={projectCredit}

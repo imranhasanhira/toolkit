@@ -1,6 +1,8 @@
 import { runExploration } from '../reddit/explorationRunner';
 import { getSettings, getDecryptedOpenRouterApiKey } from '../reddit/redditCreditService';
 import { redditAiAnalysisJob } from 'wasp/server/jobs';
+import { RedditBotJobStatus } from '@prisma/client';
+import { AI_ANALYSIS_STATUSES_QUEUED } from '../../reddit-bot/redditBotAiStatusConstants';
 
 export type RedditExplorationJobPayload = {
   projectId: string;
@@ -30,7 +32,7 @@ export const processRedditExploration = async (
     console.error(`[redditExploration] Project ${projectId} not found for job ${jobId}`);
     await context.entities.RedditBotJob.update({
       where: { id: jobId },
-      data: { status: 'FAILED', errorMessage: 'Project not found', completedAt: new Date() },
+      data: { status: RedditBotJobStatus.FAILED, errorMessage: 'Project not found', completedAt: new Date() },
     });
     return;
   }
@@ -43,7 +45,7 @@ export const processRedditExploration = async (
       console.error(`[redditExploration] Access denied for user ${args.userId} on project ${projectId}`);
       await context.entities.RedditBotJob.update({
         where: { id: jobId },
-        data: { status: 'FAILED', errorMessage: 'Access denied', completedAt: new Date() },
+        data: { status: RedditBotJobStatus.FAILED, errorMessage: 'Access denied', completedAt: new Date() },
       });
       return;
     }
@@ -87,7 +89,7 @@ export const processRedditExploration = async (
     await context.entities.RedditBotJob.update({
       where: { id: jobId },
       data: {
-        status: 'FAILED',
+        status: RedditBotJobStatus.FAILED,
         errorMessage: message.slice(0, 1000),
         completedAt: new Date(),
       },

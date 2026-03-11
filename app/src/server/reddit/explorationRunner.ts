@@ -8,6 +8,7 @@ import {
   toNum,
 } from './redditCreditService';
 import { getRedditLimiter } from './redditLimiter';
+import { RedditBotJobStatus, RedditBotProjectPostStatus, RedditBotAiAnalysisStatus } from '@prisma/client';
 
 const SAFETY_TIMEOUT_MS = 35_000;
 
@@ -88,21 +89,21 @@ export async function runExploration(
       if (job?.stopRequestedAt) {
         await entities.RedditBotJob.update({
           where: { id: jobId },
-          data: { status: 'KILLED', completedAt: now },
+          data: { status: RedditBotJobStatus.KILLED, completedAt: now },
         });
         return;
       }
       if (maxPosts > 0 && job && job.uniqueCount >= maxPosts) {
         await entities.RedditBotJob.update({
           where: { id: jobId },
-          data: { status: 'COMPLETED', completedAt: now },
+          data: { status: RedditBotJobStatus.COMPLETED, completedAt: now },
         });
         return;
       }
       if (maxLeads > 0 && job && job.keywordMatchCount >= maxLeads) {
         await entities.RedditBotJob.update({
           where: { id: jobId },
-          data: { status: 'COMPLETED', completedAt: now },
+          data: { status: RedditBotJobStatus.COMPLETED, completedAt: now },
         });
         return;
       }
@@ -117,7 +118,7 @@ export async function runExploration(
           await entities.RedditBotJob.update({
             where: { id: jobId },
             data: {
-              status: 'FAILED',
+              status: RedditBotJobStatus.FAILED,
               errorMessage: err.message || 'Insufficient Reddit credit',
               completedAt: now,
             },
@@ -264,7 +265,11 @@ export async function runExploration(
         const existingLink = await entities.RedditBotProjectPost.findUnique({
           where: { projectId_postId: { projectId, postId } },
         });
-        if (existingLink && (existingLink.status === 'RELEVANT' || existingLink.status === 'DISCARDED')) {
+        if (
+          existingLink &&
+          (existingLink.status === RedditBotProjectPostStatus.RELEVANT ||
+            existingLink.status === RedditBotProjectPostStatus.DISCARDED)
+        ) {
           continue; // already in a final state (AI said relevant or discarded)
         }
 
@@ -272,30 +277,31 @@ export async function runExploration(
         const matched = matchKeywords(text, projectKeywords);
         const isMatched = matched.length > 0;
 
-        const aiAnalysisStatus = aiEnabled ? 'PENDING' : 'NOT_REQUESTED';
+        const aiAnalysisStatus = aiEnabled ? RedditBotAiAnalysisStatus.PENDING : RedditBotAiAnalysisStatus.NOT_REQUESTED;
         const jobIdForPost = aiEnabled ? jobId : null;
 
         const shouldSetAiForUpdate =
           aiEnabled &&
           (!existingLink ||
-            existingLink.aiAnalysisStatus === 'NOT_REQUESTED' ||
-            existingLink.aiAnalysisStatus === 'PENDING');
+            existingLink.aiAnalysisStatus === RedditBotAiAnalysisStatus.NOT_REQUESTED ||
+            existingLink.aiAnalysisStatus === RedditBotAiAnalysisStatus.PENDING);
+        const skippedAiAlreadyAnalysed = aiEnabled && !!existingLink && !shouldSetAiForUpdate;
 
         await entities.RedditBotProjectPost.upsert({
           where: { projectId_postId: { projectId, postId } },
           create: {
             projectId,
             postId,
-            status: isMatched ? 'MATCH' : 'DOWNLOADED',
+            status: isMatched ? RedditBotProjectPostStatus.MATCH : RedditBotProjectPostStatus.DOWNLOADED,
             matchedKeywords: matched.length ? matched : undefined,
             aiAnalysisStatus,
             jobId: jobIdForPost,
           },
           update: {
-            status: isMatched ? 'MATCH' : 'DOWNLOADED',
+            status: isMatched ? RedditBotProjectPostStatus.MATCH : RedditBotProjectPostStatus.DOWNLOADED,
             matchedKeywords: matched.length ? matched : undefined,
             ...(shouldSetAiForUpdate
-              ? { aiAnalysisStatus: 'PENDING' as const, jobId: jobIdForPost }
+              ? { aiAnalysisStatus: RedditBotAiAnalysisStatus.PENDING, jobId: jobIdForPost }
               : {}),
           },
         });
@@ -304,7 +310,7 @@ export async function runExploration(
         const isNewLink = !existingLink;
         const jobRow = await entities.RedditBotJob.findUnique({
           where: { id: jobId },
-          select: { uniqueCount: true, keywordMatchCount: true, totalProcessed: true },
+          select: { uniqueCount: true, keywordMatchCount: true, totalProcessed: true, aiAnalysisSkippedCount: true },
         });
         await entities.RedditBotJob.update({
           where: { id: jobId },
@@ -316,6 +322,9 @@ export async function runExploration(
                 keywordMatchCount: isMatched ? (jobRow?.keywordMatchCount ?? 0) + 1 : (jobRow?.keywordMatchCount ?? 0),
               }
               : {}),
+            ...(skippedAiAlreadyAnalysed
+              ? { aiAnalysisSkippedCount: (jobRow?.aiAnalysisSkippedCount ?? 0) + 1 }
+              : {}),
           },
         });
 
@@ -326,14 +335,14 @@ export async function runExploration(
         if (maxPosts > 0 && (updated?.uniqueCount ?? 0) >= maxPosts) {
           await entities.RedditBotJob.update({
             where: { id: jobId },
-            data: { status: 'COMPLETED', completedAt: new Date() },
+            data: { status: RedditBotJobStatus.COMPLETED, completedAt: new Date() },
           });
           return;
         }
         if (maxLeads > 0 && (updated?.keywordMatchCount ?? 0) >= maxLeads) {
           await entities.RedditBotJob.update({
             where: { id: jobId },
-            data: { status: 'COMPLETED', completedAt: new Date() },
+            data: { status: RedditBotJobStatus.COMPLETED, completedAt: new Date() },
           });
           return;
         }
@@ -343,6 +352,6 @@ export async function runExploration(
 
   await entities.RedditBotJob.update({
     where: { id: jobId },
-    data: { status: 'COMPLETED', completedAt: new Date() },
+    data: { status: RedditBotJobStatus.COMPLETED, completedAt: new Date() },
   });
 }

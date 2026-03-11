@@ -15,6 +15,7 @@ type Props = {
   setExportOnlyUnexported: (v: boolean) => void;
   exportRelevantOnly: boolean;
   setExportRelevantOnly: (v: boolean) => void;
+  exportCount?: number | null;
   onConfirm: () => void;
 };
 
@@ -26,6 +27,7 @@ export function ExportDialog(props: Props) {
     setExportOnlyUnexported,
     exportRelevantOnly,
     setExportRelevantOnly,
+    exportCount,
     onConfirm,
   } = props;
   return (
@@ -37,6 +39,11 @@ export function ExportDialog(props: Props) {
             Export posts as a tab-separated file. Other filters (subreddits, keywords, dates) always apply.
           </DialogDescription>
         </DialogHeader>
+        {exportCount != null && (
+          <p className="text-sm font-medium pt-1">
+            {exportCount} post{exportCount === 1 ? '' : 's'} will be exported.
+          </p>
+        )}
         <div className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Scope</Label>

@@ -12,6 +12,8 @@ import { requireAppAccess } from '../server/appPermissions';
 import { APP_KEYS } from '../shared/appKeys';
 import { z } from 'zod';
 import { ensureArgsSchemaOrThrowHttpError } from '../server/validation';
+import { RedditBotProjectPostStatus, RedditBotAiAnalysisStatus } from '@prisma/client';
+import { AI_ANALYSIS_STATUSES_ALL } from './redditBotAiStatusConstants';
 
 /**
  * Ensures the user is the project owner or an admin. Call this for every operation
@@ -162,7 +164,7 @@ export const deleteRedditBotProject = async (
 // --- Project posts (list with filters, cursor pagination)
 const getProjectPostsSchema = z.object({
   projectId: z.string(),
-  status: z.enum(['DOWNLOADED', 'MATCH', 'RELEVANT', 'DISCARDED']).optional(),
+  status: z.nativeEnum(RedditBotProjectPostStatus).optional(),
   subreddits: z.array(z.string()).optional(),
   keywords: z.array(z.string()).optional(),
   postedAfter: z.string().datetime().optional(),
@@ -288,7 +290,7 @@ export const getRedditBotProjectPosts = async (
 
 const updatePostStatusSchema = z.object({
   projectPostId: z.string(),
-  status: z.enum(['DOWNLOADED', 'MATCH', 'RELEVANT', 'DISCARDED']),
+  status: z.nativeEnum(RedditBotProjectPostStatus),
   painPointSummary: z.string().optional(),
 });
 
@@ -366,7 +368,7 @@ export const analyzeRedditBotProjectPost = async (
 
   await context.entities.RedditBotProjectPost.update({
     where: { id: args.projectPostId },
-    data: { aiAnalysisStatus: 'IN_PROGRESS' },
+    data: { aiAnalysisStatus: RedditBotAiAnalysisStatus.IN_PROGRESS },
   });
 
   const postText = `${projectPost.post?.title ?? ''} ${projectPost.post?.content ?? ''}`.trim();
@@ -382,8 +384,8 @@ export const analyzeRedditBotProjectPost = async (
     await context.entities.RedditBotProjectPost.update({
       where: { id: args.projectPostId },
       data: {
-        aiAnalysisStatus: 'COMPLETED',
-        status: result.relevant ? 'RELEVANT' : 'DISCARDED',
+        aiAnalysisStatus: RedditBotAiAnalysisStatus.COMPLETED,
+        status: result.relevant ? RedditBotProjectPostStatus.RELEVANT : RedditBotProjectPostStatus.DISCARDED,
         painPointSummary: result.painPointSummary ?? null,
         aiReasoning: result.reasoning ?? null,
       },
@@ -392,7 +394,7 @@ export const analyzeRedditBotProjectPost = async (
     const message = err instanceof Error ? err.message : String(err);
     await context.entities.RedditBotProjectPost.update({
       where: { id: args.projectPostId },
-      data: { aiAnalysisStatus: 'FAILED', aiAnalysisErrorMessage: message },
+      data: { aiAnalysisStatus: RedditBotAiAnalysisStatus.FAILED, aiAnalysisErrorMessage: message },
     });
     throw new HttpError(500, message);
   }
@@ -401,7 +403,7 @@ export const analyzeRedditBotProjectPost = async (
 // --- Export TSV (returns rows for client to build TSV; includes id for mark-as-exported)
 const getExportPostsSchema = z.object({
   projectId: z.string(),
-  status: z.enum(['DOWNLOADED', 'MATCH', 'RELEVANT', 'DISCARDED']).optional(),
+  status: z.nativeEnum(RedditBotProjectPostStatus).optional(),
   subreddits: z.array(z.string()).optional(),
   keywords: z.array(z.string()).optional(),
   postedAfter: z.string().datetime().optional(),
@@ -458,7 +460,7 @@ export const getRedditBotProjectPostsForExport = async (
 
   const where: any = buildPostsWhere({
     projectId: args.projectId,
-    status: relevantOnly ? 'RELEVANT' : args.status,
+    status: relevantOnly ? RedditBotProjectPostStatus.RELEVANT : args.status,
     subreddits: args.subreddits,
     postedAfter: args.postedAfter,
     postedBefore: args.postedBefore,
@@ -496,6 +498,75 @@ export const getRedditBotProjectPostsForExport = async (
   }));
 };
 
+const getExportCountSchema = getExportPostsSchema.pick({
+  projectId: true,
+  status: true,
+  subreddits: true,
+  keywords: true,
+  postedAfter: true,
+  postedBefore: true,
+  fetchedAfter: true,
+  fetchedBefore: true,
+  onlyUnexported: true,
+  relevantOnly: true,
+  projectPostIds: true,
+});
+
+export const getRedditBotProjectExportCount = async (
+  rawArgs: z.infer<typeof getExportCountSchema>,
+  context: any
+) => {
+  if (!context.user) throw new HttpError(401, 'Not authorized');
+  await requireAppAccess(context.user.id, APP_KEYS.REDDIT_BOT, context.user.isAdmin);
+
+  const args = ensureArgsSchemaOrThrowHttpError(getExportCountSchema, rawArgs);
+  const project = await context.entities.RedditBotProject.findUnique({
+    where: { id: args.projectId },
+  });
+  ensureProjectAccess(project, context.user.id, context.user.isAdmin);
+
+  if (args.projectPostIds && args.projectPostIds.length > 0) {
+    const count = await context.entities.RedditBotProjectPost.count({
+      where: {
+        id: { in: args.projectPostIds },
+        projectId: args.projectId,
+      },
+    });
+    return { count };
+  }
+
+  const onlyUnexported = args.onlyUnexported !== false;
+  const relevantOnly = args.relevantOnly !== false;
+
+  const where: any = buildPostsWhere({
+    projectId: args.projectId,
+    status: relevantOnly ? RedditBotProjectPostStatus.RELEVANT : args.status,
+    subreddits: args.subreddits,
+    postedAfter: args.postedAfter,
+    postedBefore: args.postedBefore,
+    fetchedAfter: args.fetchedAfter,
+    fetchedBefore: args.fetchedBefore,
+  });
+  if (onlyUnexported) where.lastExportedAt = null;
+
+  let count: number;
+  if (args.keywords?.length) {
+    const list = await context.entities.RedditBotProjectPost.findMany({
+      where,
+      select: { matchedKeywords: true },
+    });
+    count = list.filter((pp: any) => {
+      const mk = pp.matchedKeywords as string[] | null;
+      if (!mk || !Array.isArray(mk)) return false;
+      const mkLower = mk.map((m: string) => m.toLowerCase());
+      return args.keywords!.some((k) => mkLower.includes(k.toLowerCase()));
+    }).length;
+  } else {
+    count = await context.entities.RedditBotProjectPost.count({ where });
+  }
+  return { count };
+};
+
 const markAsExportedSchema = z.object({
   projectPostIds: z.array(z.string()).min(1),
 });
@@ -524,7 +595,7 @@ export const markRedditBotProjectPostsAsExported = async (
 // --- Filter counts (contextual: respect other filters)
 const getFilterCountsSchema = z.object({
   projectId: z.string(),
-  status: z.enum(['DOWNLOADED', 'MATCH', 'RELEVANT', 'DISCARDED']).optional(),
+  status: z.nativeEnum(RedditBotProjectPostStatus).optional(),
   subreddits: z.array(z.string()).optional(),
   keywords: z.array(z.string()).optional(),
   postedAfter: z.string().datetime().optional(),
@@ -892,6 +963,7 @@ export const runRedditBotExploration = async (
       status: 'RUNNING',
       uniqueCount: 0,
       keywordMatchCount: 0,
+      aiAnalysisSkippedCount: 0,
       config: jobConfig,
     },
   });
@@ -979,10 +1051,7 @@ export const getRedditAiAnalysisProspectiveCount = async (
   });
   ensureProjectAccess(project, context.user.id, context.user.isAdmin);
 
-  const statuses = args.includeAlreadyProcessed
-    ? (['NOT_REQUESTED', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED'] as const)
-    : (['NOT_REQUESTED', 'PENDING'] as const);
-
+  // Manual run always processes all matching posts (no skip by status).
   const where = buildPostsWhere({
     projectId: args.projectId,
     status: args.status,
@@ -990,7 +1059,7 @@ export const getRedditAiAnalysisProspectiveCount = async (
     postedAfter: args.postedAfter,
     postedBefore: args.postedBefore,
   });
-  where.aiAnalysisStatus = { in: statuses };
+  where.aiAnalysisStatus = { in: AI_ANALYSIS_STATUSES_ALL };
 
   const projectKeywords = (project!.keywords as string[]) || [];
   let count: number;
@@ -1031,10 +1100,7 @@ export const triggerRedditAiAnalysis = async (
   });
   ensureProjectAccess(project, context.user.id, context.user.isAdmin);
 
-  const statusesToProcess = args.includeAlreadyProcessed
-    ? (['NOT_REQUESTED', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED'] as const)
-    : (['NOT_REQUESTED', 'PENDING'] as const);
-
+  // Manual run: never skip by status; always process all matching posts.
   const filterSnapshot = {
     status: args.status,
     subreddits: args.subreddits,
@@ -1051,7 +1117,7 @@ export const triggerRedditAiAnalysis = async (
     postedAfter: args.postedAfter,
     postedBefore: args.postedBefore,
   });
-  where.aiAnalysisStatus = { in: statusesToProcess };
+  where.aiAnalysisStatus = { in: AI_ANALYSIS_STATUSES_ALL };
 
   const projectKeywords = (project!.keywords as string[]) || [];
   let totalToProcess: number;
@@ -1072,9 +1138,7 @@ export const triggerRedditAiAnalysis = async (
   if (totalToProcess === 0) {
     throw new HttpError(
       400,
-      args.includeAlreadyProcessed
-        ? 'No posts to process. Run an exploration first to add posts.'
-        : 'No posts to process. All posts have already been analyzed or are in progress. Run an exploration first to add posts, use the sparkle icon on individual posts, or enable "Also process already completed/failed" to re-run.'
+      'No posts to process. Run an exploration first to add posts or use the sparkle icon on individual posts.'
     );
   }
 
@@ -1118,12 +1182,30 @@ export const deleteRedditBotProjectPosts = async (
   });
   ensureProjectAccess(project, context.user.id, context.user.isAdmin);
 
+  const toDelete = await context.entities.RedditBotProjectPost.findMany({
+    where: {
+      id: { in: args.projectPostIds },
+      projectId: args.projectId,
+    },
+    select: { postId: true },
+  });
+  const postIdsToCheck = [...new Set(toDelete.map((r: { postId: string }) => r.postId))];
+
   await context.entities.RedditBotProjectPost.deleteMany({
     where: {
       id: { in: args.projectPostIds },
       projectId: args.projectId,
     },
   });
+
+  for (const postId of postIdsToCheck) {
+    const remaining = await context.entities.RedditBotProjectPost.count({
+      where: { postId },
+    });
+    if (remaining === 0) {
+      await context.entities.RedditBotPost.delete({ where: { id: postId } });
+    }
+  }
 
   return { deletedCount: args.projectPostIds.length };
 };

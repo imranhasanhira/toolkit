@@ -109,6 +109,7 @@ export function ProjectDetailHomeTab({
                 <span className="ml-2 text-muted-foreground">
                   {latestJob.keywordMatchCount ?? 0} matched, {latestJob.uniqueCount ?? 0} unique,{' '}
                   {latestJob.totalProcessed ?? 0} total
+                  {(latestJob.aiAnalysisSkippedCount ?? 0) > 0 && `, ${latestJob.aiAnalysisSkippedCount} AI skipped`}
                 </span>
               </span>
               <Button variant="destructive" size="sm" onClick={onKillJob}>

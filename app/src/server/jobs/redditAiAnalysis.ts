@@ -1,5 +1,11 @@
 import { getSettings, getDecryptedOpenRouterApiKey } from '../reddit/redditCreditService';
 import { evaluateRelevancy } from '../reddit/redditRelevancyService';
+import {
+  RedditBotAiAnalysisStatus,
+  RedditBotProjectPostStatus,
+  RedditBotAiAnalysisRunStatus,
+} from '@prisma/client';
+import { AI_ANALYSIS_STATUSES_QUEUED, AI_ANALYSIS_STATUSES_ALL } from '../../reddit-bot/redditBotAiStatusConstants';
 
 export type RedditAiAnalysisJobPayload = {
   runId?: string;
@@ -32,7 +38,7 @@ export const processRedditAiAnalysis = async (
     if (args.runId) {
       await entities.RedditBotAiAnalysisRun.update({
         where: { id: args.runId },
-        data: { status: 'FAILED', errorMessage: 'AI not configured' },
+        data: { status: RedditBotAiAnalysisRunStatus.FAILED, errorMessage: 'AI not configured' },
       });
     }
     return;
@@ -45,7 +51,7 @@ export const processRedditAiAnalysis = async (
       if (args.runId) {
         await entities.RedditBotAiAnalysisRun.update({
           where: { id: args.runId },
-          data: { status: 'FAILED', errorMessage: 'OpenRouter API key not set' },
+          data: { status: RedditBotAiAnalysisRunStatus.FAILED, errorMessage: 'OpenRouter API key not set' },
         });
       }
       return;
@@ -78,7 +84,7 @@ export const processRedditAiAnalysis = async (
     if (run.stopRequestedAt) {
       await entities.RedditBotAiAnalysisRun.update({
         where: { id: args.runId },
-        data: { status: 'KILLED' },
+        data: { status: RedditBotAiAnalysisRunStatus.KILLED },
       });
       return;
     }
@@ -93,7 +99,7 @@ export const processRedditAiAnalysis = async (
       if (current?.stopRequestedAt) {
         await entities.RedditBotAiAnalysisRun.update({
           where: { id: run.id },
-          data: { status: 'KILLED', processedCount: run.processedCount },
+          data: { status: RedditBotAiAnalysisRunStatus.KILLED, processedCount: run.processedCount },
         });
         return;
       }
@@ -105,14 +111,12 @@ export const processRedditAiAnalysis = async (
       projectPost = await entities.RedditBotProjectPost.findFirst({
         where: {
           jobId: args.jobId,
-          aiAnalysisStatus: { in: ['NOT_REQUESTED', 'PENDING'] },
+          aiAnalysisStatus: { in: [...AI_ANALYSIS_STATUSES_QUEUED] },
         },
         select: { id: true, projectId: true, postId: true, jobId: true },
       });
     } else if (args.projectId) {
-      const statuses = args.includeAlreadyProcessed
-        ? (['NOT_REQUESTED', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED'] as const)
-        : (['NOT_REQUESTED', 'PENDING'] as const);
+      const statuses = args.includeAlreadyProcessed ? AI_ANALYSIS_STATUSES_ALL : [...AI_ANALYSIS_STATUSES_QUEUED];
       const where: any = {
         projectId: args.projectId,
         aiAnalysisStatus: { in: statuses },
@@ -158,7 +162,7 @@ export const processRedditAiAnalysis = async (
 
     await entities.RedditBotProjectPost.update({
       where: { id: projectPost.id },
-      data: { aiAnalysisStatus: 'IN_PROGRESS' },
+      data: { aiAnalysisStatus: RedditBotAiAnalysisStatus.IN_PROGRESS },
     });
 
     const project = await entities.RedditBotProject.findUnique({
@@ -173,7 +177,7 @@ export const processRedditAiAnalysis = async (
     if (!project || !post) {
       await entities.RedditBotProjectPost.update({
         where: { id: projectPost.id },
-        data: { aiAnalysisStatus: 'FAILED' },
+        data: { aiAnalysisStatus: RedditBotAiAnalysisStatus.FAILED },
       });
       processed++;
       if (run) {
@@ -199,8 +203,8 @@ export const processRedditAiAnalysis = async (
       await entities.RedditBotProjectPost.update({
         where: { id: projectPost.id },
         data: {
-          aiAnalysisStatus: 'COMPLETED',
-          status: result.relevant ? 'RELEVANT' : 'DISCARDED',
+          aiAnalysisStatus: RedditBotAiAnalysisStatus.COMPLETED,
+          status: result.relevant ? RedditBotProjectPostStatus.RELEVANT : RedditBotProjectPostStatus.DISCARDED,
           painPointSummary: result.painPointSummary ?? null,
           aiReasoning: result.reasoning ?? null,
         },
@@ -212,7 +216,7 @@ export const processRedditAiAnalysis = async (
       console.error('Reddit AI analysis failed for projectPost', projectPost.id, err);
       await entities.RedditBotProjectPost.update({
         where: { id: projectPost.id },
-        data: { aiAnalysisStatus: 'FAILED', aiAnalysisErrorMessage: message },
+        data: { aiAnalysisStatus: RedditBotAiAnalysisStatus.FAILED, aiAnalysisErrorMessage: message },
       });
     }
 
@@ -234,7 +238,7 @@ export const processRedditAiAnalysis = async (
     await entities.RedditBotAiAnalysisRun.update({
       where: { id: args.runId },
       data: {
-        status: runRow?.stopRequestedAt ? 'KILLED' : 'COMPLETED',
+        status: runRow?.stopRequestedAt ? RedditBotAiAnalysisRunStatus.KILLED : RedditBotAiAnalysisRunStatus.COMPLETED,
         processedCount: run.processedCount,
       },
     });

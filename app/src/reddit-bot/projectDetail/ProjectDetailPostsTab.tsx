@@ -3,6 +3,7 @@ import { useQuery, useAction } from 'wasp/client/operations';
 import {
   getRedditBotProjectPosts,
   getRedditBotProjectPostsForExport,
+  getRedditBotProjectExportCount,
   getRedditBotProjectPostFilterCounts,
   getRedditAiAnalysisProspectiveCount,
   updateRedditBotProjectPostStatus,
@@ -33,10 +34,11 @@ import {
 import { ChevronDown, Download, Info, Loader2, Sparkles } from 'lucide-react';
 import { PAGE_SIZE_OPTIONS, POSTS_PAGE_SIZE_KEY } from './projectDetailConstants';
 import { PostsTable } from './PostsTable';
+import { RedditBotProjectPostStatus, RedditBotAiAnalysisStatus } from '@prisma/client';
 
 type ExportArgs = {
   projectId: string;
-  status?: 'DOWNLOADED' | 'MATCH' | 'RELEVANT' | 'DISCARDED';
+  status?: RedditBotProjectPostStatus;
   subreddits?: string[];
   keywords?: string[];
   postedAfter?: string;
@@ -49,7 +51,7 @@ type ExportArgs = {
 };
 
 type FiltersState = {
-  status?: 'DOWNLOADED' | 'MATCH' | 'RELEVANT' | 'DISCARDED';
+  status?: RedditBotProjectPostStatus;
   subreddits?: string[];
   keywords?: string[];
   postedFrom?: string;
@@ -175,6 +177,38 @@ export function ProjectDetailPostsTab({
     { enabled: !!exportArgs && !!projectId, ...queryOpts }
   );
 
+  const exportCountArgs = useMemo(
+    () =>
+      projectId && exportDialogOpen
+        ? {
+            projectId,
+            status: filters.status,
+            subreddits: filters.subreddits?.length ? filters.subreddits : undefined,
+            keywords: filters.keywords?.length ? filters.keywords : undefined,
+            postedAfter: filters.postedFrom ? `${filters.postedFrom}T00:00:00.000Z` : undefined,
+            postedBefore: filters.postedTo ? `${filters.postedTo}T23:59:59.999Z` : undefined,
+            onlyUnexported: exportOnlyUnexported,
+            relevantOnly: exportRelevantOnly,
+          }
+        : null,
+    [
+      projectId,
+      exportDialogOpen,
+      filters.status,
+      filters.subreddits,
+      filters.keywords,
+      filters.postedFrom,
+      filters.postedTo,
+      exportOnlyUnexported,
+      exportRelevantOnly,
+    ]
+  );
+  const { data: exportCountData } = useQuery(
+    getRedditBotProjectExportCount,
+    exportCountArgs ?? { projectId: projectId ?? '' },
+    { enabled: !!exportCountArgs?.projectId }
+  );
+
   const { data: aiProspectiveCount } = useQuery(
     getRedditAiAnalysisProspectiveCount,
     {
@@ -196,7 +230,9 @@ export function ProjectDetailPostsTab({
   const deleteRedditBotProjectPostsAction = useAction(deleteRedditBotProjectPosts);
 
   const hasPendingOrInProgressAi = posts.some(
-    (pp: any) => pp.aiAnalysisStatus === 'PENDING' || pp.aiAnalysisStatus === 'IN_PROGRESS'
+    (pp: any) =>
+      pp.aiAnalysisStatus === RedditBotAiAnalysisStatus.PENDING ||
+      pp.aiAnalysisStatus === RedditBotAiAnalysisStatus.IN_PROGRESS
   );
   useEffect(() => {
     if (autoRefresh && hasPendingOrInProgressAi) {
@@ -308,42 +344,50 @@ export function ProjectDetailPostsTab({
     <>
       <Card>
         <CardHeader className="flex flex-col gap-3">
-          <div className="flex flex-row flex-wrap items-center justify-start gap-2">
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-row flex-wrap items-center justify-start gap-2 min-w-0">
+            <div className="flex flex-wrap gap-2 min-w-0">
               <Select
                 value={filters.status ?? 'all'}
                 onValueChange={(v) =>
                   setFilters((f) => ({
                     ...f,
-                    status: v === 'all' ? undefined : (v as 'DOWNLOADED' | 'MATCH' | 'RELEVANT' | 'DISCARDED'),
+                    status: v === 'all' ? undefined : (v as RedditBotProjectPostStatus),
                   }))
                 }
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 max-w-full min-w-0 shrink">
                   <SelectValue>
                     Status:{' '}
-                    {filters.status === 'DOWNLOADED'
+                    {filters.status === RedditBotProjectPostStatus.DOWNLOADED
                       ? `Downloaded (${filterCounts?.statusCounts?.DOWNLOADED ?? 0})`
-                      : filters.status === 'MATCH'
+                      : filters.status === RedditBotProjectPostStatus.MATCH
                         ? `Match (${filterCounts?.statusCounts?.MATCH ?? 0})`
-                        : filters.status === 'RELEVANT'
+                        : filters.status === RedditBotProjectPostStatus.RELEVANT
                           ? `Relevant (${filterCounts?.statusCounts?.RELEVANT ?? 0})`
-                          : filters.status === 'DISCARDED'
+                          : filters.status === RedditBotProjectPostStatus.DISCARDED
                             ? `Discarded (${filterCounts?.statusCounts?.DISCARDED ?? 0})`
                             : `All (${filterCounts?.statusCounts?.all ?? 0})`}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All ({filterCounts?.statusCounts?.all ?? 0})</SelectItem>
-                  <SelectItem value="DOWNLOADED">Downloaded ({filterCounts?.statusCounts?.DOWNLOADED ?? 0})</SelectItem>
-                  <SelectItem value="MATCH">Match ({filterCounts?.statusCounts?.MATCH ?? 0})</SelectItem>
-                  <SelectItem value="RELEVANT">Relevant ({filterCounts?.statusCounts?.RELEVANT ?? 0})</SelectItem>
-                  <SelectItem value="DISCARDED">Discarded ({filterCounts?.statusCounts?.DISCARDED ?? 0})</SelectItem>
+                  <SelectItem value={RedditBotProjectPostStatus.DOWNLOADED}>
+                    Downloaded ({filterCounts?.statusCounts?.DOWNLOADED ?? 0})
+                  </SelectItem>
+                  <SelectItem value={RedditBotProjectPostStatus.MATCH}>
+                    Match ({filterCounts?.statusCounts?.MATCH ?? 0})
+                  </SelectItem>
+                  <SelectItem value={RedditBotProjectPostStatus.RELEVANT}>
+                    Relevant ({filterCounts?.statusCounts?.RELEVANT ?? 0})
+                  </SelectItem>
+                  <SelectItem value={RedditBotProjectPostStatus.DISCARDED}>
+                    Discarded ({filterCounts?.statusCounts?.DISCARDED ?? 0})
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="min-w-[10rem] justify-between">
+                  <Button variant="outline" size="sm" className="min-w-[10rem] max-w-full justify-between truncate">
                     Subreddits:{' '}
                     {!filters.subreddits?.length
                       ? `All (${subredditsAllCount})`
@@ -384,7 +428,7 @@ export function ProjectDetailPostsTab({
               </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="min-w-[10rem] justify-between">
+                  <Button variant="outline" size="sm" className="min-w-[10rem] max-w-full justify-between truncate">
                     Keywords:{' '}
                     {!filters.keywords?.length
                       ? `All (${keywordsAllCount})`
@@ -423,21 +467,25 @@ export function ProjectDetailPostsTab({
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-muted-foreground text-xs">Posted:</span>
-                <Input
-                  type="date"
-                  value={filters.postedFrom ?? ''}
-                  onChange={(e) => setFilters((f) => ({ ...f, postedFrom: e.target.value || undefined }))}
-                  className="h-8 w-36"
-                />
-                <span className="text-muted-foreground text-xs">–</span>
-                <Input
-                  type="date"
-                  value={filters.postedTo ?? ''}
-                  onChange={(e) => setFilters((f) => ({ ...f, postedTo: e.target.value || undefined }))}
-                  className="h-8 w-36"
-                />
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <span className="text-muted-foreground text-xs shrink-0">Posted:</span>
+                <span className="inline-flex shrink-0" style={{ minWidth: '11rem' }}>
+                  <Input
+                    type="date"
+                    value={filters.postedFrom ?? ''}
+                    onChange={(e) => setFilters((f) => ({ ...f, postedFrom: e.target.value || undefined }))}
+                    className="h-8 w-full min-w-0 pr-8"
+                  />
+                </span>
+                <span className="text-muted-foreground text-xs shrink-0">–</span>
+                <span className="inline-flex shrink-0" style={{ minWidth: '11rem' }}>
+                  <Input
+                    type="date"
+                    value={filters.postedTo ?? ''}
+                    onChange={(e) => setFilters((f) => ({ ...f, postedTo: e.target.value || undefined }))}
+                    className="h-8 w-full min-w-0 pr-8"
+                  />
+                </span>
               </div>
               {aiConfig?.configured === false && (
                 <span className="text-muted-foreground text-xs">
@@ -575,6 +623,7 @@ export function ProjectDetailPostsTab({
         setExportOnlyUnexported={setExportOnlyUnexported}
         exportRelevantOnly={exportRelevantOnly}
         setExportRelevantOnly={setExportRelevantOnly}
+        exportCount={exportCountData?.count}
         onConfirm={handleConfirmExport}
       />
 

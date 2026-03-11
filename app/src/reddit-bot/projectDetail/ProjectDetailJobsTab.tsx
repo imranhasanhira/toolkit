@@ -79,6 +79,7 @@ export function ProjectDetailJobsTab({
                         )}
                         <span className="text-muted-foreground truncate">
                           {j.keywordMatchCount ?? 0} matched, {j.uniqueCount ?? 0} unique, {j.totalProcessed ?? 0} total
+                          {(j.aiAnalysisSkippedCount ?? 0) > 0 && `, ${j.aiAnalysisSkippedCount} AI skipped`}
                           {formatJobDuration(j.createdAt, j.completedAt) != null && ` · ${formatJobDuration(j.createdAt, j.completedAt)}`}
                         </span>
                       </span>

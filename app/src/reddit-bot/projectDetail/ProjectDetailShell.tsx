@@ -60,24 +60,26 @@ export function ProjectDetailShell({
       </div>
 
       <Tabs value={activeTab} onValueChange={onTabChange} className="mt-6">
-        <TabsList className="grid w-full max-w-md grid-cols-4">
-          <TabsTrigger value="home" className="cursor-pointer">
-            <LayoutGrid className="mr-2 h-4 w-4" />
-            Home
-          </TabsTrigger>
-          <TabsTrigger value="posts" className="cursor-pointer">
-            <List className="mr-2 h-4 w-4" />
-            Posts
-          </TabsTrigger>
-          <TabsTrigger value="schedules" className="cursor-pointer">
-            <Calendar className="mr-2 h-4 w-4" />
-            Schedules
-          </TabsTrigger>
-          <TabsTrigger value="jobs" className="cursor-pointer">
-            <Clock className="mr-2 h-4 w-4" />
-            Jobs
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1 min-w-0">
+          <TabsList className="inline-flex w-max flex-nowrap justify-start gap-0 h-10 rounded-md bg-muted p-1 text-muted-foreground">
+            <TabsTrigger value="home" className="cursor-pointer shrink-0">
+              <LayoutGrid className="mr-2 h-4 w-4" />
+              Home
+            </TabsTrigger>
+            <TabsTrigger value="posts" className="cursor-pointer shrink-0">
+              <List className="mr-2 h-4 w-4" />
+              Posts
+            </TabsTrigger>
+            <TabsTrigger value="schedules" className="cursor-pointer shrink-0">
+              <Calendar className="mr-2 h-4 w-4" />
+              Schedules
+            </TabsTrigger>
+            <TabsTrigger value="jobs" className="cursor-pointer shrink-0">
+              <Clock className="mr-2 h-4 w-4" />
+              Jobs
+            </TabsTrigger>
+          </TabsList>
+        </div>
         {children}
       </Tabs>
     </>

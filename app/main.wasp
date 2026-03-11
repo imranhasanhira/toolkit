@@ -302,6 +302,10 @@ query getRedditBotProjectPostsForExport {
   fn: import { getRedditBotProjectPostsForExport } from "@src/reddit-bot/operations",
   entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost, RedditBotAuthor]
 }
+query getRedditBotProjectExportCount {
+  fn: import { getRedditBotProjectExportCount } from "@src/reddit-bot/operations",
+  entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost]
+}
 query getRedditBotProjectPostFilterCounts {
   fn: import { getRedditBotProjectPostFilterCounts } from "@src/reddit-bot/operations",
   entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost]
@@ -360,7 +364,7 @@ action triggerRedditAiAnalysis {
 }
 action deleteRedditBotProjectPosts {
   fn: import { deleteRedditBotProjectPosts } from "@src/reddit-bot/operations",
-  entities: [User, RedditBotProject, RedditBotProjectPost]
+  entities: [User, RedditBotProject, RedditBotProjectPost, RedditBotPost]
 }
 action killRedditAiAnalysisRun {
   fn: import { killRedditAiAnalysisRun } from "@src/reddit-bot/operations",

@@ -533,6 +533,7 @@ model RedditBotJob {
   uniqueCount         Int              @default(0)  // unique posts added this run
   keywordMatchCount   Int              @default(0)  // of those, keyword-matched
   totalProcessed  Int              @default(0)  // total post processings (incl. duplicates seen)
+  aiAnalysisSkippedCount Int        @default(0)  // posts skipped for auto AI (already analysed)
   completedAt     DateTime?
   errorMessage    String?
   stopRequestedAt DateTime?
