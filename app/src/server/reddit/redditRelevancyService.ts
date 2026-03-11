@@ -120,7 +120,13 @@ export async function evaluateRelevancy(
       ]);
       const text = typeof response.content === 'string' ? response.content : String(response.content ?? '');
       const ms = Date.now() - startedAt;
-      console.info('Reddit AI relevancy duration:', options.engine, options.model, formatDuration(ms), postUrl ?? '(no-url)');
+      console.info(
+        'Reddit AI relevancy duration',
+        formatDuration(ms),
+        options.engine,
+        options.model,
+        postUrl ?? '(no-url)'
+      );
       return parseRelevancyResponse(text);
     }
 
@@ -138,12 +144,24 @@ export async function evaluateRelevancy(
     } as any);
     const text = completion.choices[0]?.message?.content ?? '';
     const ms = Date.now() - startedAt;
-    console.info('Reddit AI relevancy duration:', options.engine, options.model, formatDuration(ms), postUrl ?? '(no-url)');
+    console.info(
+      'Reddit AI relevancy duration',
+      formatDuration(ms),
+      options.engine,
+      options.model,
+      postUrl ?? '(no-url)'
+    );
     return parseRelevancyResponse(text);
   } catch (err) {
     console.error('Reddit relevancy evaluation error:', err);
     const ms = Date.now() - startedAt;
-    console.info('Reddit AI relevancy duration (error):', options.engine, (options as any).model, formatDuration(ms), postUrl ?? '(no-url)');
+    console.info(
+      'Reddit AI relevancy duration (error)',
+      formatDuration(ms),
+      options.engine,
+      (options as any).model,
+      postUrl ?? '(no-url)'
+    );
     return { relevant: false, painPointSummary: null, reasoning: null };
   }
 }
