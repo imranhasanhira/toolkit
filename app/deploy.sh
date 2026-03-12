@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- Args ---
+USE_TUNNEL=false
+for arg in "$@"; do
+  case $arg in
+    --tunnel) USE_TUNNEL=true ;;
+  esac
+done
+
 # --- Configuration ---
 # Ensure SSH Agent is active and keys are added (prevents multiple passphrase prompts)
 if [ -z "${SSH_AUTH_SOCK:-}" ]; then
@@ -11,10 +19,18 @@ fi
 ssh-add -l >/dev/null 2>&1 || ssh-add
 
 APP_BACKEND="toolkit"
-REMOTE_BACKEND="dokku@hubuntu.imranhira.com:${APP_BACKEND}"
-
 APP_FRONTEND="toolkit-ui"
-REMOTE_FRONTEND="dokku@hubuntu.imranhira.com:${APP_FRONTEND}"
+
+if [ "$USE_TUNNEL" = true ]; then
+  DOKKU_HOST="ssh.imranhira.com"
+  echo "🌐 Tunnel mode: deploying via ${DOKKU_HOST}"
+else
+  DOKKU_HOST="hubuntu.imranhira.com"
+  echo "🏠 Local mode: deploying via ${DOKKU_HOST}"
+fi
+
+REMOTE_BACKEND="dokku@${DOKKU_HOST}:${APP_BACKEND}"
+REMOTE_FRONTEND="dokku@${DOKKU_HOST}:${APP_FRONTEND}"
 
 # Inferred API URL (Adjust if your Dokku configuration differs)
 API_URL="https://toolkit-api.naurinjahan.com"
@@ -134,7 +150,7 @@ cd ../../..
 # --- 7. Tag Release in Main Repository ---
 echo "→ Tagging release in main repository..."
 git tag -a "${TAG_NAME}" -m "Deployment: ${TIMESTAMP}"
-git push origin "${TAG_NAME}"
+git push origin "${TAG_NAME}" || echo "Warning: Failed to push tag. Ensure you have network connectivity to origin."
 echo "✓ Created and pushed tag: ${TAG_NAME}"
 
 echo "========================================="
@@ -145,5 +161,5 @@ echo ""
 echo "Release tag ${TAG_NAME} is baked into both images (single rollout per app)."
 echo ""
 echo "To verify baked-in release tag on the server (run from your machine):"
-echo "  Backend:  ssh dokku@hubuntu.imranhira.com run toolkit sh -c 'printenv RELEASE_TAG'"
-echo "  Frontend: ssh dokku@hubuntu.imranhira.com run toolkit-ui sh -c 'printenv RELEASE_TAG'"
+echo "  Backend:  ssh dokku@${DOKKU_HOST} run toolkit sh -c 'printenv RELEASE_TAG'"
+echo "  Frontend: ssh dokku@${DOKKU_HOST} run toolkit-ui sh -c 'printenv RELEASE_TAG'"
