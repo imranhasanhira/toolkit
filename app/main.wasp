@@ -67,7 +67,8 @@ app OpenSaaS {
       // }
     },
     onAuthFailedRedirectTo: "/login",
-    onAuthSucceededRedirectTo: "/online-judge",
+    // Post-login return to the originally requested route is handled in the
+    // client root App (sessionStorage), because Wasp's LoginForm navigates to "/".
   },
 
   db: {
@@ -84,7 +85,6 @@ app OpenSaaS {
 
   emailSender: {
     provider: SMTP,
-    // provider: Dummy,
     defaultFrom: {
       name: "Open SaaS App",
       email: "me@example.com"

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">toolkit</string>
-    <string name="title_activity_main">toolkit</string>
-    <string name="package_name">com.diaorg.apps.toolkit</string>
-    <string name="custom_url_scheme">com.diaorg.apps.toolkit</string>
+    <string name="app_name">Carely</string>
+    <string name="title_activity_main">Carely</string>
+    <string name="package_name">com.diaorg.apps.toolkit.carely</string>
+    <string name="custom_url_scheme">com.diaorg.apps.toolkit.carely</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.diaorg.apps.toolkit;
+package com.diaorg.apps.toolkit.carely;
 
 import com.getcapacitor.BridgeActivity;
 

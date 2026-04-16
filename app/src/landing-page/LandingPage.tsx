@@ -1,9 +1,79 @@
 import { Link as WaspRouterLink, routes } from 'wasp/client/router';
+import { useAuth } from 'wasp/client/auth';
+import { getMyAppPermissions, useQuery } from 'wasp/client/operations';
 import { Button } from '../client/components/ui/button';
+import type { AppKey } from '../shared/appKeys';
 
 const heroImageUrl = '/landing-hero-dawn.png';
 
 export default function LandingPage() {
+  const { data: user } = useAuth();
+  const { data: allowedAppKeys = [], isLoading: permissionsLoading } = useQuery(
+    getMyAppPermissions,
+    undefined,
+    { enabled: !!user }
+  );
+
+  if (user) {
+    const apps = [
+      { key: 'online-judge' as AppKey, name: 'Online Judge', to: routes.ProblemListRoute.to, description: 'Solve problems, submit code, track results.' },
+      { key: 'sokafilm' as AppKey, name: 'SokaFilm', to: routes.SokaFilmRoute.to, description: 'Explore films and manage your watch flow.' },
+      { key: 'reddit-bot' as AppKey, name: 'Reddit Bot', to: routes.RedditBotRoute.to, description: 'Automate Reddit workflows and monitor jobs.' },
+      { key: 'carely' as AppKey, name: 'Carely', to: routes.CarelyRoute.to, description: 'Track vitals, medications, and trends for care.' },
+    ] as const;
+
+    const allowedApps = apps.filter((a) => allowedAppKeys.includes(a.key));
+
+    return (
+      <div className="bg-background text-foreground min-h-[calc(100vh-80px)] px-6 py-16 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Welcome{user.username ? `, ${user.username}` : ''}.
+            </h1>
+            <p className="text-muted-foreground">
+              Open an app you have access to.
+            </p>
+          </div>
+
+          <div className="mt-10">
+            {permissionsLoading ? (
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-8 text-center text-muted-foreground">
+                Loading your app permissions…
+              </div>
+            ) : allowedApps.length === 0 ? (
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-8 text-center">
+                <p className="text-lg font-semibold">Waiting for app permission to be granted</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  An admin needs to enable at least one app for your account.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2">
+                {allowedApps.map((app) => (
+                  <div
+                    key={app.key}
+                    className="rounded-2xl border border-border/60 bg-card/80 p-7 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h2 className="text-xl font-semibold">{app.name}</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">{app.description}</p>
+                      </div>
+                      <Button asChild>
+                        <WaspRouterLink to={app.to}>Open</WaspRouterLink>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-background text-foreground overflow-x-hidden">
       {/* Hero — full viewport, background image, layered overlay */}
