@@ -86,16 +86,6 @@ const AppPermissionsMatrix = () => {
           </div>
         </div>
 
-        <div className="border-border grid grid-cols-12 gap-4 border-t px-4 py-3 md:px-6">
-          <div className="col-span-5 font-medium">User</div>
-          {APP_KEYS_LIST.map((appKey) => (
-            <div key={appKey} className="col-span-2 font-medium text-center">
-              {APP_DISPLAY_NAMES[appKey]}
-            </div>
-          ))}
-          <div className="col-span-1" />
-        </div>
-
         {usersLoading && <LoadingSpinner />}
         {!usersLoading &&
           usersData?.users &&
@@ -103,38 +93,70 @@ const AppPermissionsMatrix = () => {
           usersData.users.map((user) => (
             <div
               key={user.id}
-              className="border-border grid grid-cols-12 gap-4 border-t px-4 py-3 md:px-6"
+              className="border-border border-t px-4 py-4 md:px-6"
             >
-              <div className="col-span-5 flex flex-col gap-0.5">
-                <span className="text-sm">{user.email ?? "—"}</span>
-                {user.username && (
-                  <span className="text-muted-foreground text-xs">
-                    {user.username}
-                  </span>
-                )}
-              </div>
-              {APP_KEYS_LIST.map((appKey) => {
-                const allowed =
-                  user.isAdmin ||
-                  (permissionsMap?.[user.id]?.includes(appKey) ?? false);
-                return (
-                  <div
-                    key={appKey}
-                    className="col-span-2 flex items-center justify-center"
-                  >
-                    <Checkbox
-                      checked={allowed}
-                      disabled={!!user.isAdmin}
-                      onCheckedChange={(checked) => {
-                        if (user.isAdmin) return;
-                        handleToggle(user.id, appKey, !!checked);
-                      }}
-                      title={user.isAdmin ? "Admins have access to all apps" : undefined}
-                    />
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8">
+                <div className="min-w-0 shrink-0 lg:w-56 xl:w-64">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium">
+                      {user.email ?? "—"}
+                    </span>
+                    {user.username ? (
+                      <span className="text-muted-foreground text-xs">
+                        {user.username}
+                      </span>
+                    ) : null}
                   </div>
-                );
-              })}
-              <div className="col-span-1" />
+                  {user.isAdmin ? (
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Admin — all apps enabled
+                    </p>
+                  ) : null}
+                </div>
+                <div
+                  className="flex flex-wrap items-center gap-x-5 gap-y-2.5 border-border/60 lg:border-l lg:pl-8"
+                  role="group"
+                  aria-label={`App access for ${user.email ?? "user"}`}
+                >
+                  {APP_KEYS_LIST.map((appKey) => {
+                    const allowed =
+                      user.isAdmin ||
+                      (permissionsMap?.[user.id]?.includes(appKey) ?? false);
+                    const controlId = `app-perm-${user.id}-${appKey}`;
+                    return (
+                      <div
+                        key={appKey}
+                        className="flex items-center gap-2"
+                      >
+                        <Checkbox
+                          id={controlId}
+                          checked={allowed}
+                          disabled={!!user.isAdmin}
+                          onCheckedChange={(checked) => {
+                            if (user.isAdmin) return;
+                            handleToggle(user.id, appKey, !!checked);
+                          }}
+                          title={
+                            user.isAdmin
+                              ? "Admins have access to all apps"
+                              : undefined
+                          }
+                        />
+                        <Label
+                          htmlFor={controlId}
+                          className={
+                            user.isAdmin
+                              ? "text-muted-foreground cursor-not-allowed text-sm font-normal"
+                              : "cursor-pointer text-sm font-normal"
+                          }
+                        >
+                          {APP_DISPLAY_NAMES[appKey]}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ))}
 
