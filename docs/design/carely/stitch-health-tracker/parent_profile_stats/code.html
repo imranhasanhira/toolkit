@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Carely Parent Profile - Stats</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#466747",
+                        "tertiary-fixed-dim": "#e7f0f1",
+                        "on-primary": "#e0fffe",
+                        "surface-bright": "#f8fafa",
+                        "surface-container-low": "#f0f4f4",
+                        "on-tertiary-container": "#596263",
+                        "inverse-surface": "#0b0f0f",
+                        "tertiary": "#586162",
+                        "outline": "#757c7d",
+                        "surface-dim": "#d4dbdc",
+                        "on-primary-fixed-variant": "#076666",
+                        "on-secondary": "#e9ffe5",
+                        "primary": "#106a6a",
+                        "primary-container": "#a4f0ef",
+                        "surface-container-high": "#e3e9ea",
+                        "surface-tint": "#106a6a",
+                        "on-tertiary-fixed": "#475051",
+                        "primary-fixed": "#a4f0ef",
+                        "error-dim": "#67040d",
+                        "on-tertiary-fixed-variant": "#646d6e",
+                        "on-secondary-fixed-variant": "#426344",
+                        "tertiary-fixed": "#f5feff",
+                        "on-secondary-fixed": "#264629",
+                        "inverse-primary": "#a9f6f5",
+                        "surface-container-highest": "#dde4e4",
+                        "secondary-fixed": "#c6edc4",
+                        "on-surface": "#2c3435",
+                        "tertiary-container": "#f5feff",
+                        "outline-variant": "#acb3b4",
+                        "primary-dim": "#005d5d",
+                        "on-surface-variant": "#596061",
+                        "background": "#f8fafa",
+                        "secondary-dim": "#3a5b3c",
+                        "surface": "#f8fafa",
+                        "on-error-container": "#6e0a12",
+                        "on-tertiary": "#f2fbfc",
+                        "error": "#a83836",
+                        "on-background": "#2c3435",
+                        "primary-fixed-dim": "#96e2e1",
+                        "secondary-container": "#c6edc4",
+                        "on-primary-container": "#005c5c",
+                        "on-error": "#fff7f6",
+                        "surface-container": "#eaefef",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#004747",
+                        "secondary-fixed-dim": "#b8deb6",
+                        "on-secondary-container": "#38593a",
+                        "tertiary-dim": "#4c5556",
+                        "inverse-on-surface": "#9b9d9e",
+                        "surface-variant": "#dde4e4",
+                        "error-container": "#fa746f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Lexend"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Lexend', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#f8fafa] flex justify-between items-center px-6 py-4 w-full docked full-width top-0 sticky z-50">
+<div class="flex items-center gap-4">
+<button class="text-[#2D7D7D] active:scale-95 duration-150 hover:bg-slate-100 transition-colors p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="text-2xl font-bold text-[#2D7D7D] font-lexend tracking-tight">Carely</span>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="Professional headshot of a middle-aged woman caregiver with a warm smile and soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGjP0rzEn2QIkPj9WtFqhCBRxnN48cPqu24A2FFab5dKb4A8gCUDFpGx1ABYw5Iqk0FTRdLCjumpRNIW5vzf0Fxv76r12MSfW__2J6Z8SyYF3Rd_pPyyQY8M6nSBq02vZ52qfFSTFtIRRygQPkE8MqWZeuSIoJ63jFdowRxoa80E37ccnmyIJaQAJkSOOa1XT6qAFCGgiMxGOH4C3K0AeeRCUPdSg_7dnRDygufLegolOy8fhgy_N0-miSpsczrxknJanLd6ciIKo"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="px-6 py-4">
+<!-- Tab Navigation (Sub-navigation) -->
+<div class="flex items-center gap-2 mb-8 overflow-x-auto no-scrollbar py-2">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant font-medium text-sm transition-colors">Measurements</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant font-medium text-sm transition-colors">Medicine</button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-primary text-on-primary font-semibold text-sm shadow-lg shadow-primary/20">Stats</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant font-medium text-sm transition-colors">Settings</button>
+</div>
+<!-- Metric Selection Section -->
+<section class="mb-8">
+<div class="flex items-end justify-between mb-4">
+<div>
+<span class="text-xs font-bold uppercase tracking-widest text-outline-variant mb-1 block">Health Metrics</span>
+<h2 class="text-2xl font-bold text-on-surface">Vitals Overview</h2>
+</div>
+<div class="flex bg-surface-container-high p-1 rounded-full">
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-primary text-xs font-bold shadow-sm">Weekly</button>
+<button class="px-4 py-1.5 rounded-full text-on-surface-variant text-xs font-medium">Monthly</button>
+</div>
+</div>
+<!-- Horizontal Metric Selector (Bento Style Item) -->
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+<!-- Selected: Blood Pressure -->
+<div class="min-w-[120px] bg-primary-container p-4 rounded-lg flex flex-col gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="blood_pressure" style="font-variation-settings: 'FILL' 1;">blood_pressure</span>
+<div>
+<p class="text-xs font-semibold text-on-primary-container opacity-80">Blood Pressure</p>
+<p class="text-lg font-bold text-on-primary-container">Selected</p>
+</div>
+</div>
+<!-- Others -->
+<div class="min-w-[120px] bg-surface-container-lowest p-4 rounded-lg flex flex-col gap-2 border border-outline-variant/10">
+<span class="material-symbols-outlined text-outline" data-icon="glucose">glucose</span>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant">Glucose</p>
+<p class="text-lg font-bold text-on-surface">94 <span class="text-[10px]">mg/dL</span></p>
+</div>
+</div>
+<div class="min-w-[120px] bg-surface-container-lowest p-4 rounded-lg flex flex-col gap-2 border border-outline-variant/10">
+<span class="material-symbols-outlined text-outline" data-icon="device_thermostat">device_thermostat</span>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant">Temp</p>
+<p class="text-lg font-bold text-on-surface">98.6 <span class="text-[10px]">°F</span></p>
+</div>
+</div>
+<div class="min-w-[120px] bg-surface-container-lowest p-4 rounded-lg flex flex-col gap-2 border border-outline-variant/10">
+<span class="material-symbols-outlined text-outline" data-icon="blood_oxygen">oxygen_saturation</span>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant">SpO2</p>
+<p class="text-lg font-bold text-on-surface">98 <span class="text-[10px]">%</span></p>
+</div>
+</div>
+</div>
+</section>
+<!-- Chart Area - Modern Asymmetrical Layout -->
+<section class="mb-8">
+<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden">
+<div class="flex justify-between items-start mb-10">
+<div>
+<h3 class="text-lg font-bold text-on-surface">Pressure Trends</h3>
+<p class="text-xs text-on-surface-variant">Oct 16 - Oct 22, 2023</p>
+</div>
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-[10px] font-bold text-outline uppercase tracking-tighter">Systolic</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-outline uppercase tracking-tighter">Diastolic</span>
+</div>
+</div>
+</div>
+<!-- SVG Chart Mockup -->
+<div class="relative h-48 w-full mb-4">
+<!-- Y Axis Labels -->
+<div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[10px] font-bold text-outline-variant/60 -ml-2">
+<span>140</span>
+<span>120</span>
+<span>100</span>
+<span>80</span>
+<span>60</span>
+</div>
+<!-- Custom Visual Line Chart -->
+<svg class="w-full h-full overflow-visible" viewbox="0 0 400 200">
+<!-- Shaded Band -->
+<path d="M0,80 L60,75 L120,95 L180,60 L240,70 L300,85 L360,75 L400,80 L400,140 L360,135 L300,145 L240,120 L180,110 L120,135 L60,125 L0,130 Z" fill="#106a6a" fill-opacity="0.08"></path>
+<!-- Systolic Line (Primary) -->
+<path d="M0,80 L60,75 L120,95 L180,60 L240,70 L300,85 L360,75 L400,80" fill="none" stroke="#106a6a" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- Diastolic Line (Secondary) -->
+<path d="M0,130 L60,125 L120,135 L180,110 L240,120 L300,145 L360,135 L400,140" fill="none" stroke="#466747" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- Data Points -->
+<circle cx="180" cy="60" fill="white" r="4" stroke="#106a6a" stroke-width="2"></circle>
+<circle cx="180" cy="110" fill="white" r="4" stroke="#466747" stroke-width="2"></circle>
+</svg>
+<!-- X Axis Labels -->
+<div class="flex justify-between mt-4 px-2 text-[10px] font-bold text-on-surface-variant">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span class="text-primary font-extrabold underline underline-offset-4">Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+<!-- Annotation -->
+<div class="mt-8 pt-6 border-t border-surface-container-high flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="lightbulb" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Stable Trend</p>
+<p class="text-xs text-on-surface-variant">Values remained within the target range for 6 out of 7 days.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Summary Stats Bento -->
+<section class="grid grid-cols-3 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-xl flex flex-col gap-1 shadow-sm border border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase tracking-widest text-outline-variant">Minimum</span>
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-on-surface">110/70</span>
+<span class="text-[9px] font-bold text-on-surface-variant">mmHg</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl flex flex-col gap-1 shadow-sm border border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase tracking-widest text-outline-variant">Maximum</span>
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-primary">135/85</span>
+<span class="text-[9px] font-bold text-on-surface-variant">mmHg</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl flex flex-col gap-1 shadow-sm border border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase tracking-widest text-outline-variant">Average</span>
+<div class="flex flex-col">
+<span class="font-headline text-lg font-bold text-on-surface">122/78</span>
+<span class="text-[9px] font-bold text-on-surface-variant">mmHg</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center pt-3 pb-6 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-t-[3rem] shadow-[0_-12px_32px_rgba(44,52,53,0.06)] border-t border-white/20">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Home</span>
+</a>
+<!-- Vitals -->
+<a class="flex flex-col items-center justify-center bg-[#e0fffe] dark:bg-teal-900/40 text-[#106a6a] dark:text-teal-200 rounded-full px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="monitor_heart" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Vitals</span>
+</a>
+<!-- Meds -->
+<a class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="medication">medication</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Meds</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

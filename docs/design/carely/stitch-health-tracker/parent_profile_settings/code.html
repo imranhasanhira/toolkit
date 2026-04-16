@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Parent Profile - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#466747",
+                    "surface-container": "#eaefef",
+                    "surface-tint": "#106a6a",
+                    "on-surface-variant": "#596061",
+                    "secondary-fixed-dim": "#b8deb6",
+                    "secondary-container": "#c6edc4",
+                    "outline-variant": "#acb3b4",
+                    "surface-container-high": "#e3e9ea",
+                    "tertiary-fixed": "#f5feff",
+                    "on-secondary": "#e9ffe5",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#757c7d",
+                    "secondary-fixed": "#c6edc4",
+                    "on-error": "#fff7f6",
+                    "primary-container": "#a4f0ef",
+                    "on-surface": "#2c3435",
+                    "primary-dim": "#005d5d",
+                    "surface-container-low": "#f0f4f4",
+                    "error-container": "#fa746f",
+                    "on-primary-fixed": "#004747",
+                    "on-tertiary-fixed-variant": "#646d6e",
+                    "error": "#a83836",
+                    "surface": "#f8fafa",
+                    "primary-fixed-dim": "#96e2e1",
+                    "primary": "#106a6a",
+                    "on-secondary-fixed-variant": "#426344",
+                    "on-primary": "#e0fffe",
+                    "tertiary-dim": "#4c5556",
+                    "on-error-container": "#6e0a12",
+                    "surface-bright": "#f8fafa",
+                    "on-tertiary-container": "#596263",
+                    "on-background": "#2c3435",
+                    "on-secondary-container": "#38593a",
+                    "error-dim": "#67040d",
+                    "surface-container-highest": "#dde4e4",
+                    "primary-fixed": "#a4f0ef",
+                    "background": "#f8fafa",
+                    "on-tertiary-fixed": "#475051",
+                    "inverse-primary": "#a9f6f5",
+                    "inverse-surface": "#0b0f0f",
+                    "tertiary-container": "#f5feff",
+                    "secondary-dim": "#3a5b3c",
+                    "on-tertiary": "#f2fbfc",
+                    "on-primary-fixed-variant": "#076666",
+                    "on-primary-container": "#005c5c",
+                    "tertiary": "#586162",
+                    "surface-variant": "#dde4e4",
+                    "tertiary-fixed-dim": "#e7f0f1",
+                    "on-secondary-fixed": "#264629",
+                    "inverse-on-surface": "#9b9d9e",
+                    "surface-dim": "#d4dbdc"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Lexend"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h1, h2, h3, .font-headline {
+            font-family: 'Lexend', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#f8fafa] dark:bg-slate-950">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:bg-[#e3e9ea] dark:hover:bg-slate-800 rounded-full transition-colors p-2 active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[#106a6a] dark:text-[#2D7D7D]" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Lexend'] font-semibold text-lg text-[#106a6a] dark:text-[#2D7D7D]">Parent Profile</h1>
+</div>
+<button class="hover:bg-[#e3e9ea] dark:hover:bg-slate-800 rounded-full transition-colors p-2 active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[#106a6a] dark:text-[#2D7D7D]" data-icon="settings">settings</span>
+</button>
+</div>
+<div class="bg-[#e3e9ea] dark:bg-slate-800 h-[1px] w-full"></div>
+</header>
+<main class="max-w-md mx-auto px-6 pt-6 space-y-8">
+<!-- Parent Profile Header (Consistent with Screen 2, 4, 5) -->
+<section class="flex flex-col items-center text-center space-y-4">
+<div class="relative">
+<div class="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white shadow-sm">
+<img alt="Margaret Bennett" class="w-full h-full object-cover" data-alt="Close-up portrait of a kind elderly woman with white hair and gentle eyes, soft natural indoor lighting, warm aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvZKFZXS13qDcBnU57hYW5ZxAEER6WvUb-lbrURGxqSOMBk7d4V1bagxqf_qD5fz6P6l4E8b7AFPoGgfwvXRfMqkoJBg2gWGP5LP7wwl3gjRYK3wZds3FVcpqOiVd-xm43y-3sZmIMw-lW9fl8jhkO5KYDwH6PuWGyQYz9NAQzEAMp_9lFWYOM7ilerJs7UA0_zn-jWEN-9qV2CvApy84ZZnayir2wEmGVylH2AmpQlmzYgHcejR0s7O6ygEAYWWHeNefcjUkCch4"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-on-primary p-2 rounded-full shadow-lg active:scale-95 duration-150">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<div>
+<h2 class="text-2xl font-bold tracking-tight text-on-surface">Margaret Bennett</h2>
+<p class="text-on-surface-variant font-medium">78 years</p>
+</div>
+</section>
+<!-- Tab Bar -->
+<nav class="flex overflow-x-auto gap-2 no-scrollbar pb-2">
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-semibold transition-all bg-surface-container-high text-on-surface-variant">Measurements</button>
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-semibold transition-all bg-surface-container-high text-on-surface-variant">Medicine</button>
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-semibold transition-all bg-surface-container-high text-on-surface-variant">Stats</button>
+<button class="whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-semibold transition-all bg-primary text-white shadow-md">Settings</button>
+</nav>
+<!-- Section A: Parent Info -->
+<section class="bg-surface-container-lowest p-6 rounded-lg space-y-6">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary" data-icon="badge">badge</span>
+<h3 class="font-bold text-lg">Parent Info</h3>
+</div>
+<div class="space-y-5">
+<div class="space-y-1.5">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1">Name</label>
+<input class="w-full bg-surface-container-low border-none rounded-DEFAULT px-4 py-3 focus:ring-2 focus:ring-primary text-on-surface font-medium" type="text" value="Margaret Bennett"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1">Date of Birth</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-DEFAULT px-4 py-3 focus:ring-2 focus:ring-primary text-on-surface font-medium" type="text" value="Jan 12, 1946"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1">Notes</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-DEFAULT px-4 py-3 focus:ring-2 focus:ring-primary text-on-surface font-medium resize-none" rows="3">General health notes here...</textarea>
+</div>
+<button class="w-full bg-primary text-on-primary font-bold py-4 rounded-full shadow-lg active:scale-95 transition-transform">
+                    Save Changes
+                </button>
+</div>
+<div class="pt-4 mt-4 border-t border-surface-container-high">
+<button class="w-full flex items-center justify-center gap-2 text-error font-semibold py-2">
+<span class="material-symbols-outlined text-lg" data-icon="delete_forever">delete_forever</span>
+                    Delete Parent
+                </button>
+</div>
+</section>
+<!-- Section B: Collaborators -->
+<section class="bg-surface-container-lowest p-6 rounded-lg space-y-6">
+<div class="space-y-1">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="group">group</span>
+<h3 class="font-bold text-lg">Collaborators</h3>
+</div>
+<p class="text-sm text-on-surface-variant ml-9">People who co-manage Margaret Bennett</p>
+</div>
+<div class="space-y-4">
+<!-- Collaborator Row -->
+<div class="bg-surface-container-low rounded-DEFAULT p-4 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">JD</div>
+<span class="text-sm font-semibold">jane.doe@example.com</span>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined" data-icon="person_remove">person_remove</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-3 pt-2">
+<div class="flex items-center justify-between px-2">
+<span class="text-xs font-medium">View Rx</span>
+<div class="w-8 h-4 bg-primary rounded-full relative flex items-center justify-end px-1 cursor-pointer">
+<div class="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between px-2">
+<span class="text-xs font-medium">Edit Rx</span>
+<div class="w-8 h-4 bg-primary rounded-full relative flex items-center justify-end px-1 cursor-pointer">
+<div class="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between px-2">
+<span class="text-xs font-medium">Add Logs</span>
+<div class="w-8 h-4 bg-primary rounded-full relative flex items-center justify-end px-1 cursor-pointer">
+<div class="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between px-2">
+<span class="text-xs font-medium">View Logs</span>
+<div class="w-8 h-4 bg-primary rounded-full relative flex items-center justify-end px-1 cursor-pointer">
+<div class="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Invite Area -->
+<div class="space-y-3 pt-2">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1">Invite New</label>
+<div class="relative">
+<input class="w-full bg-surface-container-high border-none rounded-DEFAULT px-11 py-3 focus:ring-2 focus:ring-primary text-sm" placeholder="Add new collaborator from directory" type="text"/>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="person_search">person_search</span>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 bg-primary text-white text-xs px-3 py-1.5 rounded-full font-bold">Add</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-12px_32px_rgba(44,52,53,0.06)] rounded-t-[2rem]">
+<div class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 p-2 hover:text-[#106a6a] dark:hover:text-[#2D7D7D] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] tracking-wide font-medium">Health</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 p-2 hover:text-[#106a6a] dark:hover:text-[#2D7D7D] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="medication">medication</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] tracking-wide font-medium">Medication</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 p-2 hover:text-[#106a6a] dark:hover:text-[#2D7D7D] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] tracking-wide font-medium">Care</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#106a6a] text-white rounded-full px-5 py-2 active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] tracking-wide font-medium">Profile</span>
+</div>
+</nav>
+</body></html>

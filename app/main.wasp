@@ -10,7 +10,8 @@ app OpenSaaS {
   },
 
   head: [
-    "<link rel='icon' href='/favicon.ico' />",
+    "<link rel='icon' type='image/png' href='/favicon.png' />",
+    "<link href='https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap' rel='stylesheet' />",
     "<meta charset='utf-8' />",
     "<meta name='description' content='Developer toolkit.' />",
     "<meta name='author' content='Toolkit' />",
@@ -83,6 +84,7 @@ app OpenSaaS {
 
   emailSender: {
     provider: SMTP,
+    // provider: Dummy,
     defaultFrom: {
       name: "Open SaaS App",
       email: "me@example.com"
@@ -865,4 +867,131 @@ query getSubmissions {
 }
 
 
+//#region Carely
+route CarelyRoute { path: "/carely", to: CarelyHomePage }
+page CarelyHomePage {
+  authRequired: true,
+  component: import CarelyHomePage from "@src/carely/HomePage"
+}
+
+route CarelyParentRoute { path: "/carely/parent/:parentId", to: CarelyParentPage }
+page CarelyParentPage {
+  authRequired: true,
+  component: import CarelyParentPage from "@src/carely/ParentProfilePage"
+}
+
+query getCarelyParents {
+  fn: import { getCarelyParents } from "@src/carely/operations",
+  entities: [CarelyParent, CarelyCollaborator]
+}
+
+query getCarelyParentById {
+  fn: import { getCarelyParentById } from "@src/carely/operations",
+  entities: [CarelyParent, CarelyCollaborator]
+}
+
+query getCarelyVitalLogs {
+  fn: import { getCarelyVitalLogs } from "@src/carely/operations",
+  entities: [CarelyVitalLog, CarelyParent, CarelyCollaborator]
+}
+
+query getCarelyPrescriptions {
+  fn: import { getCarelyPrescriptions } from "@src/carely/operations",
+  entities: [CarelyPrescription, CarelyMedicineIntakeLog, CarelyParent, CarelyCollaborator]
+}
+
+query getCarelyMedicineIntakeLogs {
+  fn: import { getCarelyMedicineIntakeLogs } from "@src/carely/operations",
+  entities: [CarelyMedicineIntakeLog, CarelyParent, CarelyCollaborator]
+}
+
+query getCarelyMedicineLogsByRange {
+  fn: import { getCarelyMedicineLogsByRange } from "@src/carely/operations",
+  entities: [CarelyMedicineIntakeLog, CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+query getCarelyPrescriptionHistory {
+  fn: import { getCarelyPrescriptionHistory } from "@src/carely/operations",
+  entities: [CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+action createCarelyParent {
+  fn: import { createCarelyParent } from "@src/carely/operations",
+  entities: [CarelyParent]
+}
+
+action updateCarelyParent {
+  fn: import { updateCarelyParent } from "@src/carely/operations",
+  entities: [CarelyParent]
+}
+
+action deleteCarelyParent {
+  fn: import { deleteCarelyParent } from "@src/carely/operations",
+  entities: [CarelyParent]
+}
+
+action addCarelyCollaborator {
+  fn: import { addCarelyCollaborator } from "@src/carely/operations",
+  entities: [CarelyCollaborator, CarelyParent, User]
+}
+
+action updateCarelyCollaboratorPermissions {
+  fn: import { updateCarelyCollaboratorPermissions } from "@src/carely/operations",
+  entities: [CarelyCollaborator, CarelyParent]
+}
+
+action removeCarelyCollaborator {
+  fn: import { removeCarelyCollaborator } from "@src/carely/operations",
+  entities: [CarelyCollaborator, CarelyParent]
+}
+
+action addCarelyVitalLog {
+  fn: import { addCarelyVitalLog } from "@src/carely/operations",
+  entities: [CarelyVitalLog, CarelyParent, CarelyCollaborator]
+}
+
+action updateCarelyVitalLog {
+  fn: import { updateCarelyVitalLog } from "@src/carely/operations",
+  entities: [CarelyVitalLog, CarelyParent, CarelyCollaborator]
+}
+
+action deleteCarelyVitalLog {
+  fn: import { deleteCarelyVitalLog } from "@src/carely/operations",
+  entities: [CarelyVitalLog, CarelyParent]
+}
+
+action createCarelyPrescription {
+  fn: import { createCarelyPrescription } from "@src/carely/operations",
+  entities: [CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+action updateCarelyPrescription {
+  fn: import { updateCarelyPrescription } from "@src/carely/operations",
+  entities: [CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+action deactivateCarelyPrescription {
+  fn: import { deactivateCarelyPrescription } from "@src/carely/operations",
+  entities: [CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+action logCarelyMedicineIntake {
+  fn: import { logCarelyMedicineIntake } from "@src/carely/operations",
+  entities: [CarelyMedicineIntakeLog, CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+action unlogCarelyMedicineIntake {
+  fn: import { unlogCarelyMedicineIntake } from "@src/carely/operations",
+  entities: [CarelyMedicineIntakeLog, CarelyPrescription, CarelyParent, CarelyCollaborator]
+}
+
+action seedCarelyMockData {
+  fn: import { seedCarelyMockData } from "@src/carely/operations",
+  entities: [CarelyParent, CarelyVitalLog, CarelyPrescription, CarelyMedicineIntakeLog, CarelyCollaborator]
+}
+
+action clearCarelyMockData {
+  fn: import { clearCarelyMockData } from "@src/carely/operations",
+  entities: [CarelyParent, CarelyVitalLog, CarelyPrescription, CarelyMedicineIntakeLog, CarelyCollaborator]
+}
 //#endregion

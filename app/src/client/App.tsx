@@ -81,6 +81,8 @@ export default function App() {
                 <Navigate to={routes.AccountRoute.to} replace />
               ) : user && !permissionsLoading && location.pathname.startsWith("/reddit-bot") && !allowedAppKeys.includes("reddit-bot") ? (
                 <Navigate to={routes.AccountRoute.to} replace />
+              ) : user && !permissionsLoading && location.pathname.startsWith("/carely") && !allowedAppKeys.includes("carely") ? (
+                <Navigate to={routes.AccountRoute.to} replace />
               ) : (
                 <Outlet />
               )}

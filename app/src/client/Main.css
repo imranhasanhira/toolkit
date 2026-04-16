@@ -53,6 +53,21 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* Carely Concept Theme Tokens */
+  --color-carely-primary: #106a6a;
+  --color-carely-on-primary: #e0fffe;
+  --color-carely-surface: #f8fafa;
+  --color-carely-surface-lowest: #ffffff;
+  --color-carely-surface-low: #f0f4f4;
+  --color-carely-surface-high: #e3e9ea;
+  --color-carely-on-surface: #2c3435;
+  --color-carely-on-surface-variant: #596061;
+  --color-carely-tertiary: #e2f0ef;
+  --color-carely-error: #fa746f;
+
+  --font-lexend: "Lexend", sans-serif;
+  --font-jakarta: "Plus Jakarta Sans", sans-serif;
+
   --breakpoint-2xsm: 375px;
   --breakpoint-xsm: 425px;
   --breakpoint-3xl: 2000px;
@@ -144,6 +159,52 @@
     50% {
       transform: rotate(0deg);
     }
+  }
+}
+
+/* Landing page keyframes (global so inline animation: "name" works) */
+@keyframes landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes landing-float {
+  0%, 100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, -6px);
+  }
+}
+@keyframes landing-glow {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes landing-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+@keyframes landing-pillar-in {
+  from {
+    opacity: 0;
+    transform: translateY(2rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

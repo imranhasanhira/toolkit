@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#466747",
+                        "tertiary-fixed-dim": "#e7f0f1",
+                        "on-primary": "#e0fffe",
+                        "surface-bright": "#f8fafa",
+                        "surface-container-low": "#f0f4f4",
+                        "on-tertiary-container": "#596263",
+                        "inverse-surface": "#0b0f0f",
+                        "tertiary": "#586162",
+                        "outline": "#757c7d",
+                        "surface-dim": "#d4dbdc",
+                        "on-primary-fixed-variant": "#076666",
+                        "on-secondary": "#e9ffe5",
+                        "primary": "#106a6a",
+                        "primary-container": "#a4f0ef",
+                        "surface-container-high": "#e3e9ea",
+                        "surface-tint": "#106a6a",
+                        "on-tertiary-fixed": "#475051",
+                        "primary-fixed": "#a4f0ef",
+                        "error-dim": "#67040d",
+                        "on-tertiary-fixed-variant": "#646d6e",
+                        "on-secondary-fixed-variant": "#426344",
+                        "tertiary-fixed": "#f5feff",
+                        "on-secondary-fixed": "#264629",
+                        "inverse-primary": "#a9f6f5",
+                        "surface-container-highest": "#dde4e4",
+                        "secondary-fixed": "#c6edc4",
+                        "on-surface": "#2c3435",
+                        "tertiary-container": "#f5feff",
+                        "outline-variant": "#acb3b4",
+                        "primary-dim": "#005d5d",
+                        "on-surface-variant": "#596061",
+                        "background": "#f8fafa",
+                        "secondary-dim": "#3a5b3c",
+                        "surface": "#f8fafa",
+                        "on-error-container": "#6e0a12",
+                        "on-tertiary": "#f2fbfc",
+                        "error": "#a83836",
+                        "on-background": "#2c3435",
+                        "primary-fixed-dim": "#96e2e1",
+                        "secondary-container": "#c6edc4",
+                        "on-primary-container": "#005c5c",
+                        "on-error": "#fff7f6",
+                        "surface-container": "#eaefef",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#004747",
+                        "secondary-fixed-dim": "#b8deb6",
+                        "on-secondary-container": "#38593a",
+                        "tertiary-dim": "#4c5556",
+                        "inverse-on-surface": "#9b9d9e",
+                        "surface-variant": "#dde4e4",
+                        "error-container": "#fa746f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Lexend"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h1, h2, h3, .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#f8fafa] flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50">
+<div class="flex items-center gap-3">
+<span class="text-2xl font-bold text-[#2D7D7D] font-lexend tracking-tight">Carely</span>
+</div>
+<button class="bg-primary text-on-primary px-5 py-2.5 rounded-full flex items-center gap-2 font-medium text-sm active:scale-95 duration-150 shadow-sm">
+<span class="material-symbols-outlined text-lg">add</span>
+<span>+ Add Parent</span>
+</button>
+</header>
+<main class="mt-20 px-6 space-y-8">
+<!-- Welcome Greeting Section -->
+<section class="py-4">
+<p class="text-on-surface-variant font-medium tracking-wide text-xs uppercase">Welcome back,</p>
+<h2 class="text-3xl font-bold font-lexend text-on-surface mt-1 tracking-tight">Your loved ones</h2>
+</section>
+<!-- Parent Cards Grid -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Card 1: Margaret Bennett -->
+<div class="bg-surface-container-lowest rounded-lg p-6 shadow-[0_12_32_rgba(44,52,53,0.06)] relative overflow-hidden group border border-outline-variant/10">
+<div class="flex justify-between items-start mb-6">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-lexend font-bold text-xl">
+                            MB
+                        </div>
+<div>
+<h3 class="text-xl font-bold font-lexend text-on-surface">Margaret Bennett</h3>
+<p class="text-on-surface-variant font-medium text-sm">78 years</p>
+</div>
+</div>
+<span class="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase">Owner</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-6">
+<!-- Stat 1: Meds -->
+<div class="bg-surface-container-low rounded-DEFAULT p-4 flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="medication">medication</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Medicine</span>
+</div>
+<span class="text-lg font-lexend font-semibold text-primary">3/5 taken</span>
+</div>
+<!-- Stat 2: Measurements -->
+<div class="bg-surface-container-low rounded-DEFAULT p-4 flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="monitor_heart">monitor_heart</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Vitals</span>
+</div>
+<span class="text-xs font-semibold text-on-surface-variant leading-tight">BP logged 2h ago</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/5 flex justify-between items-center">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full border-2 border-surface-container-lowest bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a caring female family member smiling gently" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWIOdSfpw4TzELSH0rLZmGSqiA8oNKFYUJ7kAecrXK1XZ0vNG4E7qHKp9XJNGdoNv_LdQnMSCNhzu2F1a1RYv_Ef8Eab7CeXvBL6mCcA61KAxjk_o0ZFGGz8_aF4WbVrKi97zKyroTY8NUwpglnrLxM066FQaDKsk-eU_8ODG-ds9Ofqb0SV41aGspUHOv3jV_kXu9_rrXRbNDwYpwJ_DxKeMR9bYrcOgNM0ETMVQQRhaBOi40FTvhR9yPn6Nl3_9Z7ZOFhhQv8Jo"/>
+</div>
+<div class="w-7 h-7 rounded-full border-2 border-surface-container-lowest bg-primary flex items-center justify-center text-[10px] text-white font-bold">+2</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Card 2: James Smith -->
+<div class="bg-surface-container-lowest rounded-lg p-6 shadow-[0_12_32_rgba(44,52,53,0.06)] relative overflow-hidden group border border-outline-variant/10">
+<div class="flex justify-between items-start mb-6">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-lexend font-bold text-xl">
+                            JS
+                        </div>
+<div>
+<h3 class="text-xl font-bold font-lexend text-on-surface">James Smith</h3>
+<p class="text-on-surface-variant font-medium text-sm">82 years</p>
+</div>
+</div>
+<span class="bg-surface-container-high text-on-tertiary-container px-3 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase">Co-managing</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-6">
+<!-- Stat 1: Meds -->
+<div class="bg-surface-container-low rounded-DEFAULT p-4 flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="task_alt" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Medicine</span>
+</div>
+<span class="text-lg font-lexend font-semibold text-secondary">All done ✅</span>
+</div>
+<!-- Stat 2: Measurements -->
+<div class="bg-surface-container-low rounded-DEFAULT p-4 flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="glucose">glucose</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Vitals</span>
+</div>
+<span class="text-xs font-semibold text-on-surface-variant leading-tight">Glucose logged 5h ago</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/5 flex justify-between items-center">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full border-2 border-surface-container-lowest bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a professional young man looking helpful and friendly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw30OpE-lXVYoCfaP2Eq3iEk9xgZBGSJNW_3aSdq5aYLJ1lqZIOI4MAqJ72IX_yMCSgtG5B4YzM1hTGOKYpVuVZKszCoJvkWErBNQ23x0nGf4JWSv5PmqYfIh7QEjiYM30u0_XjlZn2u37X49lQS_hfr3G2mT3S8NSItIwovittoQDI7udOTwpDGxEblTg9sp1p3aD6Nmm3V4ILXJiJu0p-86neH2ssYovLNUl5qzY-dODUnUmx7sMu85tRZLLXlhgoQw20nbHUik"/>
+</div>
+<div class="w-7 h-7 rounded-full border-2 border-surface-container-lowest bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a smiling woman with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu75aoQxOrWie9hARB2Fp1ehB9lgmvkxUaScG9clqjVP0SqQTBZIivRJolpN3N_XhEomSHOfhqdpzvp3NBNUV9MZVr6rhLSfs1KAGtzKYIsgwX8eXwm3ie6mn9-XRGBLVNy8kfeW3fTPxlQjBEBdO7hhAhX-6O1L_lX4oq_vCYyea3gUb6pXqXTsZqFsQ8LobTnbyieSYNNAUxOadhf8zVm9JlzBaM6otKF4TMPuhf9ljFYqNUSTyGtqjJ7Zu2WKKB4nfQy9x1cq0"/>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Quick Summary / Insight Section (Asymmetric Bento Element) -->
+<section class="bg-primary bg-gradient-to-br from-primary to-primary-dim rounded-xl p-8 text-on-primary">
+<div class="flex justify-between items-start">
+<div class="space-y-2">
+<p class="text-on-primary/70 font-bold text-[10px] uppercase tracking-widest">Daily Insight</p>
+<p class="text-xl font-lexend font-medium leading-snug">Everything looks stable across both parents today. Keep it up!</p>
+</div>
+<span class="material-symbols-outlined text-4xl opacity-50" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div class="mt-6 flex items-center gap-2 bg-white/10 w-max px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+                Monday, Oct 14
+            </div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center pt-3 pb-6 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-12px_32px_rgba(44,52,53,0.06)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center bg-[#e0fffe] dark:bg-teal-900/40 text-[#106a6a] dark:text-teal-200 rounded-full px-5 py-1.5 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Vitals</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="medication">medication</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Meds</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-lexend text-[11px] font-medium mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

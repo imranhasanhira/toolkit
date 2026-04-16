@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "secondary": "#466747",
+                  "tertiary-fixed-dim": "#e7f0f1",
+                  "on-primary": "#e0fffe",
+                  "surface-bright": "#f8fafa",
+                  "surface-container-low": "#f0f4f4",
+                  "on-tertiary-container": "#596263",
+                  "inverse-surface": "#0b0f0f",
+                  "tertiary": "#586162",
+                  "outline": "#757c7d",
+                  "surface-dim": "#d4dbdc",
+                  "on-primary-fixed-variant": "#076666",
+                  "on-secondary": "#e9ffe5",
+                  "primary": "#106a6a",
+                  "primary-container": "#a4f0ef",
+                  "surface-container-high": "#e3e9ea",
+                  "surface-tint": "#106a6a",
+                  "on-tertiary-fixed": "#475051",
+                  "primary-fixed": "#a4f0ef",
+                  "error-dim": "#67040d",
+                  "on-tertiary-fixed-variant": "#646d6e",
+                  "on-secondary-fixed-variant": "#426344",
+                  "tertiary-fixed": "#f5feff",
+                  "on-secondary-fixed": "#264629",
+                  "inverse-primary": "#a9f6f5",
+                  "surface-container-highest": "#dde4e4",
+                  "secondary-fixed": "#c6edc4",
+                  "on-surface": "#2c3435",
+                  "tertiary-container": "#f5feff",
+                  "outline-variant": "#acb3b4",
+                  "primary-dim": "#005d5d",
+                  "on-surface-variant": "#596061",
+                  "background": "#f8fafa",
+                  "secondary-dim": "#3a5b3c",
+                  "surface": "#f8fafa",
+                  "on-error-container": "#6e0a12",
+                  "on-tertiary": "#f2fbfc",
+                  "error": "#a83836",
+                  "on-background": "#2c3435",
+                  "primary-fixed-dim": "#96e2e1",
+                  "secondary-container": "#c6edc4",
+                  "on-primary-container": "#005c5c",
+                  "on-error": "#fff7f6",
+                  "surface-container": "#eaefef",
+                  "surface-container-lowest": "#ffffff",
+                  "on-primary-fixed": "#004747",
+                  "secondary-fixed-dim": "#b8deb6",
+                  "on-secondary-container": "#38593a",
+                  "tertiary-dim": "#4c5556",
+                  "inverse-on-surface": "#9b9d9e",
+                  "surface-variant": "#dde4e4",
+                  "error-container": "#fa746f"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "fontFamily": {
+                  "headline": ["Lexend"],
+                  "body": ["Plus Jakarta Sans"],
+                  "label": ["Plus Jakarta Sans"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    h1, h2, h3, .headline-font { font-family: 'Lexend', sans-serif; }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- Shared Component: TopAppBar -->
+<nav class="bg-[#f8fafa] dark:bg-slate-950 flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#2D7D7D] dark:text-teal-400">menu</span>
+<span class="font-lexend tracking-tight text-2xl font-bold text-[#2D7D7D] dark:text-teal-400">Carely</span>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-highest flex items-center justify-center">
+<img alt="user profile picture" class="w-full h-full object-cover" data-alt="professional portrait of a healthcare worker or family caregiver in soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4ndoVMHvFENNUJYOQ4pR5XY3lQDMx0A3LoW1SZtwxBqlif2KUo5M9lvQO43HmgWJdqIxNNVFj488Nke98n4GX-yKgwvT7wAeDSD4mP6Sag9Tix5yumknaeTZTV42FcCMz846rFilmwH0a5Yx8KhD9kRdvg6aMDjXYul_X4sgNS8hhUOMay-NBKFl-PBYn1cqbdkIci3cjQsWUpn5OuvKg77uews5rs9Gmlif1io_L8bWCweR1OBrybmpromoDPyy28mQvln16pE8"/>
+</div>
+</nav>
+<main class="pt-20 px-6">
+<!-- Profile Section -->
+<header class="flex flex-col gap-6 py-4">
+<div class="flex items-center gap-5">
+<div class="w-20 h-20 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed text-2xl font-headline font-bold shadow-sm">
+          MB
+        </div>
+<div class="flex flex-col">
+<h1 class="text-2xl font-headline font-bold text-on-surface tracking-tight">Margaret Bennett</h1>
+<p class="text-on-surface-variant font-medium">78 years</p>
+</div>
+</div>
+<!-- Status Pills -->
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-1.5 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-xs font-semibold">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+          3/5 meds taken
+        </div>
+<div class="flex items-center gap-1.5 px-4 py-2 bg-tertiary-container text-on-tertiary-container rounded-full text-xs font-semibold">
+<span class="material-symbols-outlined text-[16px]">history</span>
+          Last BP: 2h ago
+        </div>
+</div>
+</header>
+<!-- Sub-Navigation Tabs -->
+<nav class="flex justify-between items-center bg-surface-container-low rounded-lg p-1.5 mt-4 mb-6">
+<button class="flex-1 py-2.5 px-2 rounded-lg text-sm font-bold bg-surface-container-lowest text-primary shadow-sm">Measurements</button>
+<button class="flex-1 py-2.5 px-2 rounded-lg text-sm font-medium text-on-surface-variant">Medicine</button>
+<button class="flex-1 py-2.5 px-2 rounded-lg text-sm font-medium text-on-surface-variant">Stats</button>
+<button class="flex-1 py-2.5 px-2 rounded-lg text-sm font-medium text-on-surface-variant">Settings</button>
+</nav>
+<!-- Filter Bar -->
+<div class="flex overflow-x-auto no-scrollbar gap-3 pb-4 -mx-6 px-6">
+<button class="flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-full bg-primary text-on-primary text-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary"></span>
+        All
+      </button>
+<button class="flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant text-sm font-medium border border-outline-variant/10">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+        Blood Pressure
+      </button>
+<button class="flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant text-sm font-medium border border-outline-variant/10">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+        Glucose
+      </button>
+<button class="flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant text-sm font-medium border border-outline-variant/10">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+        Temp
+      </button>
+<button class="flex items-center gap-2 whitespace-nowrap px-5 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant text-sm font-medium border border-outline-variant/10">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+        SpO2
+      </button>
+</div>
+<!-- Event List -->
+<section class="mt-4">
+<div class="flex items-center gap-4 mb-4">
+<h2 class="text-lg font-headline font-bold text-on-surface">Today</h2>
+<div class="flex-1 h-px bg-surface-container-high"></div>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Row 1: BP -->
+<div class="bg-surface-container-lowest p-5 rounded-lg flex items-center justify-between group transition-all">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Blood Pressure</span>
+<div class="flex items-baseline gap-1">
+<span class="text-xl font-headline font-bold text-on-surface leading-none">120 / 80</span>
+<span class="text-[11px] font-bold text-on-surface-variant">mmHg</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-sm font-bold text-on-surface">2h ago</span>
+<span class="text-xs text-on-surface-variant">by Sarah</span>
+</div>
+</div>
+<!-- Row 2: Glucose -->
+<div class="bg-surface-container-lowest p-5 rounded-lg flex items-center justify-between group transition-all">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">opacity</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Glucose</span>
+<div class="flex items-baseline gap-1">
+<span class="text-xl font-headline font-bold text-on-surface leading-none">5.4</span>
+<span class="text-[11px] font-bold text-on-surface-variant">mmol/L</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-sm font-bold text-on-surface">4h ago</span>
+<span class="text-xs text-on-surface-variant">by Sarah</span>
+</div>
+</div>
+<!-- Row 3: Temp -->
+<div class="bg-surface-container-lowest p-5 rounded-lg flex items-center justify-between group transition-all">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">thermostat</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Temperature</span>
+<div class="flex items-baseline gap-1">
+<span class="text-xl font-headline font-bold text-on-surface leading-none">36.6</span>
+<span class="text-[11px] font-bold text-on-surface-variant">°C</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-sm font-bold text-on-surface">6h ago</span>
+<span class="text-xs text-on-surface-variant">by Sarah</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Yesterday Header Placeholder -->
+<section class="mt-8 opacity-60">
+<div class="flex items-center gap-4 mb-4">
+<h2 class="text-lg font-headline font-bold text-on-surface">Yesterday</h2>
+<div class="flex-1 h-px bg-surface-container-high"></div>
+</div>
+</section>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-28 right-6 w-16 h-16 bg-primary text-on-primary rounded-2xl shadow-[0_12px_32px_rgba(16,106,106,0.3)] flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- Shared Component: BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center pt-3 pb-6 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-12px_32px_rgba(44,52,53,0.06)] rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-lexend text-[11px] font-medium">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#e0fffe] dark:bg-teal-900/40 text-[#106a6a] dark:text-teal-200 rounded-full px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+<span class="font-lexend text-[11px] font-medium">Vitals</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">medication</span>
+<span class="font-lexend text-[11px] font-medium">Meds</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#596061] dark:text-slate-400 px-5 py-1.5 hover:opacity-80 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-lexend text-[11px] font-medium">Settings</span>
+</div>
+</nav>
+</body></html>

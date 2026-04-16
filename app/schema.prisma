@@ -30,6 +30,11 @@ model User {
   redditBotProjects         RedditBotProject[]
   redditCreditAccount       RedditCreditAccount?
   redditCreditTransactions  RedditCreditTransaction[]
+  careParentsCreated        CarelyParent[] @relation("CareParentsCreated")
+  carelyCollaborators       CarelyCollaborator[] @relation("CarelyCollaborators")
+  careVitalLogs             CarelyVitalLog[] @relation("CareVitalLogs")
+  carePrescriptions         CarelyPrescription[] @relation("CarePrescriptions")
+  careMedicineIntakeLogs    CarelyMedicineIntakeLog[] @relation("CareMedicineIntakeLogs")
 }
 
 model UserAppPermission {
@@ -581,4 +586,118 @@ model RedditCreditTransaction {
   jobId     String?
   job       RedditBotJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
   createdAt DateTime      @default(now())
+}
+
+// === Carely module ===
+
+model CarelyParent {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdByUserId String
+  createdByUser   User   @relation("CareParentsCreated", fields: [createdByUserId], references: [id])
+
+  name        String
+  dateOfBirth DateTime?
+  notes       String?
+  avatarUrl   String?
+  // Preferred unit for temperature vitals logged for this parent.
+  // Individual log entries still store their own unit.
+  temperatureUnit String @default("F")
+
+  measurements  CarelyVitalLog[]
+  prescriptions CarelyPrescription[]
+  collaborators CarelyCollaborator[]
+}
+
+// Co-management: other users invited to help manage a parent
+model CarelyCollaborator {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  parentId  String
+  parent    CarelyParent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User   @relation("CarelyCollaborators", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Permissions
+  canViewPrescription  Boolean @default(true)
+  canEditPrescription  Boolean @default(false)
+  canAddVitals         Boolean @default(true)
+  canViewVitals        Boolean @default(true)
+
+  @@unique([parentId, userId])
+}
+
+// Vital measurement log entries (BP, glucose, temp, SpO2, heart rate)
+model CarelyVitalLog {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  parentId  String
+  parent    CarelyParent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  loggedByUserId String
+  loggedByUser   User   @relation("CareVitalLogs", fields: [loggedByUserId], references: [id])
+
+  // The type: BLOOD_PRESSURE | GLUCOSE | TEMPERATURE | SPO2 | HEART_RATE
+  type      String
+
+  // Flexible value storage per type:
+  // BLOOD_PRESSURE: { systolic: 120, diastolic: 80, unit: "mmHg" }
+  // GLUCOSE:        { value: 5.5, unit: "mmol/L" }
+  // TEMPERATURE:    { value: 37.2, unit: "C" }
+  // SPO2:           { value: 98, unit: "%" }
+  // HEART_RATE:     { value: 72, unit: "bpm" }
+  value     Json
+
+  loggedAt  DateTime @default(now())
+  notes     String?
+}
+
+// Prescription record for a parent
+model CarelyPrescription {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parentId  String
+  parent    CarelyParent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  createdByUserId String
+  createdByUser   User   @relation("CarePrescriptions", fields: [createdByUserId], references: [id])
+
+  medicineName  String
+  // Standard: { type: "standard", morning: 1, afternoon: 0, evening: 0, night: 1 }
+  // All four fields always stored as integers. evening=0 means not in use (renders 3-value string).
+  // Custom:   { type: "custom", notes: "4 times a day, after meals" }
+  doseSchedule  Json
+  doseNote      String?
+  startDate     DateTime
+  endDate       DateTime?
+  isActive      Boolean @default(true)
+
+  intakeLogs    CarelyMedicineIntakeLog[]
+}
+
+// Daily medicine intake confirmation (check-off log)
+model CarelyMedicineIntakeLog {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+
+  prescriptionId String
+  prescription   CarelyPrescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  loggedByUserId String
+  loggedByUser   User   @relation("CareMedicineIntakeLogs", fields: [loggedByUserId], references: [id])
+
+  // Which slot: "morning" | "afternoon" | "evening" | "night" | custom index
+  slot          String
+  // The date for which this intake is logged (date only, no time)
+  intakeDate    DateTime
+  takenAt       DateTime @default(now())
+
+  @@unique([prescriptionId, slot, intakeDate])
 }
