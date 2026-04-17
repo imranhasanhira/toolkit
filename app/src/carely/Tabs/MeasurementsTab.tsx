@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useQuery, getCarelyVitalLogs } from "wasp/client/operations";
+import React, { useMemo, useState } from 'react';
+import { useQuery, getCarelyVitalLogs, getCarelyVitalCategories } from "wasp/client/operations";
 import { useAuth } from 'wasp/client/auth';
 import { VitalTypeChip } from '../components/VitalTypeChip';
 import { VitalLogItem } from '../components/VitalLogItem';
@@ -7,8 +7,6 @@ import { VitalLogForm } from '../components/VitalLogForm';
 import { EmptyState } from '../components/EmptyState';
 import { Activity, ListFilter, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../client/components/ui/dialog';
-
-const ADD_TYPES = ['BLOOD_PRESSURE', 'HEART_RATE', 'WEIGHT', 'GLUCOSE', 'TEMPERATURE', 'SPO2'];
 
 export function MeasurementsTab({ parent }: { parent: any }) {
   const { data: user } = useAuth();
@@ -22,6 +20,20 @@ export function MeasurementsTab({ parent }: { parent: any }) {
   
   // We fetch all logs and filter instantly on the frontend
   const { data: logs, isLoading, refetch } = useQuery(getCarelyVitalLogs, { parentId: parent.id });
+  const { data: categories } = useQuery(getCarelyVitalCategories);
+
+  const activeCategories = useMemo(() => {
+    const list = (categories ?? []).filter((c: any) => c.isActive !== false);
+    return list.sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [categories]);
+
+  const typeLabelByKey = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const c of activeCategories) map[c.key] = c.displayName;
+    return map;
+  }, [activeCategories]);
+
+  const orderedTypes = useMemo(() => activeCategories.map((c: any) => c.key), [activeCategories]);
 
   const displayLogs = logs 
     ? (activeFilters.length > 0 ? logs.filter((l: any) => activeFilters.includes(l.type)) : logs)
@@ -73,7 +85,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
                 </DialogTitle>
               </DialogHeader>
               <div className="flex flex-col gap-3 mt-4">
-                {ADD_TYPES.map(type => {
+                {orderedTypes.map((type: string) => {
                   const isSelected = activeFilters.includes(type);
                   return (
                     <label
@@ -87,7 +99,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
                         className="w-5 h-5 rounded border-[color:var(--color-carely-surface-high)] text-[color:var(--color-carely-primary)] focus:ring-[color:var(--color-carely-primary)]"
                       />
                       <span className="font-jakarta font-medium text-[color:var(--color-carely-on-surface)]">
-                        {type.replace('_', ' ')}
+                        {typeLabelByKey[type] ?? type.replace('_', ' ')}
                       </span>
                     </label>
                   );
@@ -116,8 +128,13 @@ export function MeasurementsTab({ parent }: { parent: any }) {
 
       {canAddVitals && (
         <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {ADD_TYPES.map(vt => (
-            <VitalTypeChip key={vt} label={`+ ${vt.replace('_', ' ')}`} selected={false} onClick={() => setQuickAddType(vt)} />
+          {orderedTypes.map((vt: string) => (
+            <VitalTypeChip
+              key={vt}
+              label={`+ ${typeLabelByKey[vt] ?? vt.replace('_', ' ')}`}
+              selected={false}
+              onClick={() => setQuickAddType(vt)}
+            />
           ))}
         </div>
       )}
@@ -135,6 +152,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
               canEdit={canAddVitals}
               isOwner={!!isOwner}
               temperatureUnit={parent.temperatureUnit}
+              typeLabel={typeLabelByKey[log.type]}
             />
           ))
         ) : (

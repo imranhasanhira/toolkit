@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../client/components/ui/dialog';
-import { addCarelyVitalLog, updateCarelyVitalLog } from "wasp/client/operations";
+import { addCarelyVitalLog, updateCarelyVitalLog, getCarelyAppSettings, getCarelyVitalCategories } from "wasp/client/operations";
+import { useQuery } from "wasp/client/operations";
 import { Plus } from "lucide-react";
 import toast from 'react-hot-toast';
 
@@ -39,13 +40,20 @@ export function VitalLogForm({
   };
   const [loggedAt, setLoggedAt] = useState(toLocalIso(new Date()));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: categories } = useQuery(getCarelyVitalCategories);
+  const { data: appSettings } = useQuery(getCarelyAppSettings);
+
+  const getCategory = (k: string) => (categories ?? []).find((c: any) => c.key === k);
+  const currentCategory = getCategory(type);
+  const kind = (currentCategory?.kind as string) || (type === 'BLOOD_PRESSURE' ? 'blood_pressure' : 'numeric');
 
   useEffect(() => {
     if (isOpen) {
       if (initialLog) {
         setType(initialLog.type);
-        setVal1(initialLog.type === 'BLOOD_PRESSURE' ? initialLog.value.systolic : initialLog.value.value);
-        if (initialLog.type === 'BLOOD_PRESSURE') setVal2(initialLog.value.diastolic);
+        const isBP = initialLog.type === 'BLOOD_PRESSURE' || getCategory(initialLog.type)?.kind === 'blood_pressure';
+        setVal1(isBP ? initialLog.value.systolic : initialLog.value.value);
+        if (isBP) setVal2(initialLog.value.diastolic);
         setNotes(initialLog.notes || '');
         setLoggedAt(toLocalIso(new Date(initialLog.loggedAt)));
       } else {
@@ -63,12 +71,9 @@ export function VitalLogForm({
     setIsSubmitting(true);
     try {
       let value: any = {};
-      if (type === 'BLOOD_PRESSURE') value = { systolic: Number(val1), diastolic: Number(val2), unit: 'mmHg' };
-      else if (type === 'GLUCOSE') value = { value: Number(val1), unit: 'mg/dL' }; 
-      else if (type === 'TEMPERATURE') value = { value: Number(val1), unit: temperatureUnit || 'F' };
-      else if (type === 'SPO2') value = { value: Number(val1), unit: '%' };
-      else if (type === 'HEART_RATE') value = { value: Number(val1), unit: 'bpm' };
-      else if (type === 'WEIGHT') value = { value: Number(val1), unit: 'kg' };
+      if (kind === 'blood_pressure') value = { systolic: Number(val1), diastolic: Number(val2), unit: currentCategory?.unit || 'mmHg' };
+      else if (type === 'TEMPERATURE') value = { value: Number(val1), unit: ((appSettings as any)?.temperatureUnit === 'C' ? 'C' : 'F') };
+      else value = { value: Number(val1), unit: currentCategory?.unit || '' };
 
       const time = new Date(loggedAt);
 
@@ -89,11 +94,12 @@ export function VitalLogForm({
   };
 
   const getUnitPlaceholder = () => {
-    if (type === 'GLUCOSE') return 'Value (mg/dL)';
-    if (type === 'TEMPERATURE') return `Value (°${temperatureUnit || 'F'})`;
-    if (type === 'SPO2') return 'Value (%)';
-    if (type === 'HEART_RATE') return 'Value (bpm)';
-    if (type === 'WEIGHT') return 'Value (kg)';
+    if (type === 'TEMPERATURE') {
+      const tu = ((appSettings as any)?.temperatureUnit === 'C' ? 'C' : 'F');
+      return `Value (°${tu})`;
+    }
+    const unit = currentCategory?.unit;
+    if (unit) return `Value (${unit})`;
     return 'Value';
   };
 
@@ -136,12 +142,15 @@ export function VitalLogForm({
               onChange={e => {setType(e.target.value); setVal1(''); setVal2('');}}
               className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
             >
-              <option value="BLOOD_PRESSURE">Blood Pressure</option>
-              <option value="HEART_RATE">Heart Rate</option>
-              <option value="WEIGHT">Weight</option>
-              <option value="GLUCOSE">Glucose</option>
-              <option value="TEMPERATURE">Temperature</option>
-              <option value="SPO2">SpO2</option>
+              {(categories ?? [])
+                .filter((c: any) => c.isActive !== false)
+                .slice()
+                .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                .map((c: any) => (
+                  <option key={c.key} value={c.key}>
+                    {c.displayName}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -149,12 +158,12 @@ export function VitalLogForm({
             <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
               Measurement
             </label>
-            {type === 'BLOOD_PRESSURE' ? (
+            {kind === 'blood_pressure' ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <input
                   required
                   type="number"
-                  placeholder="Systolic (mmHg)"
+                  placeholder={`Systolic (${currentCategory?.unit || 'mmHg'})`}
                   value={val1}
                   onChange={e => setVal1(e.target.value)}
                   className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
@@ -162,7 +171,7 @@ export function VitalLogForm({
                 <input
                   required
                   type="number"
-                  placeholder="Diastolic (mmHg)"
+                  placeholder={`Diastolic (${currentCategory?.unit || 'mmHg'})`}
                   value={val2}
                   onChange={e => setVal2(e.target.value)}
                   className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"

@@ -1,5 +1,5 @@
 import { LogIn, Menu } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { Link as ReactRouterLink, useLocation } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
@@ -115,11 +115,16 @@ export default function NavBar({
 
 function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
   const { data: user } = useAuth();
+  const location = useLocation();
+  const shouldShowAiCredit = useMemo(() => {
+    const path = location.pathname;
+    return path.startsWith("/reddit-bot") || path.startsWith("/admin/reddit-bot-settings");
+  }, [location.pathname]);
 
   return (
     <div className="hidden items-center justify-end gap-3 lg:flex lg:flex-1">
       <ul className="flex items-center justify-center gap-2 sm:gap-4">
-        <AiCreditIndicator />
+        {shouldShowAiCredit ? <AiCreditIndicator /> : null}
         <DarkModeSwitcher />
       </ul>
       {!user ? (
@@ -162,6 +167,11 @@ function NavBarMobileMenu({
 }) {
   const { data: user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const shouldShowAiCredit = useMemo(() => {
+    const path = location.pathname;
+    return path.startsWith("/reddit-bot") || path.startsWith("/admin/reddit-bot-settings");
+  }, [location.pathname]);
 
   return (
     <div className="flex lg:hidden">
@@ -198,6 +208,11 @@ function NavBarMobileMenu({
                 {renderNavigationItems(navigationItems, setMobileMenuOpen)}
               </ul>
               <div className="py-6">
+                {shouldShowAiCredit ? (
+                  <ul className="flex items-center justify-end gap-2 pb-4">
+                    <AiCreditIndicator />
+                  </ul>
+                ) : null}
                 {!user ? (
                   <WaspRouterLink to={routes.LoginRoute.to}>
                     <div className="text-foreground hover:text-primary flex items-center justify-end transition-colors duration-300 ease-in-out">

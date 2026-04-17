@@ -143,6 +143,159 @@ export const getCarelyVitalLogs = async (args: { parentId: string; type?: string
   });
 };
 
+type CarelyVitalCategoryKind = "blood_pressure" | "numeric";
+
+const DEFAULT_CARELY_VITAL_CATEGORIES: Array<{
+  key: string;
+  displayName: string;
+  kind: CarelyVitalCategoryKind;
+  unit?: string;
+  sortOrder: number;
+}> = [
+  { key: "BLOOD_PRESSURE", displayName: "Blood Pressure", kind: "blood_pressure", unit: "mmHg", sortOrder: 10 },
+  { key: "HEART_RATE", displayName: "Heart Rate", kind: "numeric", unit: "bpm", sortOrder: 20 },
+  { key: "WEIGHT", displayName: "Weight", kind: "numeric", unit: "kg", sortOrder: 30 },
+  { key: "GLUCOSE", displayName: "Glucose", kind: "numeric", unit: "mg/dL", sortOrder: 40 },
+  // Temperature uses per-parent unit in the UI, but we keep a stable key.
+  { key: "TEMPERATURE", displayName: "Temperature", kind: "numeric", unit: undefined, sortOrder: 50 },
+  { key: "SPO2", displayName: "SpO₂", kind: "numeric", unit: "%", sortOrder: 60 },
+];
+
+async function ensureDefaultCarelyVitalCategories(context: any) {
+  const count = await context.entities.CarelyVitalCategory.count();
+  if (count > 0) return;
+  await context.entities.CarelyVitalCategory.createMany({
+    data: DEFAULT_CARELY_VITAL_CATEGORIES.map((c) => ({
+      key: c.key,
+      displayName: c.displayName,
+      kind: c.kind,
+      unit: c.unit,
+      sortOrder: c.sortOrder,
+      isActive: true,
+    })),
+  });
+}
+
+export const getCarelyVitalCategories = async (args: void, context: any) => {
+  await checkAuth(context);
+  // If DB isn't migrated yet, this will throw; callers can still use hardcoded defaults.
+  try {
+    await ensureDefaultCarelyVitalCategories(context);
+    return await context.entities.CarelyVitalCategory.findMany({
+      orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+    });
+  } catch (e) {
+    return DEFAULT_CARELY_VITAL_CATEGORIES.map((c) => ({
+      id: `__default__${c.key}`,
+      key: c.key,
+      displayName: c.displayName,
+      kind: c.kind,
+      unit: c.unit ?? null,
+      sortOrder: c.sortOrder,
+      isActive: true,
+    }));
+  }
+};
+
+export const getCarelyAppSettings = async (args: void, context: any) => {
+  await checkAuth(context);
+  try {
+    const existing = await context.entities.CarelyAppSettings.findUnique({ where: { id: 1 } });
+    if (existing) return existing;
+    return await context.entities.CarelyAppSettings.create({ data: { id: 1, temperatureUnit: "F" } });
+  } catch (e) {
+    // Fallback if migration not applied yet.
+    return { id: 1, temperatureUnit: "F" };
+  }
+};
+
+export const updateCarelyAppSettings = async (
+  args: { temperatureUnit: "C" | "F" },
+  context: any
+) => {
+  await checkAuth(context);
+  if (!context.user?.isAdmin) throw new HttpError(403, "Only admins can update Carely settings");
+  const unit = args.temperatureUnit === "C" ? "C" : "F";
+  return context.entities.CarelyAppSettings.upsert({
+    where: { id: 1 },
+    create: { id: 1, temperatureUnit: unit },
+    update: { temperatureUnit: unit },
+  });
+};
+
+export const upsertCarelyVitalCategory = async (
+  args: {
+    id?: string;
+    key: string;
+    displayName: string;
+    kind: CarelyVitalCategoryKind;
+    unit?: string | null;
+    isActive: boolean;
+  },
+  context: any
+) => {
+  await checkAuth(context);
+  if (!context.user?.isAdmin) throw new HttpError(403, "Only admins can manage vital categories");
+
+  const key = args.key.trim().toUpperCase();
+  if (!/^[A-Z0-9_]+$/.test(key)) throw new HttpError(400, "Key must be A-Z, 0-9, and underscore only");
+  const displayName = args.displayName.trim();
+  if (!displayName) throw new HttpError(400, "Display name is required");
+
+  const unit =
+    args.kind === "numeric" ? (args.unit ?? "").trim() || null : (args.unit ?? "mmHg").trim() || "mmHg";
+
+  if (args.id) {
+    return context.entities.CarelyVitalCategory.update({
+      where: { id: args.id },
+      data: {
+        key,
+        displayName,
+        kind: args.kind,
+        unit,
+        isActive: args.isActive,
+      },
+    });
+  }
+
+  const maxOrder = await context.entities.CarelyVitalCategory.aggregate({ _max: { sortOrder: true } });
+  const sortOrder = (maxOrder?._max?.sortOrder ?? 0) + 10;
+
+  return context.entities.CarelyVitalCategory.create({
+    data: {
+      key,
+      displayName,
+      kind: args.kind,
+      unit,
+      isActive: args.isActive,
+      sortOrder,
+    },
+  });
+};
+
+export const deleteCarelyVitalCategory = async (args: { id: string }, context: any) => {
+  await checkAuth(context);
+  if (!context.user?.isAdmin) throw new HttpError(403, "Only admins can manage vital categories");
+  return context.entities.CarelyVitalCategory.delete({ where: { id: args.id } });
+};
+
+export const reorderCarelyVitalCategories = async (args: { orderedIds: string[] }, context: any) => {
+  await checkAuth(context);
+  if (!context.user?.isAdmin) throw new HttpError(403, "Only admins can manage vital categories");
+  const ids = args.orderedIds.filter((id) => !id.startsWith("__default__"));
+  // We intentionally avoid using $transaction here because the shape of `context.entities`
+  // varies across Wasp versions / compilation targets. Sequential updates are fine for
+  // the small number of categories.
+  for (let idx = 0; idx < ids.length; idx++) {
+    const id = ids[idx];
+    await context.entities.CarelyVitalCategory.update({
+      where: { id },
+      data: { sortOrder: (idx + 1) * 10 },
+    });
+  }
+  return true;
+};
+
 export const addCarelyVitalLog = async (args: { parentId: string; type: string; value: any; notes?: string; loggedAt?: Date }, context: any) => {
   const userId = await checkAuth(context);
   const parent = await getCarelyParentById({ id: args.parentId }, context);

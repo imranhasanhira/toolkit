@@ -631,7 +631,36 @@ model CarelyCollaborator {
   @@unique([parentId, userId])
 }
 
-// Vital measurement log entries (BP, glucose, temp, SpO2, heart rate)
+// Configurable vital categories (admin-managed).
+// Used by the Carely UI to render chips, labels, units, and input shape.
+model CarelyVitalCategory {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Stable identifier referenced by CarelyVitalLog.type (e.g. "BLOOD_PRESSURE", "WEIGHT")
+  key         String   @unique
+  displayName String
+
+  // "blood_pressure" | "numeric"
+  kind        String
+  // For kind="numeric": unit string like "kg", "%", "bpm", "mg/dL"
+  // For kind="blood_pressure": typically "mmHg" (display only; values still store unit in JSON)
+  unit        String?
+
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+}
+
+// Global Carely settings (not per patient).
+model CarelyAppSettings {
+  id              Int     @id @default(1)
+  temperatureUnit String  @default("F") // "F" | "C"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Vital measurement log entries (type is a CarelyVitalCategory.key)
 model CarelyVitalLog {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
@@ -642,7 +671,7 @@ model CarelyVitalLog {
   loggedByUserId String
   loggedByUser   User   @relation("CareVitalLogs", fields: [loggedByUserId], references: [id])
 
-  // The type: BLOOD_PRESSURE | GLUCOSE | TEMPERATURE | SPO2 | HEART_RATE
+  // The type: references CarelyVitalCategory.key
   type      String
 
   // Flexible value storage per type:

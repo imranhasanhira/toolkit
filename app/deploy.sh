@@ -44,6 +44,35 @@ echo "========================================="
 echo "Starting Pre-Deployment Build & Validation"
 echo "========================================="
 
+# --- 0. Guardrails: ensure SMTP is enabled for production deploys ---
+echo "✓ Validating emailSender provider..."
+EMAIL_PROVIDER="$(
+  awk '
+    BEGIN { inBlock=0; provider="" }
+    /^[[:space:]]*emailSender[[:space:]]*:[[:space:]]*\\{/ { inBlock=1; next }
+    inBlock && /^[[:space:]]*provider[[:space:]]*:/ {
+      # Take the token after ":" and strip spaces, commas, and comments.
+      line=$0
+      sub(/#.*/, "", line)
+      sub(/\\/\\/.*$/, "", line)
+      sub(/.*provider[[:space:]]*:[[:space:]]*/, "", line)
+      sub(/[[:space:]]*,[[:space:]]*$/, "", line)
+      gsub(/[[:space:]]+/, "", line)
+      provider=line
+    }
+    inBlock && /^[[:space:]]*\\}[[:space:]]*,?[[:space:]]*$/ { inBlock=0 }
+    END { print provider }
+  ' main.wasp
+)"
+
+if [ "${EMAIL_PROVIDER:-}" != "SMTP" ]; then
+  echo "❌ Refusing to deploy: emailSender.provider must be SMTP for production."
+  echo "   Found: '${EMAIL_PROVIDER:-<missing>}' in app/main.wasp"
+  echo "   Fix it by setting:"
+  echo "     emailSender: { provider: SMTP, ... }"
+  exit 1
+fi
+
 # --- 1. Build Wasp Project ---
 echo "✓ Building Wasp project..."
 wasp build

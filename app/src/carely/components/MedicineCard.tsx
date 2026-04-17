@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { DoseString } from './DoseString';
 import { SlotCheckbox } from './SlotCheckbox';
-import { logCarelyMedicineIntake, unlogCarelyMedicineIntake } from "wasp/client/operations";
-import { Edit2 } from "lucide-react";
+import { deactivateCarelyPrescription, logCarelyMedicineIntake, unlogCarelyMedicineIntake } from "wasp/client/operations";
+import { Edit2, Trash2 } from "lucide-react";
 import toast from 'react-hot-toast';
 import { PrescriptionForm } from './PrescriptionForm';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export function MedicineCard({
   prescription,
@@ -23,6 +24,8 @@ export function MedicineCard({
 }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const handleToggle = async (slot: string, checked: boolean) => {
     setIsUpdating(true);
@@ -50,18 +53,53 @@ export function MedicineCard({
 
   return (
     <div className="bg-[color:var(--color-carely-surface-lowest)] p-5 rounded-2xl border border-[color:var(--color-carely-surface-high)] shadow-xs relative overflow-hidden group">
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove prescription?"
+        description="This will mark the prescription as inactive. Existing intake history is kept."
+        confirmText={isDeleting ? "Removing..." : "Remove"}
+        confirmTone="danger"
+        isConfirming={isDeleting}
+        onConfirm={async () => {
+          try {
+            setIsDeleting(true);
+            await deactivateCarelyPrescription({ id: prescription.id } as any);
+            toast.success("Prescription removed");
+            setConfirmOpen(false);
+            onUpdate();
+          } catch (e: any) {
+            toast.error("Failed to remove: " + e.message);
+          } finally {
+            setIsDeleting(false);
+          }
+        }}
+      />
       <div className="absolute top-3 right-3 flex items-center gap-2">
         {!prescription.isActive && (
           <span className="text-[10px] font-jakarta bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-on-surface-variant)] px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Inactive</span>
         )}
         {canEditPrescription && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="p-1.5 rounded-full bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-primary)]/10 hover:text-[color:var(--color-carely-primary)] transition-colors"
-            title="Edit prescription"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
+          <>
+            {prescription.isActive && (
+              <button
+                onClick={() => setConfirmOpen(true)}
+                className="p-1.5 rounded-full bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-error)] hover:bg-[color:var(--color-carely-error)]/10 transition-colors"
+                title="Remove prescription"
+                type="button"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-1.5 rounded-full bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-primary)]/10 hover:text-[color:var(--color-carely-primary)] transition-colors"
+              title="Edit prescription"
+              type="button"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+          </>
         )}
       </div>
       

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery, getCarelyVitalLogs } from "wasp/client/operations";
+import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery, getCarelyAppSettings, getCarelyVitalLogs, getCarelyVitalCategories } from "wasp/client/operations";
 import { MetricChip } from '../components/MetricChip';
 import { StatChart } from '../components/StatChart';
 import { StatSummaryTile } from '../components/StatSummaryTile';
@@ -13,6 +13,24 @@ export function StatsTab({ parent }: { parent: any }) {
   const [medianPerDay, setMedianPerDay] = useState(false);
   
   const { data: logs, isLoading, refetch } = useQuery(getCarelyVitalLogs, { parentId: parent.id, type: metric });
+  const { data: categories } = useQuery(getCarelyVitalCategories);
+  const { data: appSettings } = useQuery(getCarelyAppSettings);
+
+  const activeCategories = useMemo(() => {
+    const list = (categories ?? []).filter((c: any) => c.isActive !== false);
+    return list.sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [categories]);
+
+  const categoryByKey = useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const c of activeCategories) map[c.key] = c;
+    return map;
+  }, [activeCategories]);
+
+  useEffect(() => {
+    if (activeCategories.length === 0) return;
+    if (!categoryByKey[metric]) setMetric(activeCategories[0].key);
+  }, [activeCategories, categoryByKey, metric]);
 
   const toLocalDateKey = (d: Date) => {
     const y = d.getFullYear();
@@ -22,7 +40,8 @@ export function StatsTab({ parent }: { parent: any }) {
   };
 
   const getNumericValueForMedian = (l: any) => {
-    if (l.type === 'BLOOD_PRESSURE') {
+    const kind = categoryByKey[l.type]?.kind;
+    if (kind === 'blood_pressure' || l.type === 'BLOOD_PRESSURE') {
       const sys = Number((l.value as any)?.systolic);
       const dia = Number((l.value as any)?.diastolic);
       if (!Number.isFinite(sys) || !Number.isFinite(dia)) return Number.NaN;
@@ -100,7 +119,7 @@ export function StatsTab({ parent }: { parent: any }) {
 
     return selected.map(l => {
       const date = new Date(l.loggedAt);
-      const isBP = l.type === 'BLOOD_PRESSURE';
+      const isBP = (categoryByKey[l.type]?.kind === 'blood_pressure') || l.type === 'BLOOD_PRESSURE';
       return {
         timestamp: date.getTime(),
         val: isBP ? undefined : (l.value as any).value,
@@ -108,7 +127,7 @@ export function StatsTab({ parent }: { parent: any }) {
         diastolic: isBP ? (l.value as any).diastolic : undefined,
       };
     });
-  }, [logs, range.start, range.end, medianPerDay]);
+  }, [logs, range.start, range.end, medianPerDay, categoryByKey]);
 
   const handlePrev = () => {
     setEndOffsetDays(o => o + (period === 'week' ? 7 : 30));
@@ -160,13 +179,9 @@ export function StatsTab({ parent }: { parent: any }) {
   }, [chartData, metric]);
 
   const getUnit = (type: string) => {
-    if (type === 'BLOOD_PRESSURE') return 'mmHg';
-    if (type === 'GLUCOSE') return 'mg/dL';
-    if (type === 'TEMPERATURE') return `°${parent.temperatureUnit === 'C' ? 'C' : 'F'}`;
-    if (type === 'SPO2') return '%';
-    if (type === 'HEART_RATE') return 'bpm';
-    if (type === 'WEIGHT') return 'kg';
-    return '';
+    if (type === 'TEMPERATURE') return `°${((appSettings as any)?.temperatureUnit === 'C' ? 'C' : 'F')}`;
+    const cat = categoryByKey[type];
+    return cat?.unit || '';
   };
   const unit = getUnit(metric);
 
@@ -176,8 +191,8 @@ export function StatsTab({ parent }: { parent: any }) {
         <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-4">Health Trends</h2>
         
         <div className="flex gap-2 bg-[color:var(--color-carely-surface-lowest)] p-1.5 rounded-xl border border-[color:var(--color-carely-surface-high)] overflow-x-auto no-scrollbar">
-          {['BLOOD_PRESSURE', 'HEART_RATE', 'WEIGHT', 'GLUCOSE', 'TEMPERATURE', 'SPO2'].map(m => (
-            <MetricChip key={m} label={m.replace('_', ' ')} selected={metric === m} onClick={() => setMetric(m)} />
+          {activeCategories.map((c: any) => (
+            <MetricChip key={c.key} label={c.displayName} selected={metric === c.key} onClick={() => setMetric(c.key)} />
           ))}
         </div>
       </div>
@@ -186,7 +201,7 @@ export function StatsTab({ parent }: { parent: any }) {
         <div className="flex flex-col mb-4 gap-3">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] shrink-0">
-              {metric.replace('_', ' ')} Chart
+              {(categoryByKey[metric]?.displayName ?? metric.replace('_', ' '))} Chart
             </h3>
             <div className="flex items-center gap-2 shrink-0">
               <button

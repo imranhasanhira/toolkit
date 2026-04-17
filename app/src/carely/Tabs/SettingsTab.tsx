@@ -18,7 +18,6 @@ export function SettingsTab({ parent }: { parent: any }) {
   
   const [name, setName] = useState(parent.name || '');
   const [dob, setDob] = useState(parent.dateOfBirth ? new Date(parent.dateOfBirth).toISOString().split('T')[0] : '');
-  const [temperatureUnit, setTemperatureUnit] = useState<'C' | 'F'>((parent.temperatureUnit === 'C' ? 'C' : 'F'));
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +28,6 @@ export function SettingsTab({ parent }: { parent: any }) {
         id: parent.id,
         name,
         dateOfBirth: dob ? new Date(dob) : undefined,
-        temperatureUnit,
       });
       toast.success('Profile updated');
     } catch(err: any) {
@@ -186,15 +184,9 @@ export function SettingsTab({ parent }: { parent: any }) {
               <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
             </div>
             <div>
-              <label className="text-xs font-jakarta font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase block mb-1.5 ml-1">Temperature Unit</label>
-              <select
-                value={temperatureUnit}
-                onChange={(e) => setTemperatureUnit(e.target.value === 'C' ? 'C' : 'F')}
-                className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]"
-              >
-                <option value="F">Fahrenheit (°F)</option>
-                <option value="C">Celsius (°C)</option>
-              </select>
+              <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)]">
+                Temperature unit is now configured in Carely app settings (global).
+              </p>
             </div>
             <button disabled={isUpdatingProfile} type="submit" className="w-full bg-[color:var(--color-carely-primary)] text-white font-jakarta font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity mt-2 disabled:opacity-50">
               {isUpdatingProfile ? 'Saving...' : 'Save Profile'}

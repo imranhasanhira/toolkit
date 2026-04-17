@@ -895,6 +895,16 @@ query getCarelyVitalLogs {
   entities: [CarelyVitalLog, CarelyParent, CarelyCollaborator]
 }
 
+query getCarelyVitalCategories {
+  fn: import { getCarelyVitalCategories } from "@src/carely/operations",
+  entities: [CarelyVitalCategory]
+}
+
+query getCarelyAppSettings {
+  fn: import { getCarelyAppSettings } from "@src/carely/operations",
+  entities: [CarelyAppSettings]
+}
+
 query getCarelyPrescriptions {
   fn: import { getCarelyPrescriptions } from "@src/carely/operations",
   entities: [CarelyPrescription, CarelyMedicineIntakeLog, CarelyParent, CarelyCollaborator]
@@ -958,6 +968,26 @@ action updateCarelyVitalLog {
 action deleteCarelyVitalLog {
   fn: import { deleteCarelyVitalLog } from "@src/carely/operations",
   entities: [CarelyVitalLog, CarelyParent]
+}
+
+action upsertCarelyVitalCategory {
+  fn: import { upsertCarelyVitalCategory } from "@src/carely/operations",
+  entities: [CarelyVitalCategory]
+}
+
+action deleteCarelyVitalCategory {
+  fn: import { deleteCarelyVitalCategory } from "@src/carely/operations",
+  entities: [CarelyVitalCategory]
+}
+
+action reorderCarelyVitalCategories {
+  fn: import { reorderCarelyVitalCategories } from "@src/carely/operations",
+  entities: [CarelyVitalCategory]
+}
+
+action updateCarelyAppSettings {
+  fn: import { updateCarelyAppSettings } from "@src/carely/operations",
+  entities: [CarelyAppSettings]
 }
 
 action createCarelyPrescription {

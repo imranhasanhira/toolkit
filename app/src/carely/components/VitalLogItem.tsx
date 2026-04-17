@@ -98,6 +98,7 @@ export function VitalLogItem({
   canEdit,
   isOwner,
   temperatureUnit,
+  typeLabel,
 }: {
   log: any,
   parentId: string,
@@ -105,6 +106,7 @@ export function VitalLogItem({
   canEdit: boolean,
   isOwner?: boolean,
   temperatureUnit?: 'C' | 'F',
+  typeLabel?: string,
 }) {
   const { data: user } = useAuth();
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -150,7 +152,7 @@ export function VitalLogItem({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h4 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] truncate">
-                {formatVitalType(log.type)}
+                {typeLabel ?? formatVitalType(log.type)}
               </h4>
               <p className="font-lexend font-bold text-[color:var(--color-carely-primary)] text-lg leading-tight">
                 {valueDisp}
