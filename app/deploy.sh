@@ -49,18 +49,19 @@ echo "✓ Validating emailSender provider..."
 EMAIL_PROVIDER="$(
   awk '
     BEGIN { inBlock=0; provider="" }
-    /^[[:space:]]*emailSender[[:space:]]*:[[:space:]]*\\{/ { inBlock=1; next }
+    /^[[:space:]]*emailSender[[:space:]]*:[[:space:]]*\{/ { inBlock=1; next }
     inBlock && /^[[:space:]]*provider[[:space:]]*:/ {
       # Take the token after ":" and strip spaces, commas, and comments.
       line=$0
       sub(/#.*/, "", line)
-      sub(/\\/\\/.*$/, "", line)
+      # Match // end-of-line comments (single \/ pairs; avoid \\ which breaks BSD awk)
+      sub(/\/\/.*$/, "", line)
       sub(/.*provider[[:space:]]*:[[:space:]]*/, "", line)
       sub(/[[:space:]]*,[[:space:]]*$/, "", line)
       gsub(/[[:space:]]+/, "", line)
       provider=line
     }
-    inBlock && /^[[:space:]]*\\}[[:space:]]*,?[[:space:]]*$/ { inBlock=0 }
+    inBlock && /^[[:space:]]*\}[[:space:]]*,?[[:space:]]*$/ { inBlock=0 }
     END { print provider }
   ' main.wasp
 )"
