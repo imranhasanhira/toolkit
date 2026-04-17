@@ -430,6 +430,17 @@ export const seedCarelyMockData = async (args: { parentId: string }, context: an
       loggedAt: new Date(d.getTime() + Math.random() * 3600000)
     });
 
+    if (Math.random() > 0.35) {
+      vitalLogs.push({
+        parentId: args.parentId,
+        loggedByUserId: userId,
+        type: 'WEIGHT',
+        value: { value: 16 + Math.round(Math.random() * 12 * 10) / 10, unit: 'kg' },
+        notes: 'MOCK_DATA',
+        loggedAt: new Date(d.getTime() + Math.random() * 3600000)
+      });
+    }
+
     if (Math.random() > 0.5) {
        vitalLogs.push({
          parentId: args.parentId,

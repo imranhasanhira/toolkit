@@ -68,6 +68,7 @@ export function VitalLogForm({
       else if (type === 'TEMPERATURE') value = { value: Number(val1), unit: temperatureUnit || 'F' };
       else if (type === 'SPO2') value = { value: Number(val1), unit: '%' };
       else if (type === 'HEART_RATE') value = { value: Number(val1), unit: 'bpm' };
+      else if (type === 'WEIGHT') value = { value: Number(val1), unit: 'kg' };
 
       const time = new Date(loggedAt);
 
@@ -92,6 +93,7 @@ export function VitalLogForm({
     if (type === 'TEMPERATURE') return `Value (°${temperatureUnit || 'F'})`;
     if (type === 'SPO2') return 'Value (%)';
     if (type === 'HEART_RATE') return 'Value (bpm)';
+    if (type === 'WEIGHT') return 'Value (kg)';
     return 'Value';
   };
 
@@ -99,53 +101,103 @@ export function VitalLogForm({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {!initialLog && !hideTrigger && (
         <DialogTrigger asChild>
-          <button className="flex items-center gap-2 bg-[color:var(--color-carely-primary)] text-white px-4 py-2 rounded-full font-jakarta font-medium shadow-[0_2px_10px_var(--color-carely-tertiary)] hover:opacity-90">
-            <Plus className="w-4 h-4" /> Log Vital
+          <button className="h-10 inline-flex items-center gap-2 bg-[color:var(--color-carely-primary)] text-white px-4 rounded-xl font-jakarta font-semibold shadow-xs hover:opacity-90 transition-opacity">
+            <Plus className="w-4 h-4" /> Log vital
           </button>
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[425px] bg-[color:var(--color-carely-surface-lowest)] border-[color:var(--color-carely-surface-high)] rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="font-lexend text-[color:var(--color-carely-on-surface)] text-xl">
-            {initialLog ? 'Edit Measurement' : 'Log Measurement'}
+        <DialogHeader className="pt-1">
+          <DialogTitle className="font-lexend text-[color:var(--color-carely-on-surface)] text-xl text-center">
+            {initialLog ? 'Edit measurement' : 'Log measurement'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
           
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase tracking-wider">Date & Time</label>
-            <input required type="datetime-local" value={loggedAt} onChange={e => setLoggedAt(e.target.value)} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
+            <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
+              Date & time
+            </label>
+            <input
+              required
+              type="datetime-local"
+              value={loggedAt}
+              onChange={e => setLoggedAt(e.target.value)}
+              className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase tracking-wider">Type</label>
-            <select value={type} onChange={e => {setType(e.target.value); setVal1(''); setVal2('');}} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]">
+            <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
+              Type
+            </label>
+            <select
+              value={type}
+              onChange={e => {setType(e.target.value); setVal1(''); setVal2('');}}
+              className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
+            >
               <option value="BLOOD_PRESSURE">Blood Pressure</option>
+              <option value="HEART_RATE">Heart Rate</option>
+              <option value="WEIGHT">Weight</option>
               <option value="GLUCOSE">Glucose</option>
               <option value="TEMPERATURE">Temperature</option>
               <option value="SPO2">SpO2</option>
-              <option value="HEART_RATE">Heart Rate</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase tracking-wider">Measurement</label>
+            <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
+              Measurement
+            </label>
             {type === 'BLOOD_PRESSURE' ? (
-              <div className="flex gap-4">
-                <input required type="number" placeholder="Systolic (mmHg)" value={val1} onChange={e => setVal1(e.target.value)} className="flex-1 bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
-                <input required type="number" placeholder="Diastolic (mmHg)" value={val2} onChange={e => setVal2(e.target.value)} className="flex-1 bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <input
+                  required
+                  type="number"
+                  placeholder="Systolic (mmHg)"
+                  value={val1}
+                  onChange={e => setVal1(e.target.value)}
+                  className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
+                />
+                <input
+                  required
+                  type="number"
+                  placeholder="Diastolic (mmHg)"
+                  value={val2}
+                  onChange={e => setVal2(e.target.value)}
+                  className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
+                />
               </div>
             ) : (
-              <input required type="number" step="0.1" placeholder={getUnitPlaceholder()} value={val1} onChange={e => setVal1(e.target.value)} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
+              <input
+                required
+                type="number"
+                step="0.1"
+                placeholder={getUnitPlaceholder()}
+                value={val1}
+                onChange={e => setVal1(e.target.value)}
+                className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
+              />
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase tracking-wider">Notes</label>
-            <textarea placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)] resize-none h-20" />
+            <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
+              Notes
+            </label>
+            <textarea
+              placeholder="Notes (optional)"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] resize-none h-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
+            />
           </div>
           
-          <button disabled={isSubmitting} type="submit" className="mt-4 w-full bg-[color:var(--color-carely-primary)] text-[color:var(--color-carely-on-primary)] font-jakarta font-semibold text-lg py-3 rounded-xl disabled:opacity-50">
+          <button
+            disabled={isSubmitting}
+            type="submit"
+            className="mt-2 w-full bg-[color:var(--color-carely-primary)] text-[color:var(--color-carely-on-primary)] font-jakarta font-semibold text-base py-2.5 rounded-xl disabled:opacity-50"
+          >
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </form>

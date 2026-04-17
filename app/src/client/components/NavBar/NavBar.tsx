@@ -91,6 +91,7 @@ export default function NavBar({
                   {(() => {
                     const path = location.pathname;
                     if (path.startsWith("/online-judge")) return "Toolkit / Online Judge";
+                    if (path.startsWith("/carely")) return "Toolkit / Carely";
                     return "Toolkit";
                   })()}
                 </span>

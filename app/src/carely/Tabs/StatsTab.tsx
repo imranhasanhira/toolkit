@@ -10,8 +10,28 @@ export function StatsTab({ parent }: { parent: any }) {
   const [metric, setMetric] = useState('BLOOD_PRESSURE');
   const [period, setPeriod] = useState('month');
   const [endOffsetDays, setEndOffsetDays] = useState(0);
+  const [medianPerDay, setMedianPerDay] = useState(false);
   
   const { data: logs, isLoading, refetch } = useQuery(getCarelyVitalLogs, { parentId: parent.id, type: metric });
+
+  const toLocalDateKey = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const getNumericValueForMedian = (l: any) => {
+    if (l.type === 'BLOOD_PRESSURE') {
+      const sys = Number((l.value as any)?.systolic);
+      const dia = Number((l.value as any)?.diastolic);
+      if (!Number.isFinite(sys) || !Number.isFinite(dia)) return Number.NaN;
+      // Mean arterial pressure (MAP) is a good scalar for BP comparisons.
+      return dia + (sys - dia) / 3;
+    }
+    const v = Number((l.value as any)?.value);
+    return Number.isFinite(v) ? v : Number.NaN;
+  };
 
   const range = useMemo(() => {
     const today = new Date();
@@ -39,8 +59,46 @@ export function StatsTab({ parent }: { parent: any }) {
       const d = new Date(l.loggedAt);
       return d >= range.start && d <= range.end;
     });
-    
-    return filtered.map(l => {
+
+    const selected = (() => {
+      if (!medianPerDay) return filtered;
+
+      // If there are multiple entries on the same day, keep only one:
+      // pick the median entry (by value; BP uses MAP, others use value.value).
+      const byDay = new Map<string, any[]>();
+      for (const l of filtered) {
+        const key = toLocalDateKey(new Date(l.loggedAt));
+        const arr = byDay.get(key);
+        if (arr) arr.push(l);
+        else byDay.set(key, [l]);
+      }
+
+      const onePerDay: any[] = [];
+      for (const dayLogs of byDay.values()) {
+        if (dayLogs.length === 1) {
+          onePerDay.push(dayLogs[0]);
+          continue;
+        }
+        const withVal = dayLogs
+          .map((l) => ({ l, v: getNumericValueForMedian(l) }))
+          .filter((x) => Number.isFinite(x.v));
+
+        if (withVal.length === 0) {
+          // Fallback: pick the chronologically middle entry.
+          const chrono = [...dayLogs].sort((a, b) => new Date(a.loggedAt).getTime() - new Date(b.loggedAt).getTime());
+          onePerDay.push(chrono[Math.floor(chrono.length / 2)]);
+          continue;
+        }
+
+        withVal.sort((a, b) => a.v - b.v);
+        onePerDay.push(withVal[Math.floor(withVal.length / 2)].l);
+      }
+
+      onePerDay.sort((a, b) => new Date(a.loggedAt).getTime() - new Date(b.loggedAt).getTime());
+      return onePerDay;
+    })();
+
+    return selected.map(l => {
       const date = new Date(l.loggedAt);
       const isBP = l.type === 'BLOOD_PRESSURE';
       return {
@@ -50,7 +108,7 @@ export function StatsTab({ parent }: { parent: any }) {
         diastolic: isBP ? (l.value as any).diastolic : undefined,
       };
     });
-  }, [logs, range.start, range.end]);
+  }, [logs, range.start, range.end, medianPerDay]);
 
   const handlePrev = () => {
     setEndOffsetDays(o => o + (period === 'week' ? 7 : 30));
@@ -107,6 +165,7 @@ export function StatsTab({ parent }: { parent: any }) {
     if (type === 'TEMPERATURE') return `°${parent.temperatureUnit === 'C' ? 'C' : 'F'}`;
     if (type === 'SPO2') return '%';
     if (type === 'HEART_RATE') return 'bpm';
+    if (type === 'WEIGHT') return 'kg';
     return '';
   };
   const unit = getUnit(metric);
@@ -117,7 +176,7 @@ export function StatsTab({ parent }: { parent: any }) {
         <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-4">Health Trends</h2>
         
         <div className="flex gap-2 bg-[color:var(--color-carely-surface-lowest)] p-1.5 rounded-xl border border-[color:var(--color-carely-surface-high)] overflow-x-auto no-scrollbar">
-          {['BLOOD_PRESSURE', 'GLUCOSE', 'TEMPERATURE', 'SPO2', 'HEART_RATE'].map(m => (
+          {['BLOOD_PRESSURE', 'HEART_RATE', 'WEIGHT', 'GLUCOSE', 'TEMPERATURE', 'SPO2'].map(m => (
             <MetricChip key={m} label={m.replace('_', ' ')} selected={metric === m} onClick={() => setMetric(m)} />
           ))}
         </div>
@@ -125,7 +184,49 @@ export function StatsTab({ parent }: { parent: any }) {
 
       <div className="bg-[color:var(--color-carely-surface-lowest)] p-4 sm:p-5 rounded-2xl border border-[color:var(--color-carely-surface-high)] shadow-xs overflow-hidden">
         <div className="flex flex-col mb-4 gap-3">
-           <h3 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] shrink-0">{metric.replace('_', ' ')} Chart</h3>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] shrink-0">
+              {metric.replace('_', ' ')} Chart
+            </h3>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setMedianPerDay((v) => !v)}
+                aria-pressed={medianPerDay}
+                title={medianPerDay ? "Showing median per day" : "Showing all entries"}
+                className={[
+                  "p-1.5 border rounded-lg transition-colors shadow-xs",
+                  medianPerDay
+                    ? "bg-[color:var(--color-carely-primary)]/10 text-[color:var(--color-carely-primary)] border-[color:var(--color-carely-primary)]/30 hover:bg-[color:var(--color-carely-primary)]/15"
+                    : "bg-[color:var(--color-carely-surface-lowest)] text-[color:var(--color-carely-on-surface-variant)] border-[color:var(--color-carely-surface-high)] hover:bg-[color:var(--color-carely-surface-low)]",
+                ].join(" ")}
+              >
+                <span className="sr-only">
+                  {medianPerDay ? "Median per day enabled" : "Median per day disabled"}
+                </span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path d="M3 4.25H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M4.5 8H11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M6 11.75H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => refetch()}
+                className="p-1.5 bg-[color:var(--color-carely-surface-lowest)] border border-[color:var(--color-carely-surface-high)] rounded-lg text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-surface-low)] hover:text-[color:var(--color-carely-primary)] transition-colors shadow-xs"
+                title="Refresh data"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
            
              <div className="overflow-x-auto no-scrollbar pb-1">
                <div className="flex items-center gap-2 min-w-max">
@@ -138,10 +239,6 @@ export function StatsTab({ parent }: { parent: any }) {
                    <button onClick={handlePrev} className="px-2 py-1 text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-surface-low)] transition-colors border-r border-[color:var(--color-carely-surface-high)]"><ChevronLeft className="w-4 h-4" /></button>
                    <button onClick={handleNext} disabled={endOffsetDays === 0} className="px-2 py-1 text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-surface-low)] disabled:opacity-30 transition-colors"><ChevronRight className="w-4 h-4" /></button>
                  </div>
-                 
-                 <button onClick={() => refetch()} className="p-1.5 bg-[color:var(--color-carely-surface-lowest)] border border-[color:var(--color-carely-surface-high)] rounded-lg text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-surface-low)] hover:text-[color:var(--color-carely-primary)] transition-colors shadow-xs shrink-0" title="Refresh Data">
-                   <RefreshCw className="w-4 h-4" />
-                 </button>
 
                  <p className="text-sm font-jakarta text-[color:var(--color-carely-on-surface-variant)] shrink-0 ml-2 whitespace-nowrap">{dateLabel}</p>
                </div>
