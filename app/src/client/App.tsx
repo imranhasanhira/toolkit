@@ -15,6 +15,20 @@ import CookieConsentBanner from "./components/cookie-consent/Banner";
 import LandingPage from "../landing-page/LandingPage";
 
 /**
+ * React Router's browser history stores `idx` on `window.history.state` (see
+ * `createBrowserHistory` in @remix-run/router). `idx > 0` means the SPA has at
+ * least one prior entry to pop — even when Android WebView's `canGoBack` stays
+ * false for client-side `pushState` navigations.
+ */
+function reactRouterHistoryCanGoBack(): boolean {
+  if (typeof window === "undefined") return false;
+  const st = window.history.state;
+  if (!st || typeof st !== "object") return false;
+  const idx = (st as { idx?: unknown }).idx;
+  return typeof idx === "number" && idx > 0;
+}
+
+/**
  * use this component to wrap all child components
  * this is useful for templates, themes, and context
  */
@@ -110,6 +124,97 @@ export default function App() {
       }
     }
   }, [location]);
+
+  const isNativeAndroid = useMemo(() => {
+    const w = window as any;
+    const capacitor = w?.Capacitor;
+    if (!capacitor) return false;
+    if (typeof capacitor.getPlatform === "function") return capacitor.getPlatform() === "android";
+    return false;
+  }, []);
+
+  // Track an in-app navigation stack only on native Android. This is a fallback for cases
+  // where WebView history is empty due to replace redirects / cold starts.
+  useEffect(() => {
+    if (!isNativeAndroid) return;
+    const path = location.pathname + location.search + location.hash;
+    if (isAuthPage) return;
+
+    const key = "navStack";
+    const raw = sessionStorage.getItem(key);
+    const stack: string[] = (() => {
+      try {
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed)
+          ? parsed.filter((x) => typeof x === "string")
+          : [];
+      } catch {
+        return [];
+      }
+    })();
+
+    const last = stack[stack.length - 1];
+    if (last !== path) {
+      stack.push(path);
+      if (stack.length > 50) stack.splice(0, stack.length - 50);
+      sessionStorage.setItem(key, JSON.stringify(stack));
+    }
+  }, [isNativeAndroid, isAuthPage, location.pathname, location.search, location.hash]);
+
+  // Capacitor Android hardware back button support (hosted mode):
+  // Prefer WebView + React Router history; fall back to `navStack` when both
+  // are exhausted (e.g. cold start + replace-only redirects).
+  useEffect(() => {
+    if (!isNativeAndroid) return;
+    const w = window as any;
+    const AppPlugin = w?.Capacitor?.Plugins?.App;
+    if (!AppPlugin) return;
+
+    let remove: (() => void) | undefined;
+    (async () => {
+      try {
+        const handle = await AppPlugin.addListener(
+          "backButton",
+          (ev: { canGoBack?: boolean }) => {
+            if (ev?.canGoBack || reactRouterHistoryCanGoBack()) {
+              navigate(-1);
+              return;
+            }
+
+            const key = "navStack";
+            const raw = sessionStorage.getItem(key);
+            const stack: string[] = (() => {
+              try {
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed)
+                  ? parsed.filter((x) => typeof x === "string")
+                  : [];
+              } catch {
+                return [];
+              }
+            })();
+
+            const current = location.pathname + location.search + location.hash;
+            while (stack.length && stack[stack.length - 1] === current) stack.pop();
+            const prev = stack[stack.length - 1];
+            sessionStorage.setItem(key, JSON.stringify(stack));
+
+            if (prev && prev.startsWith("/")) {
+              navigate(prev, { replace: true });
+              return;
+            }
+
+            if (typeof AppPlugin.exitApp === "function") AppPlugin.exitApp();
+          },
+        );
+        remove = () => handle?.remove?.();
+      } catch {
+        // ignore
+      }
+    })();
+
+    return () => remove?.();
+  }, [isNativeAndroid, navigate, location.pathname, location.search, location.hash]);
 
   return (
     <>
