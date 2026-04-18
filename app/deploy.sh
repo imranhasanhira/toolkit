@@ -140,13 +140,77 @@ cd ../..
 echo "→ Deploying Frontend (${APP_FRONTEND})..."
 cd "${WASP_BUILD_DIR}/web-app"
 
-# Create custom nginx config for SPA routing
+# Create custom nginx config for SPA routing + cache-busting strategy.
+#
+# Caching strategy (applies to all current and future Wasp frontend assets):
+#   - /assets/*          -> content-hashed by Vite (e.g. index-BiJCTKor.js).
+#                           Safe to cache forever + immutable.
+#   - index.html         -> entry point, NOT hashed. Must never be cached by
+#                           clients so new deployments are picked up immediately
+#                           (critical for Capacitor WebView in hosted mode).
+#   - /locales/*.json    -> i18n translations (future). Short TTL + revalidate
+#                           so translation updates propagate without app rollout.
+#   - service worker(s)  -> must never be cached by clients.
+#   - everything else    -> unhashed public files (favicon, og images, etc.).
+#                           Short TTL + must-revalidate so replacements are
+#                           picked up quickly while still saving bandwidth.
 cat <<EOF > nginx.conf
 server {
     listen 80;
     root /usr/share/nginx/html;
     index index.html;
+
+    # Enable gzip for text assets (nginx:alpine default already covers most,
+    # but being explicit keeps this portable across base image changes).
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/javascript
+        application/javascript
+        application/json
+        application/xml
+        application/xml+rss
+        image/svg+xml;
+
+    # 1) Content-hashed assets emitted by Vite (filenames change on every
+    #    content change) -> cache forever, immutable.
+    location ^~ /assets/ {
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files \$uri =404;
+    }
+
+    # 2) i18n locale JSONs (future-proof; served even before i18n lands).
+    #    Short TTL + must-revalidate so new translations are picked up without
+    #    a mobile APK rollout.
+    location ^~ /locales/ {
+        add_header Cache-Control "public, max-age=300, must-revalidate" always;
+        try_files \$uri =404;
+    }
+
+    # 3) Service workers must never be cached by clients, otherwise an old SW
+    #    can pin users to a stale frontend forever.
+    location = /sw.js                { add_header Cache-Control "no-store, no-cache, must-revalidate" always; try_files \$uri =404; }
+    location = /service-worker.js    { add_header Cache-Control "no-store, no-cache, must-revalidate" always; try_files \$uri =404; }
+    location = /workbox-sw.js        { add_header Cache-Control "no-store, no-cache, must-revalidate" always; try_files \$uri =404; }
+
+    # 4) SPA entry point. Never cache so clients always fetch the current
+    #    index.html, which in turn references the latest hashed /assets/*.
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        expires off;
+        try_files \$uri =404;
+    }
+
+    # 5) Everything else (favicon, og images, manifest, robots.txt, other
+    #    unhashed files from public/). Short TTL + revalidate.
     location / {
+        add_header Cache-Control "public, max-age=300, must-revalidate" always;
         try_files \$uri \$uri/ /index.html;
     }
 }
