@@ -1,5 +1,6 @@
 // import { getCustomerPortalUrl, useQuery } from "wasp/client/operations";
 // import { Link as WaspRouterLink, routes } from "wasp/client/router";
+import { useTranslation } from "react-i18next";
 import type { User } from "wasp/entities";
 import { getMyAppPermissions, useQuery } from "wasp/client/operations";
 import {
@@ -18,12 +19,13 @@ import {
 import { APP_DISPLAY_NAMES } from "../shared/appKeys";
 
 export default function AccountPage({ user }: { user: User }) {
+  const { t } = useTranslation();
   return (
     <div className="mt-10 px-6">
       <Card className="mb-4 lg:m-8">
         <CardHeader>
           <CardTitle className="text-foreground text-base font-semibold leading-6">
-            Account Information
+            {t("account.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -32,7 +34,7 @@ export default function AccountPage({ user }: { user: User }) {
               <div className="px-6 py-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
                   <div className="text-muted-foreground text-sm font-medium">
-                    Email address
+                    {t("account.email")}
                   </div>
                   <div className="text-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
                     {user.email}
@@ -46,7 +48,7 @@ export default function AccountPage({ user }: { user: User }) {
                 <div className="px-6 py-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
                     <div className="text-muted-foreground text-sm font-medium">
-                      Username
+                      {t("account.username")}
                     </div>
                     <div className="text-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
                       {user.username}
@@ -59,7 +61,7 @@ export default function AccountPage({ user }: { user: User }) {
             <div className="px-6 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
                 <div className="text-muted-foreground text-sm font-medium">
-                  Your Plan
+                  {t("account.yourPlan")}
                 </div>
                 <UserCurrentSubscriptionPlan
                   subscriptionPlan={user.subscriptionPlan}
@@ -72,10 +74,10 @@ export default function AccountPage({ user }: { user: User }) {
             <div className="px-6 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
                 <div className="text-muted-foreground text-sm font-medium">
-                  Credits
+                  {t("account.credits")}
                 </div>
                 <div className="text-foreground mt-1 text-sm sm:col-span-1 sm:mt-0">
-                  {user.credits} credits
+                  {t("account.credits", { count: user.credits })}
                 </div>
                 <div className="ml-auto mt-4 sm:mt-0">
                   {/* <BuyMoreButton subscriptionStatus={user.subscriptionStatus} /> */}
@@ -86,10 +88,10 @@ export default function AccountPage({ user }: { user: User }) {
             <div className="px-6 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
                 <div className="text-muted-foreground text-sm font-medium">
-                  About
+                  {t("account.about")}
                 </div>
                 <div className="text-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
-                  I'm a cool customer.
+                  {t("account.aboutValue")}
                 </div>
               </div>
             </div>
@@ -105,15 +107,16 @@ export default function AccountPage({ user }: { user: User }) {
 }
 
 function YourAppAccess() {
+  const { t } = useTranslation();
   const { data: allowedAppKeys = [], isLoading } = useQuery(getMyAppPermissions);
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
         <div className="text-muted-foreground text-sm font-medium">
-          Your app access
+          {t("account.appAccess")}
         </div>
         <div className="text-muted-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
-          Loading…
+          {t("status.loading")}
         </div>
       </div>
     );
@@ -122,10 +125,10 @@ function YourAppAccess() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
       <div className="text-muted-foreground text-sm font-medium">
-        Your app access
+        {t("account.appAccess")}
       </div>
       <div className="text-foreground mt-1 text-sm sm:col-span-2 sm:mt-0">
-        {names.length > 0 ? names.join(", ") : "None"}
+        {names.length > 0 ? names.join(", ") : t("account.none")}
       </div>
     </div>
   );
@@ -136,7 +139,8 @@ function UserCurrentSubscriptionPlan({
   subscriptionStatus,
   datePaid,
 }: Pick<User, "subscriptionPlan" | "subscriptionStatus" | "datePaid">) {
-  let subscriptionPlanMessage = "Free Plan";
+  const { t } = useTranslation();
+  let subscriptionPlanMessage = t("account.freePlan");
   if (
     subscriptionPlan !== null &&
     subscriptionStatus !== null &&

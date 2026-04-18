@@ -1,5 +1,6 @@
 import { LogIn, Menu } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link as ReactRouterLink, useLocation } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
@@ -34,6 +35,7 @@ export default function NavBar({
   const [isScrolled, setIsScrolled] = useState(false);
   const isLandingPage = useIsLandingPage();
   const location = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const throttledHandler = throttleWithTrailingInvocation(() => {
@@ -91,9 +93,11 @@ export default function NavBar({
                 >
                   {(() => {
                     const path = location.pathname;
-                    if (path.startsWith("/online-judge")) return "Toolkit / Online Judge";
-                    if (path.startsWith("/carely")) return "Toolkit / Carely";
-                    return "Toolkit";
+                    const base = t("nav.toolkit");
+                    // Subapp names are brand names, kept untranslated.
+                    if (path.startsWith("/online-judge")) return `${base} / Online Judge`;
+                    if (path.startsWith("/carely")) return `${base} / Carely`;
+                    return base;
                   })()}
                 </span>
               </WaspRouterLink>
@@ -117,6 +121,7 @@ export default function NavBar({
 function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
   const { data: user } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
   const shouldShowAiCredit = useMemo(() => {
     const path = location.pathname;
     return path.startsWith("/reddit-bot") || path.startsWith("/admin/reddit-bot-settings");
@@ -141,7 +146,7 @@ function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
           )}
         >
           <div className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out">
-            Log in{" "}
+            {t("auth.logIn")}{" "}
             <LogIn
               size={isScrolled ? "1rem" : "1.1rem"}
               className={cn("transition-all duration-300", {
@@ -170,6 +175,7 @@ function NavBarMobileMenu({
   const { data: user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { t } = useTranslation();
   const shouldShowAiCredit = useMemo(() => {
     const path = location.pathname;
     return path.startsWith("/reddit-bot") || path.startsWith("/admin/reddit-bot-settings");
@@ -186,7 +192,7 @@ function NavBarMobileMenu({
               "text-muted-foreground hover:text-muted hover:bg-accent inline-flex items-center justify-center rounded-md transition-colors",
             )}
           >
-            <span className="sr-only">Open main menu</span>
+            <span className="sr-only">{t("nav.openMenu")}</span>
             <Menu
               className={cn("transition-all duration-300", {
                 "size-8 p-1": !isScrolled,
@@ -200,7 +206,7 @@ function NavBarMobileMenu({
           <SheetHeader>
             <SheetTitle className="flex items-center">
               <WaspRouterLink to={routes.LandingPageRoute.to}>
-                <span className="sr-only">Toolkit</span>
+                <span className="sr-only">{t("nav.toolkit")}</span>
                 <NavLogo isScrolled={false} />
               </WaspRouterLink>
             </SheetTitle>
@@ -219,7 +225,7 @@ function NavBarMobileMenu({
                 {!user ? (
                   <WaspRouterLink to={routes.LoginRoute.to}>
                     <div className="text-foreground hover:text-primary flex items-center justify-end transition-colors duration-300 ease-in-out">
-                      Log in <LogIn size="1.1rem" className="ml-1" />
+                      {t("auth.logIn")} <LogIn size="1.1rem" className="ml-1" />
                     </div>
                   </WaspRouterLink>
                 ) : (
