@@ -1,4 +1,4 @@
-import { HttpError } from "wasp/server";
+import { HttpError, prisma } from "wasp/server";
 import { requireAppAccess } from "../server/appPermissions";
 import { APP_KEYS } from "../shared/appKeys";
 
@@ -246,6 +246,42 @@ export const upsertCarelyVitalCategory = async (
     args.kind === "numeric" ? (args.unit ?? "").trim() || null : (args.unit ?? "mmHg").trim() || "mmHg";
 
   if (args.id) {
+    const existing = await context.entities.CarelyVitalCategory.findUnique({
+      where: { id: args.id },
+      select: { key: true },
+    });
+    if (!existing) throw new HttpError(404, "Category not found");
+
+    // If the key is being renamed, we MUST also migrate every historical
+    // CarelyVitalLog.type that points at the old key in the same transaction.
+    // CarelyVitalLog.type is a plain String (no FK) that soft-references
+    // CarelyVitalCategory.key, so a naive category-only rename would orphan
+    // every historical log row for this vital.
+    if (existing.key !== key) {
+      // Guard: if some other category already owns the target key, fail fast
+      // before touching any row. The schema has @unique on key so the update
+      // itself would also fail, but catching it early gives a clean error.
+      const clash = await context.entities.CarelyVitalCategory.findUnique({
+        where: { key },
+        select: { id: true },
+      });
+      if (clash && clash.id !== args.id) {
+        throw new HttpError(409, `Another category already uses key "${key}"`);
+      }
+
+      const [updatedCategory] = await prisma.$transaction([
+        context.entities.CarelyVitalCategory.update({
+          where: { id: args.id },
+          data: { key, displayName, kind: args.kind, unit, isActive: args.isActive },
+        }),
+        context.entities.CarelyVitalLog.updateMany({
+          where: { type: existing.key },
+          data: { type: key },
+        }),
+      ]);
+      return updatedCategory;
+    }
+
     return context.entities.CarelyVitalCategory.update({
       where: { id: args.id },
       data: {

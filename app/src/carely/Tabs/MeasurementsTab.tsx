@@ -8,6 +8,7 @@ import { VitalLogForm } from '../components/VitalLogForm';
 import { EmptyState } from '../components/EmptyState';
 import { Activity, ListFilter, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../client/components/ui/dialog';
+import { vitalDisplayName } from '../utils/vitalLabels';
 
 export function MeasurementsTab({ parent }: { parent: any }) {
   const { data: user } = useAuth();
@@ -31,9 +32,9 @@ export function MeasurementsTab({ parent }: { parent: any }) {
 
   const typeLabelByKey = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const c of activeCategories) map[c.key] = c.displayName;
+    for (const c of activeCategories) map[c.key] = vitalDisplayName(t, c);
     return map;
-  }, [activeCategories]);
+  }, [activeCategories, t]);
 
   const orderedTypes = useMemo(() => activeCategories.map((c: any) => c.key), [activeCategories]);
 

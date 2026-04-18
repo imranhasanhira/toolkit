@@ -5,6 +5,7 @@ import { useQuery } from "wasp/client/operations";
 import { Plus } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { vitalDisplayName } from '../utils/vitalLabels';
 
 export function VitalLogForm({
   parentId,
@@ -150,7 +151,7 @@ export function VitalLogForm({
                 .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
                 .map((c: any) => (
                   <option key={c.key} value={c.key}>
-                    {c.displayName}
+                    {vitalDisplayName(t, c)}
                   </option>
                 ))}
             </select>

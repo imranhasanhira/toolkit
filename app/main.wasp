@@ -974,7 +974,9 @@ action deleteCarelyVitalLog {
 
 action upsertCarelyVitalCategory {
   fn: import { upsertCarelyVitalCategory } from "@src/carely/operations",
-  entities: [CarelyVitalCategory]
+  // CarelyVitalLog is needed for the key-rename path, which atomically
+  // migrates CarelyVitalLog.type from the old key to the new key.
+  entities: [CarelyVitalCategory, CarelyVitalLog]
 }
 
 action deleteCarelyVitalCategory {

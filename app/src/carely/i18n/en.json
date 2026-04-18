@@ -1,4 +1,18 @@
 {
+  "vitals": {
+    "names": {
+      "BLOOD_PRESSURE": "Blood Pressure",
+      "HEART_RATE": "Heart Rate",
+      "WEIGHT": "Weight",
+      "GLUCOSE": "Glucose",
+      "TEMPERATURE": "Temperature",
+      "SPO2": "SpO₂"
+    },
+    "kinds": {
+      "numeric": "numeric",
+      "blood_pressure": "blood pressure"
+    }
+  },
   "home": {
     "loadingOverview": "Loading overview...",
     "title": "Carely",
@@ -32,6 +46,9 @@
           "name": "e.g. Head circumference",
           "unit": "e.g. cm, kg, bpm"
         },
+        "hints": {
+          "keyRename": "Renaming the key also migrates every historical vital log that references it."
+        },
         "kind": {
           "numeric": "Numeric",
           "bloodPressure": "Blood pressure"
@@ -39,11 +56,15 @@
         "actions": {
           "addCategory": "Add category",
           "saveChanges": "Save changes",
+          "cancel": "Cancel",
           "cancelEdit": "Cancel edit",
           "editTooltip": "Edit category",
-          "moveUp": "Move up",
-          "moveDown": "Move down",
+          "dragToReorder": "Drag to reorder",
           "deleteTooltip": "Delete category"
+        },
+        "dialog": {
+          "addTitle": "Add vital category",
+          "editTitle": "Edit vital category"
         },
         "footer": {
           "migrationNeeded": "Run the DB migration to enable add/edit/delete/reorder. Right now you are seeing fallback defaults.",

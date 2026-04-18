@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { MetricChip } from '../components/MetricChip';
 import { StatChart } from '../components/StatChart';
 import { StatSummaryTile } from '../components/StatSummaryTile';
+import { vitalDisplayName } from '../utils/vitalLabels';
 
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
@@ -194,7 +195,7 @@ export function StatsTab({ parent }: { parent: any }) {
         
         <div className="flex gap-2 bg-[color:var(--color-carely-surface-lowest)] p-1.5 rounded-xl border border-[color:var(--color-carely-surface-high)] overflow-x-auto no-scrollbar">
           {activeCategories.map((c: any) => (
-            <MetricChip key={c.key} label={c.displayName} selected={metric === c.key} onClick={() => setMetric(c.key)} />
+            <MetricChip key={c.key} label={vitalDisplayName(t, c)} selected={metric === c.key} onClick={() => setMetric(c.key)} />
           ))}
         </div>
       </div>
@@ -203,7 +204,7 @@ export function StatsTab({ parent }: { parent: any }) {
         <div className="flex flex-col mb-4 gap-3">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] shrink-0">
-              {(categoryByKey[metric]?.displayName ?? metric.replace('_', ' '))} {t('stats.chart.suffix')}
+              {vitalDisplayName(t, categoryByKey[metric]) || metric.replace('_', ' ')} {t('stats.chart.suffix')}
             </h3>
             <div className="flex items-center gap-2 shrink-0">
               <button
