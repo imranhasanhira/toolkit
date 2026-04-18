@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* Bengali webfont. Without this, Bengali characters fall back to the system
- * font which renders poorly on Windows and older Android WebViews. */
-@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap");
+/* Bengali webfont (Solaiman Lipi) is loaded via a <link> tag in main.wasp's
+ * `head` array (banglawebfonts.pages.dev bundles 4 weights as woff2). The
+ * font-family below is "Solaiman Lipi" with a space, matching that CSS. */
 
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
@@ -349,16 +349,16 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Per-glyph fallback: browsers pick Hind Siliguri only for characters the
-     * primary font stack lacks (i.e. Bengali). English text is unaffected. */
+    /* Browsers pick Solaiman Lipi only for Bengali glyphs (the font doesn't
+     * cover Latin), so the Latin stack still wins for English text. */
     font-family:
       ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, "Hind Siliguri", "Noto Sans Bengali",
+      "Helvetica Neue", Arial, "Solaiman Lipi", "Noto Sans Bengali",
       sans-serif;
   }
   :lang(bn) {
     font-family:
-      "Hind Siliguri", "Noto Sans Bengali", ui-sans-serif, system-ui,
+      "Solaiman Lipi", "Noto Sans Bengali", ui-sans-serif, system-ui,
       -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }

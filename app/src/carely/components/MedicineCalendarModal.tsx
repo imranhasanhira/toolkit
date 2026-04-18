@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+const WEEKDAY_SHORT_KEYS = ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'] as const;
 
 function buildMonthGrid(year: number, month: number): { date: Date; inMonth: boolean }[] {
   const firstDay = new Date(year, month, 1);
@@ -44,6 +47,7 @@ export function MedicineCalendarModal({
 }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const { t } = useTranslation('carely');
 
   const [monthOffset, setMonthOffset] = useState(0); // 0 = current month
 
@@ -113,7 +117,7 @@ export function MedicineCalendarModal({
             onClick={onClose}
             className="p-1.5 rounded-full bg-[color:var(--color-carely-surface-low)]
                        hover:bg-[color:var(--color-carely-surface-high)] transition-colors"
-            aria-label="Close calendar"
+            aria-label={t('calendar.close')}
           >
             <X className="w-4 h-4 text-[color:var(--color-carely-on-surface-variant)]" />
           </button>
@@ -121,10 +125,10 @@ export function MedicineCalendarModal({
 
         {/* Weekday header row */}
         <div className="grid grid-cols-7 px-4 mb-1">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(w => (
+          {WEEKDAY_SHORT_KEYS.map(w => (
             <div key={w} className="text-center text-[10px] font-jakarta font-semibold uppercase
                                     text-[color:var(--color-carely-on-surface-variant)] py-1">
-              {w}
+              {t(`calendar.weekdayShort.${w}`)}
             </div>
           ))}
         </div>
@@ -169,19 +173,19 @@ export function MedicineCalendarModal({
                         text-[color:var(--color-carely-on-surface-variant)] font-medium">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full border border-[color:var(--color-carely-on-surface-variant)] opacity-40 inline-block" />
-            None scheduled
+            {t('calendar.legend.noneScheduled')}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-[#106A6A] inline-block" />
-            Complete
+            {t('calendar.legend.complete')}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-            Partial
+            {t('calendar.legend.partial')}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-[#FA746F] inline-block" />
-            Missed
+            {t('calendar.legend.missed')}
           </span>
         </div>
       </div>

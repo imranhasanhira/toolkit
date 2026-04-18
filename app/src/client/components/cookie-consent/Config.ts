@@ -1,4 +1,5 @@
 import type { CookieConsentConfig } from "vanilla-cookieconsent";
+import i18n from "../../../i18n";
 
 declare global {
   interface Window {
@@ -8,6 +9,21 @@ declare global {
 
 const getConfig = () => {
   // See https://cookieconsent.orestbida.com/reference/configuration-reference.html for configuration options.
+  const t = (key: string, lng: string) =>
+    i18n.t(key, { lng, ns: "common", defaultValue: key }) as string;
+  const buildModal = (lng: string) => ({
+    consentModal: {
+      title: t("cookieConsent.title", lng),
+      description: t("cookieConsent.description", lng),
+      acceptAllBtn: t("cookieConsent.acceptAll", lng),
+      acceptNecessaryBtn: t("cookieConsent.rejectAll", lng),
+      footer: `
+            <a href="<your-url-here>" target="_blank">${t("cookieConsent.privacyPolicy", lng)}</a>
+            <a href="<your-url-here>" target="_blank">${t("cookieConsent.termsAndConditions", lng)}</a>
+                    `,
+    },
+    preferencesModal: { sections: [] },
+  });
   const config: CookieConsentConfig = {
     // Default configuration for the modal.
     root: "body",
@@ -86,27 +102,13 @@ const getConfig = () => {
     },
 
     language: {
-      default: "en",
+      // Map to the currently active i18next language so the banner speaks the
+      // same language as the rest of the UI. `i18n.changeLanguage(...)` →
+      // Banner.tsx re-runs `CookieConsent.run(getConfig())` to re-render.
+      default: (i18n.resolvedLanguage as "en" | "bn") || "en",
       translations: {
-        en: {
-          consentModal: {
-            title: "We use cookies",
-            description:
-              "We use cookies primarily for analytics to enhance your experience. By accepting, you agree to our use of these cookies. You can manage your preferences or learn more about our cookie policy.",
-            acceptAllBtn: "Accept all",
-            acceptNecessaryBtn: "Reject all",
-            // showPreferencesBtn: 'Manage Individual preferences', // (OPTIONAL) Activates the preferences modal
-            // TODO: Add your own privacy policy and terms and conditions links below.
-            footer: `
-            <a href="<your-url-here>" target="_blank">Privacy Policy</a>
-            <a href="<your-url-here>" target="_blank">Terms and Conditions</a>
-                    `,
-          },
-          // The showPreferencesBtn activates this modal to manage individual preferences https://cookieconsent.orestbida.com/reference/configuration-reference.html#translation-preferencesmodal
-          preferencesModal: {
-            sections: [],
-          },
-        },
+        en: buildModal("en"),
+        bn: buildModal("bn"),
       },
     },
   };

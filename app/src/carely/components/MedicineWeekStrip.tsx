@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { MedicineCalendarModal } from './MedicineCalendarModal';
 
-// Build an array of the last 7 days (oldest → today)
 function buildWeekDays(): Date[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -13,7 +13,7 @@ function buildWeekDays(): Date[] {
   });
 }
 
-const WEEKDAY_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const WEEKDAY_SHORT_KEYS = ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'] as const;
 
 export function MedicineWeekStrip({
   parentId,
@@ -30,6 +30,7 @@ export function MedicineWeekStrip({
 }) {
   const [navHeight, setNavHeight] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const { t } = useTranslation('carely');
 
   // Measure the bottom nav bar height so we can sit exactly on top of it
   useEffect(() => {
@@ -90,7 +91,7 @@ export function MedicineWeekStrip({
                         : 'text-[color:var(--color-carely-on-surface-variant)]'
                       }`}
                   >
-                    {WEEKDAY_SHORT[d.getDay()]}
+                    {t(`calendar.weekdayShort.${WEEKDAY_SHORT_KEYS[d.getDay()]}`)}
                   </span>
 
                   {/* Row 2 – date number */}
@@ -119,7 +120,7 @@ export function MedicineWeekStrip({
             className="flex items-center justify-center px-3 border-l border-[color:var(--color-carely-surface-high)]
                        text-[color:var(--color-carely-on-surface-variant)]
                        hover:bg-[color:var(--color-carely-surface-low)] transition-colors"
-            aria-label="Open full calendar"
+            aria-label={t('calendar.open')}
           >
             <ChevronUp className="w-5 h-5" />
           </button>

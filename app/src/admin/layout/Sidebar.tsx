@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 import Logo from "../../client/static/logo.webp";
 import { cn } from "../../client/utils";
 import SidebarLinkGroup from "./SidebarLinkGroup";
@@ -24,6 +25,7 @@ interface SidebarProps {
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
   const { pathname } = location;
+  const { t } = useTranslation("admin");
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
@@ -103,7 +105,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           {/* <!-- Menu Group --> */}
           <div>
             <h3 className="text-muted-foreground mb-4 ml-4 text-sm font-semibold">
-              MENU
+              {t("sidebar.menuHeader")}
             </h3>
 
             <ul className="mb-6 flex flex-col gap-1.5">
@@ -121,7 +123,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 }
               >
                 <LayoutDashboard />
-                Dashboard
+                {t("sidebar.dashboard")}
               </NavLink>
 
               {/* <!-- Menu Item Dashboard --> */}
@@ -141,7 +143,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   }
                 >
                   <Sheet />
-                  Users
+                  {t("sidebar.users")}
                 </NavLink>
               </li>
               {/* <!-- Menu Item Users --> */}
@@ -161,7 +163,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   }
                 >
                   <Shield />
-                  App permissions
+                  {t("sidebar.appPermissions")}
                 </NavLink>
               </li>
               {/* <!-- Menu Item App permissions --> */}
@@ -181,7 +183,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   }
                 >
                   <Coins />
-                  Reddit Bot Settings
+                  {t("sidebar.redditBotSettings")}
                 </NavLink>
               </li>
               {/* <!-- Menu Item Reddit Bot Settings --> */}
@@ -201,7 +203,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   }
                 >
                   <Settings />
-                  Settings
+                  {t("sidebar.settings")}
                 </NavLink>
               </li>
               {/* <!-- Menu Item Settings --> */}
@@ -211,7 +213,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           {/* <!-- Others Group --> */}
           <div>
             <h3 className="text-muted-foreground mb-4 ml-4 text-sm font-semibold">
-              Extra Components
+              {t("sidebar.extraHeader")}
             </h3>
 
             <ul className="mb-6 flex flex-col gap-1.5">
@@ -230,7 +232,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   }
                 >
                   <Calendar />
-                  Calendar
+                  {t("sidebar.calendar")}
                 </NavLink>
               </li>
               {/* <!-- Menu Item Calendar --> */}
@@ -259,7 +261,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         }}
                       >
                         <LayoutTemplate />
-                        UI Elements
+                        {t("sidebar.uiElements")}
                         {open ? <ChevronUp /> : <ChevronDown />}
                       </NavLink>
                       {/* <!-- Dropdown Menu Start --> */}
@@ -280,7 +282,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                 )
                               }
                             >
-                              Buttons
+                              {t("sidebar.buttons")}
                             </NavLink>
                           </li>
                         </ul>

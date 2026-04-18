@@ -1,6 +1,7 @@
 import { Link as WaspRouterLink, routes } from 'wasp/client/router';
 import { useAuth } from 'wasp/client/auth';
 import { getMyAppPermissions, useQuery } from 'wasp/client/operations';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../client/components/ui/button';
 import type { AppKey } from '../shared/appKeys';
 
@@ -8,6 +9,7 @@ const heroImageUrl = '/landing-hero-dawn.png';
 
 export default function LandingPage() {
   const { data: user } = useAuth();
+  const { t } = useTranslation('landing');
   const { data: allowedAppKeys = [], isLoading: permissionsLoading } = useQuery(
     getMyAppPermissions,
     undefined,
@@ -16,10 +18,10 @@ export default function LandingPage() {
 
   if (user) {
     const apps = [
-      { key: 'online-judge' as AppKey, name: 'Online Judge', to: routes.ProblemListRoute.to, description: 'Solve problems, submit code, track results.' },
-      { key: 'sokafilm' as AppKey, name: 'SokaFilm', to: routes.SokaFilmRoute.to, description: 'Explore films and manage your watch flow.' },
-      { key: 'reddit-bot' as AppKey, name: 'Reddit Bot', to: routes.RedditBotRoute.to, description: 'Automate Reddit workflows and monitor jobs.' },
-      { key: 'carely' as AppKey, name: 'Carely', to: routes.CarelyRoute.to, description: 'Track vitals, medications, and trends for care.' },
+      { key: 'online-judge' as AppKey, name: t('apps.onlineJudge.name'), to: routes.ProblemListRoute.to, description: t('apps.onlineJudge.description') },
+      { key: 'sokafilm' as AppKey, name: t('apps.sokafilm.name'), to: routes.SokaFilmRoute.to, description: t('apps.sokafilm.description') },
+      { key: 'reddit-bot' as AppKey, name: t('apps.redditBot.name'), to: routes.RedditBotRoute.to, description: t('apps.redditBot.description') },
+      { key: 'carely' as AppKey, name: t('apps.carely.name'), to: routes.CarelyRoute.to, description: t('apps.carely.description') },
     ] as const;
 
     const allowedApps = apps.filter((a) => allowedAppKeys.includes(a.key));
@@ -29,23 +31,25 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Welcome{user.username ? `, ${user.username}` : ''}.
+              {user.username
+                ? t('loggedIn.welcomeNamed', { name: user.username })
+                : t('loggedIn.welcome')}
             </h1>
             <p className="text-muted-foreground">
-              Open an app you have access to.
+              {t('loggedIn.subtitle')}
             </p>
           </div>
 
           <div className="mt-10">
             {permissionsLoading ? (
               <div className="rounded-2xl border border-border/60 bg-card/60 p-8 text-center text-muted-foreground">
-                Loading your app permissions…
+                {t('loggedIn.loadingPermissions')}
               </div>
             ) : allowedApps.length === 0 ? (
               <div className="rounded-2xl border border-border/60 bg-card/60 p-8 text-center">
-                <p className="text-lg font-semibold">Waiting for app permission to be granted</p>
+                <p className="text-lg font-semibold">{t('loggedIn.waitingTitle')}</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  An admin needs to enable at least one app for your account.
+                  {t('loggedIn.waitingDescription')}
                 </p>
               </div>
             ) : (
@@ -61,7 +65,7 @@ export default function LandingPage() {
                         <p className="mt-2 text-sm text-muted-foreground">{app.description}</p>
                       </div>
                       <Button asChild>
-                        <WaspRouterLink to={app.to}>Open</WaspRouterLink>
+                        <WaspRouterLink to={app.to}>{t('loggedIn.open')}</WaspRouterLink>
                       </Button>
                     </div>
                   </div>
@@ -122,7 +126,7 @@ export default function LandingPage() {
                 animation: 'landing-shimmer 8s linear infinite',
               }}
             >
-              Build with intention.
+              {t('hero.title')}
             </span>
           </h1>
           <p
@@ -133,8 +137,7 @@ export default function LandingPage() {
               animationFillMode: 'both',
             }}
           >
-            Every tool exists to help you go further. Think clearly, create
-            bravely, move forward—one step at a time.
+            {t('hero.subtitle')}
           </p>
           <div
             className="mt-12 flex flex-wrap items-center justify-center gap-4"
@@ -150,7 +153,7 @@ export default function LandingPage() {
               asChild
             >
               <WaspRouterLink to={routes.SignupRoute.to}>
-                Get started
+                {t('hero.getStarted')}
               </WaspRouterLink>
             </Button>
             <Button
@@ -160,7 +163,7 @@ export default function LandingPage() {
               asChild
             >
               <WaspRouterLink to={routes.LoginRoute.to}>
-                Sign in
+                {t('hero.signIn')}
               </WaspRouterLink>
             </Button>
           </div>
@@ -200,23 +203,23 @@ export default function LandingPage() {
               animationFillMode: 'both',
             }}
           >
-            What we stand for
+            {t('pillars.heading')}
           </h2>
           <div className="mt-16 grid gap-8 sm:grid-cols-3 sm:gap-6">
             {[
               {
-                label: 'Clarity',
-                body: 'See what matters. Strip away the noise and focus on the work that moves you.',
+                label: t('pillars.clarity.label'),
+                body: t('pillars.clarity.body'),
                 delay: '0.35s',
               },
               {
-                label: 'Craft',
-                body: 'Use the right tools for the job. Build habits and workflows that last.',
+                label: t('pillars.craft.label'),
+                body: t('pillars.craft.body'),
                 delay: '0.5s',
               },
               {
-                label: 'Possibility',
-                body: 'Tomorrow is unwritten. What you do today shapes the path ahead.',
+                label: t('pillars.possibility.label'),
+                body: t('pillars.possibility.body'),
                 delay: '0.65s',
               },
             ].map((item) => (
@@ -258,10 +261,10 @@ export default function LandingPage() {
           }}
         >
           <p className="text-foreground text-xl font-medium italic sm:text-2xl">
-            The best time to start was yesterday.
+            {t('closing.line1')}
           </p>
           <p className="text-primary mt-2 text-2xl font-semibold sm:text-3xl">
-            The next best is now.
+            {t('closing.line2')}
           </p>
         </div>
       </section>
@@ -269,7 +272,7 @@ export default function LandingPage() {
       <footer className="border-t border-border/60 py-8">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <p className="text-muted-foreground text-center text-sm">
-            Toolkit — tools for the journey.
+            {t('footer.tagline')}
           </p>
         </div>
       </footer>

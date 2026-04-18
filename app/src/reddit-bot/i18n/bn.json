@@ -1,1 +1,50 @@
-{}
+{
+  "home": {
+    "title": "রেডিট বট",
+    "subtitle": "রেডিট থেকে লিড জেনারেশন। সাবরেডিট অন্বেষণ করে লিড খুঁজতে একটি প্রজেক্ট তৈরি করুন।",
+    "credits": "রেডিট ক্রেডিট:",
+    "creditsLeft": "{{count}} বাকি",
+    "creditsUsed": "(মোট {{count}} ব্যবহৃত)",
+    "newProject": "নতুন প্রজেক্ট",
+    "createYourFirst": "আপনার প্রথম প্রজেক্ট তৈরি করতে \"নতুন প্রজেক্ট\" ক্লিক করুন।",
+    "error": "ত্রুটি: {{message}}",
+    "tryAgain": "আবার চেষ্টা করুন"
+  },
+  "deleteDialog": {
+    "title": "প্রজেক্ট মুছুন",
+    "description": "এটি স্থায়ীভাবে প্রজেক্ট এবং এর সব পোস্ট, শিডিউল ও জব ইতিহাস মুছে ফেলবে। এটি আর ফেরানো যাবে না।",
+    "cancel": "বাতিল",
+    "confirm": "প্রজেক্ট মুছুন"
+  },
+  "createDialog": {
+    "title": "নতুন প্রজেক্ট",
+    "name": "প্রজেক্টের নাম",
+    "namePlaceholder": "যেমন SaaS লিড",
+    "description": "বর্ণনা (ঐচ্ছিক)",
+    "descriptionPlaceholder": "সংক্ষিপ্ত বর্ণনা",
+    "productDescription": "পণ্যের বর্ণনা (লিড মিলানোর জন্য)",
+    "productDescriptionPlaceholder": "আপনার পণ্য কী করে / কাদের জন্য",
+    "subreddits": "সাবরেডিট (কমা বা স্পেস দিয়ে আলাদা)",
+    "subredditsPlaceholder": "যেমন webdev, startups, SaaS",
+    "keywords": "কীওয়ার্ড (কমা বা স্পেস দিয়ে আলাদা)",
+    "keywordsPlaceholder": "যেমন pricing, churn, onboarding",
+    "creating": "তৈরি হচ্ছে...",
+    "create": "প্রজেক্ট তৈরি করুন"
+  },
+  "shell": {
+    "breadcrumbHome": "রেডিট বট",
+    "creditsUsedThisProject": "এই প্রজেক্টে ব্যবহৃত ক্রেডিট:",
+    "editProject": "প্রজেক্ট সম্পাদনা"
+  },
+  "tabs": {
+    "home": "হোম",
+    "posts": "পোস্ট",
+    "schedules": "শিডিউল",
+    "jobs": "জব"
+  },
+  "autoRefresh": {
+    "label": "অটো",
+    "onTitle": "অটো-রিফ্রেশ চালু — নিষ্ক্রিয় করতে ক্লিক করুন",
+    "offTitle": "অটো-রিফ্রেশ বন্ধ — সক্রিয় করতে ক্লিক করুন"
+  }
+}

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { addCarelyVitalLog, updateCarelyVitalLog, getCarelyAppSettings, getCarelyVitalCategories } from "wasp/client/operations";
 import { useQuery } from "wasp/client/operations";
 import { Plus } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 export function VitalLogForm({
@@ -25,7 +26,8 @@ export function VitalLogForm({
   hideTrigger?: boolean,
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
-  
+  const { t } = useTranslation('carely');
+
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
 
@@ -79,15 +81,15 @@ export function VitalLogForm({
 
       if (initialLog) {
         await updateCarelyVitalLog({ id: initialLog.id, type, value, notes, loggedAt: time });
-        toast.success('Measurement updated');
+        toast.success(t('vitalLog.toasts.updated'));
       } else {
         await addCarelyVitalLog({ parentId, type, value, notes, loggedAt: time });
-        toast.success('Measurement logged');
+        toast.success(t('vitalLog.toasts.logged'));
       }
       setIsOpen(false);
       onLogged();
     } catch (e: any) {
-      toast.error('Failed to save vitals: ' + e.message);
+      toast.error(t('vitalLog.toasts.saveFailed', { reason: e.message }));
     } finally {
       setIsSubmitting(false);
     }
@@ -96,11 +98,11 @@ export function VitalLogForm({
   const getUnitPlaceholder = () => {
     if (type === 'TEMPERATURE') {
       const tu = ((appSettings as any)?.temperatureUnit === 'C' ? 'C' : 'F');
-      return `Value (°${tu})`;
+      return t('vitalLog.placeholders.valueWithUnit', { unit: `°${tu}` });
     }
     const unit = currentCategory?.unit;
-    if (unit) return `Value (${unit})`;
-    return 'Value';
+    if (unit) return t('vitalLog.placeholders.valueWithUnit', { unit });
+    return t('vitalLog.placeholders.valueNoUnit');
   };
 
   return (
@@ -108,21 +110,21 @@ export function VitalLogForm({
       {!initialLog && !hideTrigger && (
         <DialogTrigger asChild>
           <button className="h-10 inline-flex items-center gap-2 bg-[color:var(--color-carely-primary)] text-white px-4 rounded-xl font-jakarta font-semibold shadow-xs hover:opacity-90 transition-opacity">
-            <Plus className="w-4 h-4" /> Log vital
+            <Plus className="w-4 h-4" /> {t('measurements.logVital')}
           </button>
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[425px] bg-[color:var(--color-carely-surface-lowest)] border-[color:var(--color-carely-surface-high)] rounded-2xl">
         <DialogHeader className="pt-1">
           <DialogTitle className="font-lexend text-[color:var(--color-carely-on-surface)] text-xl text-center">
-            {initialLog ? 'Edit measurement' : 'Log measurement'}
+            {initialLog ? t('vitalLog.editTitle') : t('vitalLog.logTitle')}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
           
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
-              Date & time
+              {t('vitalLog.labels.dateTime')}
             </label>
             <input
               required
@@ -135,7 +137,7 @@ export function VitalLogForm({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
-              Type
+              {t('vitalLog.labels.type')}
             </label>
             <select
               value={type}
@@ -156,14 +158,14 @@ export function VitalLogForm({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
-              Measurement
+              {t('vitalLog.labels.measurement')}
             </label>
             {kind === 'blood_pressure' ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <input
                   required
                   type="number"
-                  placeholder={`Systolic (${currentCategory?.unit || 'mmHg'})`}
+                  placeholder={t('vitalLog.placeholders.systolic', { unit: currentCategory?.unit || 'mmHg' })}
                   value={val1}
                   onChange={e => setVal1(e.target.value)}
                   className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
@@ -171,7 +173,7 @@ export function VitalLogForm({
                 <input
                   required
                   type="number"
-                  placeholder={`Diastolic (${currentCategory?.unit || 'mmHg'})`}
+                  placeholder={t('vitalLog.placeholders.diastolic', { unit: currentCategory?.unit || 'mmHg' })}
                   value={val2}
                   onChange={e => setVal2(e.target.value)}
                   className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
@@ -192,10 +194,10 @@ export function VitalLogForm({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-[color:var(--color-carely-on-surface-variant)]">
-              Notes
+              {t('vitalLog.labels.notes')}
             </label>
             <textarea
-              placeholder="Notes (optional)"
+              placeholder={t('vitalLog.placeholders.notes')}
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className="w-full bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 py-2.5 font-jakarta text-[color:var(--color-carely-on-surface)] resize-none h-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-carely-primary)]"
@@ -207,7 +209,7 @@ export function VitalLogForm({
             type="submit"
             className="mt-2 w-full bg-[color:var(--color-carely-primary)] text-[color:var(--color-carely-on-primary)] font-jakarta font-semibold text-base py-2.5 rounded-xl disabled:opacity-50"
           >
-            {isSubmitting ? 'Saving...' : 'Save'}
+            {isSubmitting ? t('vitalLog.saving') : t('vitalLog.save')}
           </button>
         </form>
       </DialogContent>

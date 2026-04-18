@@ -1,1 +1,57 @@
-{}
+{
+  "loggedIn": {
+    "welcome": "Welcome.",
+    "welcomeNamed": "Welcome, {{name}}.",
+    "subtitle": "Open an app you have access to.",
+    "loadingPermissions": "Loading your app permissions…",
+    "waitingTitle": "Waiting for app permission to be granted",
+    "waitingDescription": "An admin needs to enable at least one app for your account.",
+    "open": "Open"
+  },
+  "apps": {
+    "onlineJudge": {
+      "name": "Online Judge",
+      "description": "Solve problems, submit code, track results."
+    },
+    "sokafilm": {
+      "name": "SokaFilm",
+      "description": "Explore films and manage your watch flow."
+    },
+    "redditBot": {
+      "name": "Reddit Bot",
+      "description": "Automate Reddit workflows and monitor jobs."
+    },
+    "carely": {
+      "name": "Carely",
+      "description": "Track vitals, medications, and trends for care."
+    }
+  },
+  "hero": {
+    "title": "Build with intention.",
+    "subtitle": "Every tool exists to help you go further. Think clearly, create bravely, move forward—one step at a time.",
+    "getStarted": "Get started",
+    "signIn": "Sign in"
+  },
+  "pillars": {
+    "heading": "What we stand for",
+    "clarity": {
+      "label": "Clarity",
+      "body": "See what matters. Strip away the noise and focus on the work that moves you."
+    },
+    "craft": {
+      "label": "Craft",
+      "body": "Use the right tools for the job. Build habits and workflows that last."
+    },
+    "possibility": {
+      "label": "Possibility",
+      "body": "Tomorrow is unwritten. What you do today shapes the path ahead."
+    }
+  },
+  "closing": {
+    "line1": "The best time to start was yesterday.",
+    "line2": "The next best is now."
+  },
+  "footer": {
+    "tagline": "Toolkit — tools for the journey."
+  }
+}

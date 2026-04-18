@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, getCarelyPrescriptions, getCarelyMedicineIntakeLogs, getCarelyMedicineLogsByRange } from "wasp/client/operations";
 import { Pill, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { MedicineCard } from '../components/MedicineCard';
 import { PrescriptionForm } from '../components/PrescriptionForm';
 import { EmptyState } from '../components/EmptyState';
@@ -81,6 +82,7 @@ function useAdherenceStatus(parentId: string, prescriptions: any, allLogs: any) 
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 export function MedicineTab({ parent }: { parent: any }) {
   const { data: user } = useAuth();
+  const { t } = useTranslation('carely');
   const [dateOffset, setDateOffset] = useState(0);
 
   const targetDate = new Date();
@@ -119,11 +121,11 @@ export function MedicineTab({ parent }: { parent: any }) {
   const completedSlots = logs?.length || 0;
   const overallProgress = totalSlots > 0 ? (completedSlots / totalSlots) * 100 : 0;
 
-  let title = "Today's Meds";
-  if (dateOffset === 1) title = "Yesterday's Meds";
-  else if (dateOffset === -1) title = "Tomorrow's Meds";
+  let title = t('medicine.titles.today');
+  if (dateOffset === 1) title = t('medicine.titles.yesterday');
+  else if (dateOffset === -1) title = t('medicine.titles.tomorrow');
   else if (dateOffset !== 0) {
-    title = targetDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) + " Meds";
+    title = t('medicine.titles.other', { date: targetDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) });
   }
 
   return (
@@ -132,7 +134,7 @@ export function MedicineTab({ parent }: { parent: any }) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl">{title}</h2>
-          <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)]">{totalSlots} doses scheduled</p>
+          <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)]">{t('medicine.dosesScheduled', { count: totalSlots })}</p>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -148,8 +150,8 @@ export function MedicineTab({ parent }: { parent: any }) {
       {totalSlots > 0 && (
         <div className="bg-[color:var(--color-carely-surface-lowest)] p-4 rounded-xl shadow-xs border border-[color:var(--color-carely-surface-high)]">
           <div className="flex justify-between text-sm font-jakarta mb-2 font-medium">
-            <span className="text-[color:var(--color-carely-on-surface-variant)]">Daily Progress</span>
-            <span className="text-[color:var(--color-carely-primary)]">{completedSlots} of {totalSlots}</span>
+            <span className="text-[color:var(--color-carely-on-surface-variant)]">{t('medicine.dailyProgress')}</span>
+            <span className="text-[color:var(--color-carely-primary)]">{t('medicine.completedOf', { completed: completedSlots, total: totalSlots })}</span>
           </div>
           <ProgressBar progress={overallProgress} />
         </div>
@@ -172,7 +174,7 @@ export function MedicineTab({ parent }: { parent: any }) {
             );
           })
         ) : (
-          <EmptyState icon={Pill} title="No active prescriptions" description="Add medicines to start tracking daily intakes." />
+          <EmptyState icon={Pill} title={t('medicine.empty.title')} description={t('medicine.empty.description')} />
         )}
       </div>
 

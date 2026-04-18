@@ -85,6 +85,7 @@
     "vite": "^7.0.6"
   },
   "scripts": {
-    "db:resolve": "dotenv -e .env.server -- prisma migrate resolve"
+    "db:resolve": "dotenv -e .env.server -- prisma migrate resolve",
+    "i18n:check": "node scripts/i18nCheck.mjs"
   }
 }

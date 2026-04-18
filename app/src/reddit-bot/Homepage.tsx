@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useAction } from 'wasp/client/operations';
 import {
   createRedditBotProject,
@@ -26,6 +27,7 @@ import { useAutoRefresh, AutoRefreshToggle } from './useAutoRefresh';
 
 export default function RedditBotHomepage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('reddit-bot');
   const { autoRefresh, toggleAutoRefresh, queryOpts } = useAutoRefresh();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [projectIdToDelete, setProjectIdToDelete] = useState<string | null>(null);
@@ -93,8 +95,8 @@ export default function RedditBotHomepage() {
     return (
       <div className="py-10 lg:mt-10">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <p className="text-red-500">Error: {error.message}</p>
-          <Button onClick={() => refetch()} className="mt-4">Try again</Button>
+          <p className="text-red-500">{t('home.error', { message: error.message })}</p>
+          <Button onClick={() => refetch()} className="mt-4">{t('home.tryAgain')}</Button>
         </div>
       </div>
     );
@@ -106,18 +108,18 @@ export default function RedditBotHomepage() {
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">Reddit Bot</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t('home.title')}</h1>
               <AutoRefreshToggle enabled={autoRefresh} onToggle={toggleAutoRefresh} />
             </div>
             <p className="mt-2 text-muted-foreground">
-              Lead generation from Reddit. Create a project to explore subreddits and find leads.
+              {t('home.subtitle')}
             </p>
           </div>
           {credit != null && (
             <div className="rounded-md border bg-muted/30 px-4 py-2 text-sm">
-              <span className="text-muted-foreground">Reddit credits: </span>
-              <span className="font-medium">{Number(credit.balance)} left</span>
-              <span className="text-muted-foreground"> ({Number(credit.totalUsed)} used total)</span>
+              <span className="text-muted-foreground">{t('home.credits')} </span>
+              <span className="font-medium">{t('home.creditsLeft', { count: Number(credit.balance) })}</span>
+              <span className="text-muted-foreground"> {t('home.creditsUsed', { count: Number(credit.totalUsed) })}</span>
             </div>
           )}
         </div>
@@ -134,7 +136,7 @@ export default function RedditBotHomepage() {
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="h-10 w-10 text-muted-foreground" />
-                <p className="mt-2 text-sm font-medium text-muted-foreground">New project</p>
+                <p className="mt-2 text-sm font-medium text-muted-foreground">{t('home.newProject')}</p>
               </Card>
               {projects?.map((project) => (
                 <ProjectCard
@@ -148,7 +150,7 @@ export default function RedditBotHomepage() {
           )}
           {!isLoading && projects?.length === 0 && (
             <p className="mt-4 text-center text-muted-foreground">
-              Click &quot;New project&quot; to create your first project.
+              {t('home.createYourFirst')}
             </p>
           )}
         </div>
@@ -161,20 +163,20 @@ export default function RedditBotHomepage() {
         >
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>Delete project</DialogTitle>
+              <DialogTitle>{t('deleteDialog.title')}</DialogTitle>
               <DialogDescription>
-                This will permanently delete the project and all its posts, schedules, and job history. This cannot be undone.
+                {t('deleteDialog.description')}
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setProjectIdToDelete(null)}>
-                Cancel
+                {t('deleteDialog.cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => projectIdToDelete && handleConfirmDelete(projectIdToDelete)}
               >
-                Delete project
+                {t('deleteDialog.confirm')}
               </Button>
             </div>
           </DialogContent>
@@ -183,58 +185,58 @@ export default function RedditBotHomepage() {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>New project</DialogTitle>
+              <DialogTitle>{t('createDialog.title')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div>
-                <Label htmlFor="create-name">Project name</Label>
+                <Label htmlFor="create-name">{t('createDialog.name')}</Label>
                 <Input
                   id="create-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. SaaS leads"
+                  placeholder={t('createDialog.namePlaceholder')}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="create-description">Description (optional)</Label>
+                <Label htmlFor="create-description">{t('createDialog.description')}</Label>
                 <Textarea
                   id="create-description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Short description"
+                  placeholder={t('createDialog.descriptionPlaceholder')}
                   className="mt-1 min-h-[80px]"
                   rows={3}
                 />
               </div>
               <div>
-                <Label htmlFor="create-productDescription">Product description (for matching leads)</Label>
+                <Label htmlFor="create-productDescription">{t('createDialog.productDescription')}</Label>
                 <Textarea
                   id="create-productDescription"
                   value={productDescription}
                   onChange={(e) => setProductDescription(e.target.value)}
-                  placeholder="What your product does / who it's for"
+                  placeholder={t('createDialog.productDescriptionPlaceholder')}
                   className="mt-1 min-h-[80px]"
                   rows={3}
                 />
               </div>
               <div>
-                <Label htmlFor="create-subreddits">Subreddits (comma or space separated)</Label>
+                <Label htmlFor="create-subreddits">{t('createDialog.subreddits')}</Label>
                 <Input
                   id="create-subreddits"
                   value={subredditsStr}
                   onChange={(e) => setSubredditsStr(e.target.value)}
-                  placeholder="e.g. webdev, startups, SaaS"
+                  placeholder={t('createDialog.subredditsPlaceholder')}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="create-keywords">Keywords (comma or space separated)</Label>
+                <Label htmlFor="create-keywords">{t('createDialog.keywords')}</Label>
                 <Input
                   id="create-keywords"
                   value={keywordsStr}
                   onChange={(e) => setKeywordsStr(e.target.value)}
-                  placeholder="e.g. pricing, churn, onboarding"
+                  placeholder={t('createDialog.keywordsPlaceholder')}
                   className="mt-1"
                 />
               </div>
@@ -246,12 +248,12 @@ export default function RedditBotHomepage() {
                 {isCreating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {t('createDialog.creating')}
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create project
+                    {t('createDialog.create')}
                   </>
                 )}
               </Button>

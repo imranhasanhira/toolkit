@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, getCarelyPrescriptions, getCarelyMedicineLogsByRange } from "wasp/client/operations";
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+const WEEKDAY_SHORT_KEYS = ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'] as const;
 
 function toLocalDateKey(d: Date): string {
   const year = d.getFullYear();
@@ -13,6 +16,7 @@ export function MedicineAdherenceDrawer({ parentId, onDateSelect, activeOffset }
   const [isExpanded, setIsExpanded] = useState(false);
   const [monthOffset, setMonthOffset] = useState(0); 
   const [navHeight, setNavHeight] = useState(0);
+  const { t } = useTranslation('carely');
 
   React.useEffect(() => {
     const checkHeight = () => {
@@ -208,7 +212,7 @@ export function MedicineAdherenceDrawer({ parentId, onDateSelect, activeOffset }
             </div>
 
             <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center text-xs font-jakarta mb-2 text-[color:var(--color-carely-on-surface-variant)] uppercase font-semibold">
-              {['Su','Mo','Tu','We','Th','Fr','Sa'].map(w => <div key={w}>{w}</div>)}
+              {WEEKDAY_SHORT_KEYS.map(w => <div key={w}>{t(`calendar.weekdayShort.${w}`)}</div>)}
             </div>
 
             <div className="grid grid-cols-7 gap-y-2 gap-x-2">
@@ -229,10 +233,10 @@ export function MedicineAdherenceDrawer({ parentId, onDateSelect, activeOffset }
             </div>
             
             <div className="mt-auto flex justify-center gap-4 text-[10px] font-jakarta text-[color:var(--color-carely-on-surface-variant)] font-medium pt-4">
-               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full border border-[color:var(--color-carely-on-surface-variant)] opacity-30" /> None Active</div>
-               <div className="flex items-center gap-1"><Check className="w-3 h-3 text-[#106A6A]" /> All Clear</div>
-               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-400" /> Partial</div>
-               <div className="flex items-center gap-1"><X className="w-3 h-3 text-[#FA746F]" /> Skipped</div>
+               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full border border-[color:var(--color-carely-on-surface-variant)] opacity-30" /> {t('calendar.legend.noneActive')}</div>
+               <div className="flex items-center gap-1"><Check className="w-3 h-3 text-[#106A6A]" /> {t('calendar.legend.allClear')}</div>
+               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-400" /> {t('calendar.legend.partial')}</div>
+               <div className="flex items-center gap-1"><X className="w-3 h-3 text-[#FA746F]" /> {t('calendar.legend.skipped')}</div>
             </div>
           </div>
           

@@ -4,15 +4,25 @@ import { routes } from "wasp/client/router";
 import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
+import { useTranslation } from "react-i18next";
 
 import OJLayout from "./OJLayout";
 
 export default function ProblemListPage() {
     const { data: problems, isLoading, error } = useQuery(getProblems);
     const { data: user } = useAuth();
+    const { t } = useTranslation("online-judge");
 
-    if (isLoading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error.message}</div>;
+    if (isLoading) return <div>{t("list.loading")}</div>;
+    if (error) return <div>{t("list.error", { message: error.message })}</div>;
+
+    const difficultyLabel = (d: string) => {
+        const key = d?.toLowerCase();
+        if (key === "easy" || key === "medium" || key === "hard") {
+            return t(`list.difficulty.${key}`);
+        }
+        return d;
+    };
 
     return (
         <OJLayout>
@@ -23,7 +33,7 @@ export default function ProblemListPage() {
                             to={routes.CreateProblemRoute.to}
                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
                         >
-                            Create Problem
+                            {t("list.createProblem")}
                         </Link>
                     )}
                 </div>
@@ -50,7 +60,7 @@ export default function ProblemListPage() {
                                                     ? "border-yellow-200 bg-yellow-50 text-yellow-700"
                                                     : "border-red-200 bg-red-50 text-red-700"
                                                 }`}>
-                                                {problem.difficulty}
+                                                {difficultyLabel(problem.difficulty)}
                                             </span>
                                         </div>
                                     </div>
@@ -59,27 +69,23 @@ export default function ProblemListPage() {
                                             to={`/online-judge/${problem.slug}`}
                                             className="text-blue-500 hover:text-blue-700 font-medium"
                                         >
-                                            Solve Challenge &rarr;
+                                            {t("list.solveChallenge")}
                                         </Link>
                                         {user?.isAdmin && (
                                             <button
                                                 onClick={async (e) => {
                                                     e.preventDefault();
-                                                    if (window.confirm("Are you sure you want to delete this problem?")) {
+                                                    if (window.confirm(t("list.confirmDelete"))) {
                                                         try {
                                                             await deleteProblem({ id: problem.id });
-                                                            // Invalidate queries to refresh list
-                                                            // Ideally queryClient.invalidateQueries(['getProblems'])
-                                                            // but simplistic reload or relying on refetch works for now.
-                                                            // Wasp's useQuery usually refetches on window focus or we can force it.
                                                             window.location.reload();
                                                         } catch (err: any) {
-                                                            alert("Failed to delete problem: " + err.message);
+                                                            alert(t("list.deleteFailed", { reason: err.message }));
                                                         }
                                                     }
                                                 }}
                                                 className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                                                title="Delete Problem"
+                                                title={t("list.deleteProblem")}
                                             >
                                                 <Trash2 size={18} />
                                             </button>
@@ -90,7 +96,7 @@ export default function ProblemListPage() {
                         ))
                     ) : (
                         <div className="text-center text-gray-500 py-12">
-                            No problems found. Check back later!
+                            {t("list.empty")}
                         </div>
                     )}
                 </div>

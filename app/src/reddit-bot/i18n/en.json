@@ -1,1 +1,50 @@
-{}
+{
+  "home": {
+    "title": "Reddit Bot",
+    "subtitle": "Lead generation from Reddit. Create a project to explore subreddits and find leads.",
+    "credits": "Reddit credits:",
+    "creditsLeft": "{{count}} left",
+    "creditsUsed": "({{count}} used total)",
+    "newProject": "New project",
+    "createYourFirst": "Click \"New project\" to create your first project.",
+    "error": "Error: {{message}}",
+    "tryAgain": "Try again"
+  },
+  "deleteDialog": {
+    "title": "Delete project",
+    "description": "This will permanently delete the project and all its posts, schedules, and job history. This cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete project"
+  },
+  "createDialog": {
+    "title": "New project",
+    "name": "Project name",
+    "namePlaceholder": "e.g. SaaS leads",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Short description",
+    "productDescription": "Product description (for matching leads)",
+    "productDescriptionPlaceholder": "What your product does / who it's for",
+    "subreddits": "Subreddits (comma or space separated)",
+    "subredditsPlaceholder": "e.g. webdev, startups, SaaS",
+    "keywords": "Keywords (comma or space separated)",
+    "keywordsPlaceholder": "e.g. pricing, churn, onboarding",
+    "creating": "Creating...",
+    "create": "Create project"
+  },
+  "shell": {
+    "breadcrumbHome": "Reddit Bot",
+    "creditsUsedThisProject": "Credits used (this project):",
+    "editProject": "Edit project"
+  },
+  "tabs": {
+    "home": "Home",
+    "posts": "Posts",
+    "schedules": "Schedules",
+    "jobs": "Jobs"
+  },
+  "autoRefresh": {
+    "label": "Auto",
+    "onTitle": "Auto-refresh ON — click to disable",
+    "offTitle": "Auto-refresh OFF — click to enable"
+  }
+}

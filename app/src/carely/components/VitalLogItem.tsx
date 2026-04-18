@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Activity, Thermometer, Droplet, Heart, Wind, ChevronRight, Scale } from 'lucide-react';
 import { deleteCarelyVitalLog } from 'wasp/client/operations';
 import { useAuth } from 'wasp/client/auth';
+import { useTranslation } from 'react-i18next';
 import { VitalLogForm } from './VitalLogForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../client/components/ui/dialog';
 import toast from 'react-hot-toast';
@@ -109,6 +110,7 @@ export function VitalLogItem({
   typeLabel?: string,
 }) {
   const { data: user } = useAuth();
+  const { t } = useTranslation('carely');
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
@@ -118,11 +120,11 @@ export function VitalLogItem({
   const handleDelete = async () => {
     try {
       await deleteCarelyVitalLog({ id: log.id });
-      toast.success('Measurement deleted');
+      toast.success(t('vitalLogItem.toasts.deleted'));
       setIsConfirmDeleteOpen(false);
       onUpdate();
     } catch (err: any) {
-      toast.error('Failed to delete: ' + err.message);
+      toast.error(t('vitalLogItem.toasts.deleteFailed', { reason: err.message }));
     }
   };
 
@@ -132,7 +134,7 @@ export function VitalLogItem({
   const dateObj = new Date(log.loggedAt);
   const isToday = new Date().toDateString() === dateObj.toDateString();
   const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const dateStr = isToday ? 'Today' : dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const dateStr = isToday ? t('vitalLogItem.today') : dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
   let valueDisp = '';
   if (log.type === 'BLOOD_PRESSURE') valueDisp = `${log.value.systolic}/${log.value.diastolic} ${log.value.unit}`;
@@ -164,7 +166,7 @@ export function VitalLogItem({
                   {dateStr} · {time}
                 </div>
                 <div className="text-[10px] font-jakarta text-[color:var(--color-carely-on-surface-variant)] truncate max-w-[120px]">
-                  {log.loggedByUser?.username ? `by ${log.loggedByUser.username}` : null}
+                  {log.loggedByUser?.username ? t('vitalLogItem.byUser', { username: log.loggedByUser.username }) : null}
                 </div>
               </div>
               {canEdit ? (
@@ -195,17 +197,17 @@ export function VitalLogItem({
         <Dialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
           <DialogContent className="sm:max-w-xs bg-[color:var(--color-carely-surface-lowest)] border-[color:var(--color-carely-surface-high)] rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="font-lexend text-[color:var(--color-carely-error)] text-lg">Delete Log?</DialogTitle>
+              <DialogTitle className="font-lexend text-[color:var(--color-carely-error)] text-lg">{t('vitalLogItem.deleteDialog.title')}</DialogTitle>
               <DialogDescription className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mt-1">
-                Are you sure you want to permanently delete this {log.type.replace('_', ' ')} measurement? This cannot be undone.
+                {t('vitalLogItem.deleteDialog.description', { type: typeLabel ?? formatVitalType(log.type) })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-4 flex gap-2">
               <button onClick={() => setIsConfirmDeleteOpen(false)} className="flex-1 py-2 rounded-xl text-[color:var(--color-carely-on-surface)] bg-[color:var(--color-carely-surface-low)] hover:bg-[color:var(--color-carely-surface-high)] transition-colors font-jakarta font-medium text-sm">
-                Cancel
+                {t('vitalLogItem.deleteDialog.cancel')}
               </button>
               <button onClick={handleDelete} className="flex-1 py-2 rounded-xl text-[color:var(--color-carely-error)] bg-[color:var(--color-carely-error)]/10 hover:bg-[color:var(--color-carely-error)] hover:text-white transition-colors font-jakarta font-semibold text-sm">
-                Delete
+                {t('vitalLogItem.deleteDialog.delete')}
               </button>
             </DialogFooter>
           </DialogContent>

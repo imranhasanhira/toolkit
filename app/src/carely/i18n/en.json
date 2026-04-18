@@ -1,1 +1,331 @@
-{}
+{
+  "home": {
+    "loadingOverview": "Loading overview...",
+    "title": "Carely",
+    "greeting": "Hello, {{name}}. Here's the health overview.",
+    "defaultCaregiver": "Caregiver",
+    "openSettings": "Carely settings",
+    "empty": {
+      "title": "No patients yet",
+      "description": "Add a patient to start tracking vitals, medications, and health history in one place."
+    },
+    "settings": {
+      "title": "Carely settings",
+      "temperature": {
+        "title": "Temperature unit",
+        "description": "Used for all temperature entries in Carely",
+        "fahrenheit": "Fahrenheit (°F)",
+        "celsius": "Celsius (°C)",
+        "dbMigrationPrompt": "Run the DB migrations to make settings editable."
+      },
+      "categories": {
+        "title": "Vital categories",
+        "labels": {
+          "key": "Key",
+          "name": "Name",
+          "kind": "Kind",
+          "unit": "Unit",
+          "active": "Active"
+        },
+        "placeholders": {
+          "key": "e.g. HEAD_CIRCUMFERENCE",
+          "name": "e.g. Head circumference",
+          "unit": "e.g. cm, kg, bpm"
+        },
+        "kind": {
+          "numeric": "Numeric",
+          "bloodPressure": "Blood pressure"
+        },
+        "actions": {
+          "addCategory": "Add category",
+          "saveChanges": "Save changes",
+          "cancelEdit": "Cancel edit",
+          "editTooltip": "Edit category",
+          "moveUp": "Move up",
+          "moveDown": "Move down",
+          "deleteTooltip": "Delete category"
+        },
+        "footer": {
+          "migrationNeeded": "Run the DB migration to enable add/edit/delete/reorder. Right now you are seeing fallback defaults.",
+          "livePersistence": "Changes are saved globally and affect chips, stats, and the log form immediately."
+        },
+        "toasts": {
+          "orderUpdated": "Order updated",
+          "reorderFailed": "Reorder failed: {{reason}}",
+          "unknownError": "Unknown error"
+        }
+      }
+    }
+  },
+  "patient": {
+    "loading": "Loading patient...",
+    "notFound": "Patient not found or access denied.",
+    "backToDashboard": "Back to Dashboard",
+    "yearsOld_one": "{{count}} year old",
+    "yearsOld_other": "{{count}} years old",
+    "tabs": {
+      "measurements": "Log Book",
+      "medicine": "Medications",
+      "stats": "Stats",
+      "settings": "Settings"
+    },
+    "bottomTabs": {
+      "log": "Log",
+      "meds": "Meds",
+      "stats": "Stats",
+      "settings": "Settings"
+    }
+  },
+  "parentCard": {
+    "latestVitals": "Latest vitals",
+    "viewActivity": "View Activity",
+    "meds": "Meds",
+    "openSchedule": "Open Schedule"
+  },
+  "addParent": {
+    "triggerButton": "Add Patient",
+    "title": "Add New Patient",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "John Doe",
+    "dob": "Date of Birth (Optional)",
+    "saving": "Adding...",
+    "save": "Save Patient",
+    "toasts": {
+      "added": "Patient added successfully",
+      "addFailed": "Failed to add: {{reason}}"
+    }
+  },
+  "measurements": {
+    "title": "Recent measurements",
+    "clearFilters": "Clear filters",
+    "filterMeasurements": "Filter measurements",
+    "filterTitle": "Filter measurements",
+    "applyAll": "All",
+    "apply": "Apply ({{count}})",
+    "applyAllBtn": "Apply ({{value}})",
+    "loading": "Loading logs...",
+    "logVital": "Log vital",
+    "empty": {
+      "title": "No measurements",
+      "description": "No vitals match your criteria."
+    }
+  },
+  "vitalLog": {
+    "editTitle": "Edit measurement",
+    "logTitle": "Log measurement",
+    "labels": {
+      "dateTime": "Date & time",
+      "type": "Type",
+      "measurement": "Measurement",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "systolic": "Systolic ({{unit}})",
+      "diastolic": "Diastolic ({{unit}})",
+      "valueWithUnit": "Value ({{unit}})",
+      "valueNoUnit": "Value",
+      "notes": "Notes (optional)"
+    },
+    "saving": "Saving...",
+    "save": "Save",
+    "toasts": {
+      "updated": "Measurement updated",
+      "logged": "Measurement logged",
+      "saveFailed": "Failed to save vitals: {{reason}}"
+    }
+  },
+  "vitalLogItem": {
+    "today": "Today",
+    "byUser": "by {{username}}",
+    "deleteDialog": {
+      "title": "Delete Log?",
+      "description": "Are you sure you want to permanently delete this {{type}} measurement? This cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "toasts": {
+      "deleted": "Measurement deleted",
+      "deleteFailed": "Failed to delete: {{reason}}"
+    }
+  },
+  "stats": {
+    "title": "Health Trends",
+    "chart": {
+      "suffix": "Chart",
+      "medianEnabled": "Showing median per day",
+      "medianDisabled": "Showing all entries",
+      "medianSrOn": "Median per day enabled",
+      "medianSrOff": "Median per day disabled",
+      "refresh": "Refresh data",
+      "weekShort": "1W",
+      "monthShort": "1M",
+      "loading": "Loading data..."
+    },
+    "summary": {
+      "avg": "Avg",
+      "high": "High",
+      "low": "Low"
+    }
+  },
+  "medicine": {
+    "titles": {
+      "today": "Today's Meds",
+      "yesterday": "Yesterday's Meds",
+      "tomorrow": "Tomorrow's Meds",
+      "other": "{{date}} Meds"
+    },
+    "dosesScheduled_one": "{{count}} dose scheduled",
+    "dosesScheduled_other": "{{count}} doses scheduled",
+    "dailyProgress": "Daily Progress",
+    "completedOf": "{{completed}} of {{total}}",
+    "empty": {
+      "title": "No active prescriptions",
+      "description": "Add medicines to start tracking daily intakes."
+    }
+  },
+  "medicineCard": {
+    "inactive": "Inactive",
+    "removePrescription": "Remove prescription",
+    "editPrescription": "Edit prescription",
+    "slots": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night",
+      "done": "Done"
+    },
+    "confirmRemove": {
+      "title": "Remove prescription?",
+      "description": "This will mark the prescription as inactive. Existing intake history is kept.",
+      "removing": "Removing...",
+      "confirm": "Remove"
+    },
+    "toasts": {
+      "removed": "Prescription removed",
+      "removeFailed": "Failed to remove: {{reason}}",
+      "updateFailed": "Failed to update: {{reason}}"
+    }
+  },
+  "prescriptionForm": {
+    "triggerButton": "Add prescription",
+    "editTitle": "Edit prescription",
+    "newTitle": "New prescription",
+    "placeholders": {
+      "medicineName": "Medicine Name",
+      "customSchedule": "E.g., Take 4 times a day after meals",
+      "notes": "Notes (e.g. after lunch)"
+    },
+    "labels": {
+      "startDate": "Start Date",
+      "endDate": "End Date (optional)",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night",
+      "useCustom": "Use custom schedule"
+    },
+    "saving": "Saving...",
+    "save": "Save prescription",
+    "toasts": {
+      "added": "Medication added",
+      "updated": "Medication updated",
+      "addFailed": "Failed to add: {{reason}}"
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "Patient Profile",
+      "fullName": "Full Name",
+      "dob": "Date of Birth",
+      "tempNotice": "Temperature unit is now configured in Carely app settings (global).",
+      "saving": "Saving...",
+      "save": "Save Profile"
+    },
+    "coManagement": {
+      "title": "Co-Management",
+      "description": "Manage who has access to view and edit this patient's records.",
+      "emailPlaceholder": "Enter user's email address",
+      "invite": "Invite",
+      "empty": "No co-managers added yet."
+    },
+    "developer": {
+      "title": "Developer Tools",
+      "description": "Inject safe mock data to test charts and logs. All mock entries are specially marked and can be instantly cleared.",
+      "processing": "Processing...",
+      "seedMock": "Seed Mock Data (60 Days)",
+      "clearMock": "Clear Mock Data"
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "description": "Deleting this patient will permanently remove all associated vitals, prescriptions, and intake logs.",
+      "deleting": "Deleting...",
+      "deleteButton": "Delete Patient Record"
+    },
+    "confirm": {
+      "seed": {
+        "title": "Seed mock data?",
+        "description": "This will inject 60 days of mock vitals and a mock prescription. You can clear mock data later.",
+        "confirm": "Seed mock data"
+      },
+      "clear": {
+        "title": "Clear mock data?",
+        "description": "This will delete all mock records marked MOCK_DATA for this patient.",
+        "confirm": "Clear mock data"
+      },
+      "delete": {
+        "title": "Delete patient record?",
+        "description": "This will permanently remove all associated vitals, prescriptions, and intake logs. This cannot be undone.",
+        "confirm": "Delete"
+      }
+    },
+    "toasts": {
+      "profileUpdated": "Profile updated",
+      "updateFailed": "Update failed: {{reason}}",
+      "coManagerAdded": "Co-manager added",
+      "coManagerRemoved": "Co-manager removed",
+      "permissionsUpdated": "Permissions updated",
+      "mockSeeded": "Mock data injected successfully",
+      "mockCleared": "Mock data cleared",
+      "deleteFailed": "Failed to delete: {{reason}}"
+    }
+  },
+  "collaborator": {
+    "viewVitals": "View vitals",
+    "addVitals": "Add vitals",
+    "viewPrescription": "View prescriptions",
+    "editPrescription": "Edit prescriptions"
+  },
+  "roles": {
+    "owner": "OWNER",
+    "coManager": "CO-MANAGER"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "confirm": {
+    "working": "Working…"
+  },
+  "calendar": {
+    "close": "Close calendar",
+    "open": "Open full calendar",
+    "legend": {
+      "noneScheduled": "None scheduled",
+      "complete": "Complete",
+      "partial": "Partial",
+      "missed": "Missed",
+      "noneActive": "None Active",
+      "allClear": "All Clear",
+      "skipped": "Skipped"
+    },
+    "weekdayShort": {
+      "su": "Su",
+      "mo": "Mo",
+      "tu": "Tu",
+      "we": "We",
+      "th": "Th",
+      "fr": "Fr",
+      "sa": "Sa"
+    }
+  }
+}

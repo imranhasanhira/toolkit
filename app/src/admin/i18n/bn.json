@@ -1,1 +1,17 @@
-{}
+{
+  "sidebar": {
+    "menuHeader": "মেনু",
+    "extraHeader": "অতিরিক্ত উপাদান",
+    "dashboard": "ড্যাশবোর্ড",
+    "users": "ব্যবহারকারী",
+    "appPermissions": "অ্যাপ অনুমতি",
+    "redditBotSettings": "রেডিট বট সেটিংস",
+    "settings": "সেটিংস",
+    "calendar": "ক্যালেন্ডার",
+    "uiElements": "UI উপাদান",
+    "buttons": "বাটন"
+  },
+  "breadcrumb": {
+    "dashboard": "ড্যাশবোর্ড"
+  }
+}

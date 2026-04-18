@@ -3,6 +3,7 @@ import { DoseString } from './DoseString';
 import { SlotCheckbox } from './SlotCheckbox';
 import { deactivateCarelyPrescription, logCarelyMedicineIntake, unlogCarelyMedicineIntake } from "wasp/client/operations";
 import { Edit2, Trash2 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { PrescriptionForm } from './PrescriptionForm';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -26,7 +27,8 @@ export function MedicineCard({
   const [isEditing, setIsEditing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+  const { t } = useTranslation('carely');
+
   const handleToggle = async (slot: string, checked: boolean) => {
     setIsUpdating(true);
     try {
@@ -37,7 +39,7 @@ export function MedicineCard({
       }
       onUpdate();
     } catch (e: any) {
-      toast.error('Failed to update: ' + e.message);
+      toast.error(t('medicineCard.toasts.updateFailed', { reason: e.message }));
     } finally {
       setIsUpdating(false);
     }
@@ -46,30 +48,30 @@ export function MedicineCard({
   const schedule = prescription.doseSchedule;
   const isCustom = schedule.type === 'custom';
 
-  const slots = ['morning', 'afternoon', 'evening', 'night'];
-  const activeSlots = isCustom 
-    ? [{ id: 'custom_0', label: 'Done' }]
-    : slots.filter(s => schedule[s] > 0).map(s => ({ id: s, label: s.charAt(0).toUpperCase() + s.slice(1) }));
+  const slots = ['morning', 'afternoon', 'evening', 'night'] as const;
+  const activeSlots = isCustom
+    ? [{ id: 'custom_0', label: t('medicineCard.slots.done') }]
+    : slots.filter(s => schedule[s] > 0).map(s => ({ id: s, label: t(`medicineCard.slots.${s}`) }));
 
   return (
     <div className="bg-[color:var(--color-carely-surface-lowest)] p-5 rounded-2xl border border-[color:var(--color-carely-surface-high)] shadow-xs relative overflow-hidden group">
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Remove prescription?"
-        description="This will mark the prescription as inactive. Existing intake history is kept."
-        confirmText={isDeleting ? "Removing..." : "Remove"}
+        title={t('medicineCard.confirmRemove.title')}
+        description={t('medicineCard.confirmRemove.description')}
+        confirmText={isDeleting ? t('medicineCard.confirmRemove.removing') : t('medicineCard.confirmRemove.confirm')}
         confirmTone="danger"
         isConfirming={isDeleting}
         onConfirm={async () => {
           try {
             setIsDeleting(true);
             await deactivateCarelyPrescription({ id: prescription.id } as any);
-            toast.success("Prescription removed");
+            toast.success(t('medicineCard.toasts.removed'));
             setConfirmOpen(false);
             onUpdate();
           } catch (e: any) {
-            toast.error("Failed to remove: " + e.message);
+            toast.error(t('medicineCard.toasts.removeFailed', { reason: e.message }));
           } finally {
             setIsDeleting(false);
           }
@@ -77,7 +79,7 @@ export function MedicineCard({
       />
       <div className="absolute top-3 right-3 flex items-center gap-2">
         {!prescription.isActive && (
-          <span className="text-[10px] font-jakarta bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-on-surface-variant)] px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Inactive</span>
+          <span className="text-[10px] font-jakarta bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-on-surface-variant)] px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">{t('medicineCard.inactive')}</span>
         )}
         {canEditPrescription && (
           <>
@@ -85,7 +87,7 @@ export function MedicineCard({
               <button
                 onClick={() => setConfirmOpen(true)}
                 className="p-1.5 rounded-full bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-error)] hover:bg-[color:var(--color-carely-error)]/10 transition-colors"
-                title="Remove prescription"
+                title={t('medicineCard.removePrescription')}
                 type="button"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -94,7 +96,7 @@ export function MedicineCard({
             <button
               onClick={() => setIsEditing(true)}
               className="p-1.5 rounded-full bg-[color:var(--color-carely-surface-low)] text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-primary)]/10 hover:text-[color:var(--color-carely-primary)] transition-colors"
-              title="Edit prescription"
+              title={t('medicineCard.editPrescription')}
               type="button"
             >
               <Edit2 className="w-3.5 h-3.5" />

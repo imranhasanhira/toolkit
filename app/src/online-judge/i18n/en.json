@@ -1,1 +1,21 @@
-{}
+{
+  "layout": {
+    "problems": "Problems",
+    "runtimes": "Runtimes"
+  },
+  "list": {
+    "loading": "Loading...",
+    "error": "Error: {{message}}",
+    "createProblem": "Create Problem",
+    "solveChallenge": "Solve Challenge →",
+    "deleteProblem": "Delete Problem",
+    "confirmDelete": "Are you sure you want to delete this problem?",
+    "deleteFailed": "Failed to delete problem: {{reason}}",
+    "empty": "No problems found. Check back later!",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    }
+  }
+}

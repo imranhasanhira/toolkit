@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from 'wasp/client/operations';
 import { createProject, deleteProject, getAllProjectsByUser, getCharactersByProject, getStoriesByProject } from 'wasp/client/operations';
 import type { Project } from 'wasp/entities';
@@ -15,6 +16,7 @@ export default function Homepage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
+  const { t } = useTranslation('sokafilm');
 
   const { data: projects, isLoading, refetch, error } = useQuery(getAllProjectsByUser);
 
@@ -38,7 +40,7 @@ export default function Homepage() {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+    if (!confirm(t('home.confirmDelete'))) {
       return;
     }
     
@@ -56,9 +58,9 @@ export default function Homepage() {
       <div className='py-10 lg:mt-10'>
         <div className='mx-auto max-w-7xl px-6 lg:px-8'>
           <div className='text-center'>
-            <p className='text-red-500'>Error loading projects: {error.message}</p>
+            <p className='text-red-500'>{t('home.errorLoading', { message: error.message })}</p>
             <Button onClick={() => refetch()} className='mt-4'>
-              Try Again
+              {t('home.tryAgain')}
             </Button>
           </div>
         </div>
@@ -72,34 +74,34 @@ export default function Homepage() {
         {/* Header */}
         <div className='mb-8'>
           <h1 className='text-3xl font-bold tracking-tight text-foreground'>
-            Welcome to SokaFilm
+            {t('home.title')}
           </h1>
           <p className='mt-2 text-muted-foreground'>
-            Your creative hub for film project management and storytelling
+            {t('home.subtitle')}
           </p>
         </div>
 
         {/* Create Project Form */}
         <div className='mb-8 p-6 border rounded-lg bg-muted/50'>
-          <h3 className='text-lg font-semibold mb-4'>Start Your First Project</h3>
+          <h3 className='text-lg font-semibold mb-4'>{t('home.createSection')}</h3>
           <div className='space-y-4'>
             <div>
-              <Label htmlFor='name'>Project Name</Label>
+              <Label htmlFor='name'>{t('home.projectName')}</Label>
               <Input
                 id='name'
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder='Enter project name'
+                placeholder={t('home.projectNamePlaceholder')}
                 className='mt-1'
               />
             </div>
             <div>
-              <Label htmlFor='description'>Description (Optional)</Label>
+              <Label htmlFor='description'>{t('home.description')}</Label>
               <Input
                 id='description'
                 value={newProjectDescription}
                 onChange={(e) => setNewProjectDescription(e.target.value)}
-                placeholder='Enter project description'
+                placeholder={t('home.descriptionPlaceholder')}
                 className='mt-1'
               />
             </div>
@@ -111,12 +113,12 @@ export default function Homepage() {
               {isCreating ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Creating...
+                  {t('home.creating')}
                 </>
               ) : (
                 <>
                   <Plus className='mr-2 h-4 w-4' />
-                  Create Project
+                  {t('home.create')}
                 </>
               )}
             </Button>
@@ -141,7 +143,7 @@ export default function Homepage() {
             </div>
           ) : (
             <div className='text-center text-muted-foreground'>
-              <p>Ready to bring your story to life? Create your first project to get started!</p>
+              <p>{t('home.empty')}</p>
             </div>
           )}
         </div>
@@ -156,7 +158,8 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({ project, onDelete }: ProjectCardProps) {
-  const projectName = project.name || 'Untitled Project';
+  const { t } = useTranslation('sokafilm');
+  const projectName = project.name || t('projectCard.untitled');
   const projectDescription = project.description || null;
   
   // Check if project has characters or stories with proper error handling
@@ -197,7 +200,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
       <div className='p-4 pb-0'>
         <MediaDisplay
           fileUuid={project.thumbnailUuid}
-          alt={`${projectName} thumbnail`}
+          alt={t('projectCard.thumbnailAlt', { name: projectName })}
           className="w-full h-32 rounded-lg overflow-hidden"
           fallbackIcon={<FileImage className="h-12 w-12 text-muted-foreground" />}
         />
@@ -233,7 +236,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
           </p>
         )}
         <p className='text-sm text-muted-foreground'>
-          Created {new Date(project.createdAt).toLocaleDateString()}
+          {t('projectCard.created', { date: new Date(project.createdAt).toLocaleDateString() })}
         </p>
       </CardContent>
     </Card>

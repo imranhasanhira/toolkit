@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import * as CookieConsent from "vanilla-cookieconsent";
 import "vanilla-cookieconsent/dist/cookieconsent.css";
 import getConfig from "./Config";
@@ -9,9 +10,10 @@ import getConfig from "./Config";
  * as well as its import in src/client/App.tsx .
  */
 const CookieConsentBanner = () => {
+  const { i18n } = useTranslation();
   useEffect(() => {
     CookieConsent.run(getConfig());
-  }, []);
+  }, [i18n.resolvedLanguage]);
 
   return <div id="cookieconsent"></div>;
 };

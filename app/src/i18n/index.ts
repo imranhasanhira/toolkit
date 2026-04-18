@@ -31,6 +31,11 @@ i18n
       en: { common: commonEn },
       bn: { common: commonBn },
     },
+    // Required when mixing init-time `resources` with a backend: without this,
+    // i18next treats the bundled namespace as "everything is loaded" and never
+    // calls HttpBackend for other namespaces, so `useTranslation('carely')`
+    // would render raw keys forever. See i18next docs on partialBundledLanguages.
+    partialBundledLanguages: true,
     fallbackLng: "en",
     supportedLngs: [...SUPPORTED_LANGUAGES],
     nonExplicitSupportedLngs: true,
@@ -50,7 +55,13 @@ i18n
       queryStringParams: { v: BUILD_HASH },
     },
     react: {
+      // Critical: with `useSuspense: false`, react-i18next otherwise does NOT
+      // re-render components when a lazy-loaded namespace finishes fetching
+      // (bindI18nStore defaults to ''). Without this, `useTranslation('landing')`
+      // renders raw keys and never updates once the HTTP fetch completes.
       useSuspense: false,
+      bindI18n: "languageChanged loaded",
+      bindI18nStore: "added removed",
     },
     returnNull: false,
   })

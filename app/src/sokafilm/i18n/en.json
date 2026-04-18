@@ -1,1 +1,22 @@
-{}
+{
+  "home": {
+    "title": "Welcome to SokaFilm",
+    "subtitle": "Your creative hub for film project management and storytelling",
+    "errorLoading": "Error loading projects: {{message}}",
+    "tryAgain": "Try Again",
+    "createSection": "Start Your First Project",
+    "projectName": "Project Name",
+    "projectNamePlaceholder": "Enter project name",
+    "description": "Description (Optional)",
+    "descriptionPlaceholder": "Enter project description",
+    "creating": "Creating...",
+    "create": "Create Project",
+    "empty": "Ready to bring your story to life? Create your first project to get started!",
+    "confirmDelete": "Are you sure you want to delete this project? This action cannot be undone."
+  },
+  "projectCard": {
+    "untitled": "Untitled Project",
+    "thumbnailAlt": "{{name}} thumbnail",
+    "created": "Created {{date}}"
+  }
+}

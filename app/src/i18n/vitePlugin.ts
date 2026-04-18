@@ -109,6 +109,7 @@ export default function i18nLocalesPlugin(options?: {
 }): Plugin {
   const projectRoot = options?.projectRoot ?? process.cwd();
   let locales: LocaleFile[] = [];
+  let isServe = false;
 
   const refresh = () => {
     locales = discoverLocales(projectRoot);
@@ -117,8 +118,16 @@ export default function i18nLocalesPlugin(options?: {
   return {
     name: "toolkit:i18n-locales",
 
+    configResolved(config) {
+      isServe = config.command === "serve";
+    },
+
     buildStart() {
       refresh();
+      // In `vite` (serve/dev) mode Vite calls buildStart per-optimized-dep and
+      // `emitFile` is not supported; file discovery already happens in
+      // `configureServer` which serves JSONs live.
+      if (isServe) return;
       // Emit as unhashed build assets so files land at /locales/<ns>/<lng>.json.
       for (const loc of locales) {
         try {

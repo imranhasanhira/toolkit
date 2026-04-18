@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router';
 import { useQuery, getCarelyParentById } from "wasp/client/operations";
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { MeasurementsTab } from './Tabs/MeasurementsTab';
 import { MedicineTab } from './Tabs/MedicineTab';
 import { StatsTab } from './Tabs/StatsTab';
@@ -18,12 +19,13 @@ export default function CarelyParentPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: user } = useAuth();
-  
+  const { t } = useTranslation('carely');
+
   // Wasp's query cache mechanism ensures data is auto-updated when mutations occur.
   const { data: parent, isLoading, error } = useQuery(getCarelyParentById, { id: parentId as string }, { enabled: !!parentId });
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-jakarta text-[color:var(--color-carely-on-surface-variant)] bg-[color:var(--color-carely-surface)]">Loading patient...</div>;
-  if (error || !parent) return <div className="min-h-screen flex items-center justify-center font-jakarta text-[color:var(--color-carely-error)] bg-[color:var(--color-carely-surface)]">Patient not found or access denied.</div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-jakarta text-[color:var(--color-carely-on-surface-variant)] bg-[color:var(--color-carely-surface)]">{t('patient.loading')}</div>;
+  if (error || !parent) return <div className="min-h-screen flex items-center justify-center font-jakarta text-[color:var(--color-carely-error)] bg-[color:var(--color-carely-surface)]">{t('patient.notFound')}</div>;
 
   const isOwner = user?.id === parent.createdByUserId;
 
@@ -33,10 +35,10 @@ export default function CarelyParentPage() {
   const setTab = (tabId: string) => navigate(`?tab=${tabId}`);
 
   const TABS = [
-    { id: 'measurements', label: 'Log Book', icon: <Activity className="w-4 h-4" /> },
-    { id: 'medicine', label: 'Medications', icon: <Pill className="w-4 h-4" /> },
-    { id: 'stats', label: 'Stats', icon: <LineChart className="w-4 h-4" /> },
-    { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
+    { id: 'measurements', label: t('patient.tabs.measurements'), icon: <Activity className="w-4 h-4" /> },
+    { id: 'medicine', label: t('patient.tabs.medicine'), icon: <Pill className="w-4 h-4" /> },
+    { id: 'stats', label: t('patient.tabs.stats'), icon: <LineChart className="w-4 h-4" /> },
+    { id: 'settings', label: t('patient.tabs.settings'), icon: <Settings className="w-4 h-4" /> },
   ];
 
   return (
@@ -46,7 +48,7 @@ export default function CarelyParentPage() {
         {/* Header / Top Panel */}
         <div className="mb-8 relative z-10">
           <Link to="/carely" className="inline-flex items-center gap-2 text-sm font-jakarta text-[color:var(--color-carely-on-surface-variant)] hover:text-[color:var(--color-carely-on-surface)] transition-colors mb-6">
-            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+            <ArrowLeft className="w-4 h-4" /> {t('patient.backToDashboard')}
           </Link>
           
           <div className="bg-[color:var(--color-carely-surface-lowest)] p-4 rounded-3xl shadow-sm border border-[color:var(--color-carely-surface-high)] relative overflow-hidden">
@@ -62,7 +64,7 @@ export default function CarelyParentPage() {
                   </h1>
                   {parent.dateOfBirth && (
                     <p className="font-jakarta text-[color:var(--color-carely-on-surface-variant)] text-sm">
-                      {new Date().getFullYear() - new Date(parent.dateOfBirth).getFullYear()} years old
+                      {t('patient.yearsOld', { count: new Date().getFullYear() - new Date(parent.dateOfBirth).getFullYear() })}
                     </p>
                   )}
                 </div>

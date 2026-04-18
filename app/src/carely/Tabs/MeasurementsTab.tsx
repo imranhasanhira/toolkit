@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, getCarelyVitalLogs, getCarelyVitalCategories } from "wasp/client/operations";
 import { useAuth } from 'wasp/client/auth';
+import { useTranslation } from 'react-i18next';
 import { VitalTypeChip } from '../components/VitalTypeChip';
 import { VitalLogItem } from '../components/VitalLogItem';
 import { VitalLogForm } from '../components/VitalLogForm';
@@ -10,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 export function MeasurementsTab({ parent }: { parent: any }) {
   const { data: user } = useAuth();
+  const { t } = useTranslation('carely');
   const [quickAddType, setQuickAddType] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -50,7 +52,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl">
-            Recent measurements
+            {t('measurements.title')}
           </h2>
         </div>
 
@@ -59,7 +61,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
             <button
               onClick={() => setActiveFilters([])}
               className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-colors shadow-sm"
-              title="Clear filters"
+              title={t('measurements.clearFilters')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -73,7 +75,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
                     ? 'bg-[color:var(--color-carely-primary)]/10 text-[color:var(--color-carely-primary)] border-[color:var(--color-carely-primary)]/30'
                     : 'bg-[color:var(--color-carely-surface-lowest)] text-[color:var(--color-carely-on-surface-variant)] border-[color:var(--color-carely-surface-high)]'
                 } hover:bg-[color:var(--color-carely-surface-low)] shadow-sm`}
-                title="Filter measurements"
+                title={t('measurements.filterMeasurements')}
               >
                 <ListFilter className="w-4 h-4" />
               </button>
@@ -81,7 +83,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
             <DialogContent className="sm:max-w-xs bg-[color:var(--color-carely-surface-lowest)] border-[color:var(--color-carely-surface-high)] rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="font-lexend text-[color:var(--color-carely-on-surface)] text-lg">
-                  Filter measurements
+                  {t('measurements.filterTitle')}
                 </DialogTitle>
               </DialogHeader>
               <div className="flex flex-col gap-3 mt-4">
@@ -109,7 +111,9 @@ export function MeasurementsTab({ parent }: { parent: any }) {
                     onClick={() => setIsFilterOpen(false)}
                     className="w-full bg-[color:var(--color-carely-primary)] text-white font-jakarta font-semibold py-3 rounded-xl shadow-xs hover:opacity-90 transition-opacity"
                   >
-                    Apply ({activeFilters.length || 'All'})
+                    {activeFilters.length > 0
+                      ? t('measurements.apply', { count: activeFilters.length })
+                      : t('measurements.applyAllBtn', { value: t('measurements.applyAll') })}
                   </button>
                 </div>
               </div>
@@ -141,7 +145,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
 
       <div className="space-y-3 pb-20 lg:pb-0">
         {isLoading ? (
-          <div className="text-center py-10 font-jakarta text-[color:var(--color-carely-on-surface-variant)]">Loading logs...</div>
+          <div className="text-center py-10 font-jakarta text-[color:var(--color-carely-on-surface-variant)]">{t('measurements.loading')}</div>
         ) : displayLogs.length > 0 ? (
           displayLogs.map((log: any) => (
             <VitalLogItem
@@ -156,7 +160,7 @@ export function MeasurementsTab({ parent }: { parent: any }) {
             />
           ))
         ) : (
-          <EmptyState icon={Activity} title="No measurements" description="No vitals match your criteria." />
+          <EmptyState icon={Activity} title={t('measurements.empty.title')} description={t('measurements.empty.description')} />
         )}
       </div>
 

@@ -1,15 +1,17 @@
 import React from 'react';
 import { Home, LineChart, Pill, Settings, Activity } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 export function BottomTabBar({ parentId }: { parentId: string }) {
   const location = useLocation();
-  
+  const { t } = useTranslation('carely');
+
   const tabs = [
-    { id: 'measurements', icon: Activity, label: 'Log', path: `/carely/parent/${parentId}` },
-    { id: 'medicine', icon: Pill, label: 'Meds', path: `/carely/parent/${parentId}?tab=medicine` },
-    { id: 'stats', icon: LineChart, label: 'Stats', path: `/carely/parent/${parentId}?tab=stats` },
-    { id: 'settings', icon: Settings, label: 'Settings', path: `/carely/parent/${parentId}?tab=settings` },
+    { id: 'measurements', icon: Activity, label: t('patient.bottomTabs.log'), path: `/carely/parent/${parentId}` },
+    { id: 'medicine', icon: Pill, label: t('patient.bottomTabs.meds'), path: `/carely/parent/${parentId}?tab=medicine` },
+    { id: 'stats', icon: LineChart, label: t('patient.bottomTabs.stats'), path: `/carely/parent/${parentId}?tab=stats` },
+    { id: 'settings', icon: Settings, label: t('patient.bottomTabs.settings'), path: `/carely/parent/${parentId}?tab=settings` },
   ];
 
   const query = new URLSearchParams(location.search);

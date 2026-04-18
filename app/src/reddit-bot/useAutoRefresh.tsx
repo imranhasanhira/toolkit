@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../client/components/ui/button';
 
 const STORAGE_KEY = 'reddit-auto-refresh';
@@ -35,17 +36,18 @@ export function AutoRefreshToggle({
   enabled: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation('reddit-bot');
   return (
     <Button
       type="button"
       variant={enabled ? 'default' : 'outline'}
       size="sm"
       onClick={onToggle}
-      title={enabled ? 'Auto-refresh ON — click to disable' : 'Auto-refresh OFF — click to enable'}
+      title={enabled ? t('autoRefresh.onTitle') : t('autoRefresh.offTitle')}
       className="gap-1.5"
     >
       <RefreshCw className={`h-3.5 w-3.5 ${enabled ? 'animate-spin' : ''}`} />
-      <span className="text-xs">{enabled ? 'Auto' : 'Auto'}</span>
+      <span className="text-xs">{t('autoRefresh.label')}</span>
     </Button>
   );
 }

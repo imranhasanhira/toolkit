@@ -1,16 +1,18 @@
 
 import { Link, useLocation } from "react-router";
 import { type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "wasp/client/auth";
 
 export default function OJLayout({ children }: { children: ReactNode }) {
     const location = useLocation();
     const { data: user } = useAuth();
+    const { t } = useTranslation("online-judge");
     const currentPath = location.pathname;
 
     const tabs = [
-        { name: "Problems", path: "/online-judge" },
-        ...(user?.isAdmin ? [{ name: "Runtimes", path: "/online-judge/runtimes" }] : []),
+        { name: t("layout.problems"), path: "/online-judge" },
+        ...(user?.isAdmin ? [{ name: t("layout.runtimes"), path: "/online-judge/runtimes" }] : []),
     ];
 
     return (

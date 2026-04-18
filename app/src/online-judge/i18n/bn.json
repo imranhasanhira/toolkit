@@ -1,1 +1,21 @@
-{}
+{
+  "layout": {
+    "problems": "সমস্যা",
+    "runtimes": "রানটাইম"
+  },
+  "list": {
+    "loading": "লোড হচ্ছে...",
+    "error": "ত্রুটি: {{message}}",
+    "createProblem": "সমস্যা তৈরি করুন",
+    "solveChallenge": "চ্যালেঞ্জ সমাধান করুন →",
+    "deleteProblem": "সমস্যা মুছুন",
+    "confirmDelete": "আপনি কি নিশ্চিত এই সমস্যাটি মুছে ফেলতে চান?",
+    "deleteFailed": "সমস্যা মুছতে ব্যর্থ: {{reason}}",
+    "empty": "কোনো সমস্যা পাওয়া যায়নি। পরে আবার দেখুন!",
+    "difficulty": {
+      "easy": "সহজ",
+      "medium": "মধ্যম",
+      "hard": "কঠিন"
+    }
+  }
+}

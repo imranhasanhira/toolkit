@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 
 export function CollaboratorRow({ collab, isOwner, onRemove, onUpdate }: { collab: any, isOwner: boolean, onRemove: () => void, onUpdate: (data: any) => void }) {
+  const { t } = useTranslation('carely');
   const handleToggle = (key: string, value: boolean) => {
     if (!isOwner) return;
     onUpdate({ ...collab, [key]: value });
@@ -17,19 +19,19 @@ export function CollaboratorRow({ collab, isOwner, onRemove, onUpdate }: { colla
       <div className="flex flex-wrap items-center gap-4">
          <label className="flex items-center gap-2 text-xs font-jakarta text-[color:var(--color-carely-on-surface)]">
             <input type="checkbox" checked={collab.canViewVitals} onChange={e => handleToggle('canViewVitals', e.target.checked)} disabled={!isOwner} className="rounded text-[color:var(--color-carely-primary)] focus:ring-[color:var(--color-carely-primary)]" />
-            View vitals
+            {t('collaborator.viewVitals')}
          </label>
          <label className="flex items-center gap-2 text-xs font-jakarta text-[color:var(--color-carely-on-surface)]">
             <input type="checkbox" checked={collab.canAddVitals} onChange={e => handleToggle('canAddVitals', e.target.checked)} disabled={!isOwner} className="rounded text-[color:var(--color-carely-primary)] focus:ring-[color:var(--color-carely-primary)]" />
-            Add vitals
+            {t('collaborator.addVitals')}
          </label>
          <label className="flex items-center gap-2 text-xs font-jakarta text-[color:var(--color-carely-on-surface)]">
             <input type="checkbox" checked={collab.canViewPrescription} onChange={e => handleToggle('canViewPrescription', e.target.checked)} disabled={!isOwner} className="rounded text-[color:var(--color-carely-primary)] focus:ring-[color:var(--color-carely-primary)]" />
-            View prescriptions
+            {t('collaborator.viewPrescription')}
          </label>
          <label className="flex items-center gap-2 text-xs font-jakarta text-[color:var(--color-carely-on-surface)]">
             <input type="checkbox" checked={collab.canEditPrescription} onChange={e => handleToggle('canEditPrescription', e.target.checked)} disabled={!isOwner} className="rounded text-[color:var(--color-carely-primary)] focus:ring-[color:var(--color-carely-primary)]" />
-            Edit prescriptions
+            {t('collaborator.editPrescription')}
          </label>
          
          {isOwner && (

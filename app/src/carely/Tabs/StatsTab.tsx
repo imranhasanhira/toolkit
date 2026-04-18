@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, getCarelyAppSettings, getCarelyVitalLogs, getCarelyVitalCategories } from "wasp/client/operations";
+import { useTranslation } from 'react-i18next';
 import { MetricChip } from '../components/MetricChip';
 import { StatChart } from '../components/StatChart';
 import { StatSummaryTile } from '../components/StatSummaryTile';
@@ -7,6 +8,7 @@ import { StatSummaryTile } from '../components/StatSummaryTile';
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 export function StatsTab({ parent }: { parent: any }) {
+  const { t } = useTranslation('carely');
   const [metric, setMetric] = useState('BLOOD_PRESSURE');
   const [period, setPeriod] = useState('month');
   const [endOffsetDays, setEndOffsetDays] = useState(0);
@@ -188,7 +190,7 @@ export function StatsTab({ parent }: { parent: any }) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 lg:pb-0">
       <div>
-        <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-4">Health Trends</h2>
+        <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-4">{t('stats.title')}</h2>
         
         <div className="flex gap-2 bg-[color:var(--color-carely-surface-lowest)] p-1.5 rounded-xl border border-[color:var(--color-carely-surface-high)] overflow-x-auto no-scrollbar">
           {activeCategories.map((c: any) => (
@@ -201,14 +203,14 @@ export function StatsTab({ parent }: { parent: any }) {
         <div className="flex flex-col mb-4 gap-3">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] shrink-0">
-              {(categoryByKey[metric]?.displayName ?? metric.replace('_', ' '))} Chart
+              {(categoryByKey[metric]?.displayName ?? metric.replace('_', ' '))} {t('stats.chart.suffix')}
             </h3>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setMedianPerDay((v) => !v)}
                 aria-pressed={medianPerDay}
-                title={medianPerDay ? "Showing median per day" : "Showing all entries"}
+                title={medianPerDay ? t('stats.chart.medianEnabled') : t('stats.chart.medianDisabled')}
                 className={[
                   "p-1.5 border rounded-lg transition-colors shadow-xs",
                   medianPerDay
@@ -217,7 +219,7 @@ export function StatsTab({ parent }: { parent: any }) {
                 ].join(" ")}
               >
                 <span className="sr-only">
-                  {medianPerDay ? "Median per day enabled" : "Median per day disabled"}
+                  {medianPerDay ? t('stats.chart.medianSrOn') : t('stats.chart.medianSrOff')}
                 </span>
                 <svg
                   width="16"
@@ -236,7 +238,7 @@ export function StatsTab({ parent }: { parent: any }) {
               <button
                 onClick={() => refetch()}
                 className="p-1.5 bg-[color:var(--color-carely-surface-lowest)] border border-[color:var(--color-carely-surface-high)] rounded-lg text-[color:var(--color-carely-on-surface-variant)] hover:bg-[color:var(--color-carely-surface-low)] hover:text-[color:var(--color-carely-primary)] transition-colors shadow-xs"
-                title="Refresh data"
+                title={t('stats.chart.refresh')}
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -246,8 +248,8 @@ export function StatsTab({ parent }: { parent: any }) {
              <div className="overflow-x-auto no-scrollbar pb-1">
                <div className="flex items-center gap-2 min-w-max">
                  <div className="flex gap-1 bg-[color:var(--color-carely-surface-high)] p-1 rounded-lg shrink-0">
-                   <button onClick={() => handlePeriodChange('week')} className={`px-3 py-1 rounded text-xs font-jakarta font-medium transition-colors ${period==='week'?'bg-[color:var(--color-carely-surface-lowest)] shadow-xs text-[color:var(--color-carely-primary)]':'text-[color:var(--color-carely-on-surface-variant)]'}`}>1W</button>
-                   <button onClick={() => handlePeriodChange('month')} className={`px-3 py-1 rounded text-xs font-jakarta font-medium transition-colors ${period==='month'?'bg-[color:var(--color-carely-surface-lowest)] shadow-xs text-[color:var(--color-carely-primary)]':'text-[color:var(--color-carely-on-surface-variant)]'}`}>1M</button>
+                   <button onClick={() => handlePeriodChange('week')} className={`px-3 py-1 rounded text-xs font-jakarta font-medium transition-colors ${period==='week'?'bg-[color:var(--color-carely-surface-lowest)] shadow-xs text-[color:var(--color-carely-primary)]':'text-[color:var(--color-carely-on-surface-variant)]'}`}>{t('stats.chart.weekShort')}</button>
+                   <button onClick={() => handlePeriodChange('month')} className={`px-3 py-1 rounded text-xs font-jakarta font-medium transition-colors ${period==='month'?'bg-[color:var(--color-carely-surface-lowest)] shadow-xs text-[color:var(--color-carely-primary)]':'text-[color:var(--color-carely-on-surface-variant)]'}`}>{t('stats.chart.monthShort')}</button>
                  </div>
                  
                  <div className="flex bg-[color:var(--color-carely-surface-lowest)] border border-[color:var(--color-carely-surface-high)] rounded-lg overflow-hidden shadow-xs shrink-0">
@@ -261,7 +263,7 @@ export function StatsTab({ parent }: { parent: any }) {
         </div>
         
         {isLoading ? (
-          <div className="h-48 flex items-center justify-center font-jakarta text-[color:var(--color-carely-on-surface-variant)]">Loading data...</div>
+          <div className="h-48 flex items-center justify-center font-jakarta text-[color:var(--color-carely-on-surface-variant)]">{t('stats.chart.loading')}</div>
         ) : (
           <StatChart
             data={chartData}
@@ -273,9 +275,9 @@ export function StatsTab({ parent }: { parent: any }) {
       </div>
 
       <div className="flex gap-2 sm:gap-3">
-        <StatSummaryTile title="Avg" value={String(stats.avg)} unit={unit} />
-        <StatSummaryTile title="High" value={String(stats.max)} unit={unit} />
-        <StatSummaryTile title="Low" value={String(stats.min)} unit={unit} />
+        <StatSummaryTile title={t('stats.summary.avg')} value={String(stats.avg)} unit={unit} />
+        <StatSummaryTile title={t('stats.summary.high')} value={String(stats.max)} unit={unit} />
+        <StatSummaryTile title={t('stats.summary.low')} value={String(stats.min)} unit={unit} />
       </div>
     </div>
   );

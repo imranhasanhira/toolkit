@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../client/components/ui/dialog';
 
 export function ConfirmDialog({
@@ -6,8 +7,8 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   onConfirm,
   isConfirming,
   confirmTone = 'primary',
@@ -22,6 +23,10 @@ export function ConfirmDialog({
   isConfirming?: boolean;
   confirmTone?: 'primary' | 'danger';
 }) {
+  const { t: tCommon } = useTranslation('common');
+  const { t: tCarely } = useTranslation('carely');
+  const resolvedConfirm = confirmText ?? tCommon('actions.confirm');
+  const resolvedCancel = cancelText ?? tCommon('actions.cancel');
   const confirmClass =
     confirmTone === 'danger'
       ? 'bg-[color:var(--color-carely-error)] text-white hover:opacity-90'
@@ -48,7 +53,7 @@ export function ConfirmDialog({
             disabled={!!isConfirming}
             className="flex-1 py-2.5 rounded-xl text-[color:var(--color-carely-on-surface)] bg-[color:var(--color-carely-surface-low)] hover:bg-[color:var(--color-carely-surface-high)] transition-colors font-jakarta font-medium text-sm disabled:opacity-50"
           >
-            {cancelText}
+            {resolvedCancel}
           </button>
           <button
             type="button"
@@ -56,7 +61,7 @@ export function ConfirmDialog({
             disabled={!!isConfirming}
             className={`flex-1 py-2.5 rounded-xl transition-opacity font-jakarta font-semibold text-sm disabled:opacity-50 ${confirmClass}`}
           >
-            {isConfirming ? 'Working…' : confirmText}
+            {isConfirming ? tCarely('confirm.working') : resolvedConfirm}
           </button>
         </DialogFooter>
       </DialogContent>

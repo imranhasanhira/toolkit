@@ -1,1 +1,17 @@
-{}
+{
+  "sidebar": {
+    "menuHeader": "MENU",
+    "extraHeader": "Extra Components",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "appPermissions": "App permissions",
+    "redditBotSettings": "Reddit Bot Settings",
+    "settings": "Settings",
+    "calendar": "Calendar",
+    "uiElements": "UI Elements",
+    "buttons": "Buttons"
+  },
+  "breadcrumb": {
+    "dashboard": "Dashboard"
+  }
+}

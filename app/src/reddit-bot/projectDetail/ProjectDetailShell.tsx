@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../client/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../../client/components/ui/tabs';
 import { ChevronRight, Calendar, List, Clock, LayoutGrid, Pencil } from 'lucide-react';
@@ -26,6 +27,7 @@ export function ProjectDetailShell({
   onTabChange,
   children,
 }: Props) {
+  const { t } = useTranslation('reddit-bot');
   return (
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -34,7 +36,7 @@ export function ProjectDetailShell({
           aria-label="Breadcrumb"
         >
           <Link to={routes.RedditBotRoute.to} className="hover:text-foreground transition-colors">
-            Reddit Bot
+            {t('shell.breadcrumbHome')}
           </Link>
           <ChevronRight className="h-4 w-4 shrink-0" />
           <h1 className="truncate text-foreground font-semibold text-base">{project.name}</h1>
@@ -42,7 +44,7 @@ export function ProjectDetailShell({
             <>
               <span className="mx-1.5">·</span>
               <span className="text-muted-foreground text-sm">
-                Credits used (this project):{' '}
+                {t('shell.creditsUsedThisProject')}{' '}
                 <span className="font-medium text-foreground">
                   {Number(projectCredit.creditsUsed).toFixed(2)}
                 </span>
@@ -54,7 +56,7 @@ export function ProjectDetailShell({
           <AutoRefreshToggle enabled={autoRefresh} onToggle={toggleAutoRefresh} />
           <Button variant="outline" size="sm" onClick={onEditClick}>
             <Pencil className="mr-2 h-4 w-4" />
-            Edit project
+            {t('shell.editProject')}
           </Button>
         </div>
       </div>
@@ -64,19 +66,19 @@ export function ProjectDetailShell({
           <TabsList className="inline-flex w-max flex-nowrap justify-start gap-0 h-10 rounded-md bg-muted p-1 text-muted-foreground">
             <TabsTrigger value="home" className="cursor-pointer shrink-0">
               <LayoutGrid className="mr-2 h-4 w-4" />
-              Home
+              {t('tabs.home')}
             </TabsTrigger>
             <TabsTrigger value="posts" className="cursor-pointer shrink-0">
               <List className="mr-2 h-4 w-4" />
-              Posts
+              {t('tabs.posts')}
             </TabsTrigger>
             <TabsTrigger value="schedules" className="cursor-pointer shrink-0">
               <Calendar className="mr-2 h-4 w-4" />
-              Schedules
+              {t('tabs.schedules')}
             </TabsTrigger>
             <TabsTrigger value="jobs" className="cursor-pointer shrink-0">
               <Clock className="mr-2 h-4 w-4" />
-              Jobs
+              {t('tabs.jobs')}
             </TabsTrigger>
           </TabsList>
         </div>

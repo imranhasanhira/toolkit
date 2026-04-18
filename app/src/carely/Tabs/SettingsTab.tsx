@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { updateCarelyParent, deleteCarelyParent, addCarelyCollaborator, updateCarelyCollaboratorPermissions, removeCarelyCollaborator, seedCarelyMockData, clearCarelyMockData } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
 import { Shield, Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { CollaboratorRow } from '../components/CollaboratorRow';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 
 export function SettingsTab({ parent }: { parent: any }) {
   const { data: user } = useAuth();
+  const { t } = useTranslation('carely');
   const isOwner = user?.id === parent.createdByUserId;
   const [email, setEmail] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,9 +31,9 @@ export function SettingsTab({ parent }: { parent: any }) {
         name,
         dateOfBirth: dob ? new Date(dob) : undefined,
       });
-      toast.success('Profile updated');
+      toast.success(t('settings.toasts.profileUpdated'));
     } catch(err: any) {
-      toast.error('Update failed: ' + err.message);
+      toast.error(t('settings.toasts.updateFailed', { reason: err.message }));
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -43,7 +45,7 @@ export function SettingsTab({ parent }: { parent: any }) {
     try {
       await addCarelyCollaborator({ parentId: parent.id, email });
       setEmail('');
-      toast.success('Co-manager added');
+      toast.success(t('settings.toasts.coManagerAdded'));
     } catch(err: any) {
       toast.error(err.message);
     }
@@ -52,7 +54,7 @@ export function SettingsTab({ parent }: { parent: any }) {
   const handleRemoveCollab = async (id: string) => {
     try {
       await removeCarelyCollaborator({ id });
-      toast.success('Co-manager removed');
+      toast.success(t('settings.toasts.coManagerRemoved'));
     } catch(e: any) { toast.error(e.message); }
   };
 
@@ -65,7 +67,7 @@ export function SettingsTab({ parent }: { parent: any }) {
         canViewPrescription: collab.canViewPrescription,
         canEditPrescription: collab.canEditPrescription
       });
-      toast.success('Permissions updated');
+      toast.success(t('settings.toasts.permissionsUpdated'));
     } catch(e: any) { toast.error(e.message); }
   };
 
@@ -78,7 +80,7 @@ export function SettingsTab({ parent }: { parent: any }) {
     setIsSeeding(true);
     try {
       await seedCarelyMockData({ parentId: parent.id });
-      toast.success('Mock data injected successfully');
+      toast.success(t('settings.toasts.mockSeeded'));
     } catch(e: any) { toast.error(e.message); }
     finally { setIsSeeding(false); }
   };
@@ -92,7 +94,7 @@ export function SettingsTab({ parent }: { parent: any }) {
     setIsSeeding(true);
     try {
       await clearCarelyMockData({ parentId: parent.id });
-      toast.success('Mock data cleared');
+      toast.success(t('settings.toasts.mockCleared'));
     } catch(e: any) { toast.error(e.message); }
     finally { setIsSeeding(false); }
   };
@@ -108,7 +110,7 @@ export function SettingsTab({ parent }: { parent: any }) {
       await deleteCarelyParent({ id: parent.id });
       window.location.href = '/carely';
     } catch(e: any) {
-      toast.error('Failed to delete: ' + e.message);
+      toast.error(t('settings.toasts.deleteFailed', { reason: e.message }));
       setIsDeleting(false);
     }
   };
@@ -116,9 +118,9 @@ export function SettingsTab({ parent }: { parent: any }) {
   const confirmConfig = (() => {
     if (confirmKind === 'seed') {
       return {
-        title: 'Seed mock data?',
-        description: 'This will inject 60 days of mock vitals and a mock prescription. You can clear mock data later.',
-        confirmText: 'Seed mock data',
+        title: t('settings.confirm.seed.title'),
+        description: t('settings.confirm.seed.description'),
+        confirmText: t('settings.confirm.seed.confirm'),
         confirmTone: 'primary' as const,
         onConfirm: confirmSeedMockData,
         isConfirming: isSeeding,
@@ -126,9 +128,9 @@ export function SettingsTab({ parent }: { parent: any }) {
     }
     if (confirmKind === 'clear') {
       return {
-        title: 'Clear mock data?',
-        description: 'This will delete all mock records marked MOCK_DATA for this patient.',
-        confirmText: 'Clear mock data',
+        title: t('settings.confirm.clear.title'),
+        description: t('settings.confirm.clear.description'),
+        confirmText: t('settings.confirm.clear.confirm'),
         confirmTone: 'danger' as const,
         onConfirm: confirmClearMockData,
         isConfirming: isSeeding,
@@ -136,9 +138,9 @@ export function SettingsTab({ parent }: { parent: any }) {
     }
     if (confirmKind === 'delete') {
       return {
-        title: 'Delete patient record?',
-        description: 'This will permanently remove all associated vitals, prescriptions, and intake logs. This cannot be undone.',
-        confirmText: 'Delete',
+        title: t('settings.confirm.delete.title'),
+        description: t('settings.confirm.delete.description'),
+        confirmText: t('settings.confirm.delete.confirm'),
         confirmTone: 'danger' as const,
         onConfirm: confirmDelete,
         isConfirming: isDeleting,
@@ -172,24 +174,24 @@ export function SettingsTab({ parent }: { parent: any }) {
       {isOwner && (
         <div>
           <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-4 text-left">
-            Patient Profile
+            {t('settings.profile.title')}
           </h2>
           <form onSubmit={handleUpdateProfile} className="bg-[color:var(--color-carely-surface-lowest)] p-5 rounded-2xl border border-[color:var(--color-carely-surface-high)] shadow-xs space-y-4">
             <div>
-              <label className="text-xs font-jakarta font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase block mb-1.5 ml-1">Full Name</label>
+              <label className="text-xs font-jakarta font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase block mb-1.5 ml-1">{t('settings.profile.fullName')}</label>
               <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
             </div>
             <div>
-              <label className="text-xs font-jakarta font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase block mb-1.5 ml-1">Date of Birth</label>
+              <label className="text-xs font-jakarta font-semibold text-[color:var(--color-carely-on-surface-variant)] uppercase block mb-1.5 ml-1">{t('settings.profile.dob')}</label>
               <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)]" />
             </div>
             <div>
               <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)]">
-                Temperature unit is now configured in Carely app settings (global).
+                {t('settings.profile.tempNotice')}
               </p>
             </div>
             <button disabled={isUpdatingProfile} type="submit" className="w-full bg-[color:var(--color-carely-primary)] text-white font-jakarta font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity mt-2 disabled:opacity-50">
-              {isUpdatingProfile ? 'Saving...' : 'Save Profile'}
+              {isUpdatingProfile ? t('settings.profile.saving') : t('settings.profile.save')}
             </button>
           </form>
         </div>
@@ -198,22 +200,22 @@ export function SettingsTab({ parent }: { parent: any }) {
       <div>
         <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl flex items-center gap-2 mb-1">
           <Shield className="w-5 h-5 text-[color:var(--color-carely-primary)]" />
-          Co-Management
+          {t('settings.coManagement.title')}
         </h2>
-        <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mb-6">Manage who has access to view and edit this patient's records.</p>
+        <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mb-6">{t('settings.coManagement.description')}</p>
         
         {isOwner && (
           <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 mb-6 bg-[color:var(--color-carely-surface-lowest)] p-4 rounded-2xl border border-[color:var(--color-carely-surface-high)] shadow-xs">
             <input 
               type="email" 
-              placeholder="Enter user's email address" 
+              placeholder={t('settings.coManagement.emailPlaceholder')} 
               value={email} 
               onChange={e => setEmail(e.target.value)} 
               className="flex-1 bg-[color:var(--color-carely-surface-low)] border-none rounded-xl p-3 font-jakarta text-[color:var(--color-carely-on-surface)] text-sm focus:ring-2 focus:ring-[color:var(--color-carely-primary)]"
               required 
             />
             <button type="submit" className="bg-[color:var(--color-carely-primary)] text-[color:var(--color-carely-on-primary)] px-6 py-3 rounded-xl font-jakarta font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity whitespace-nowrap">
-              <Plus className="w-4 h-4" /> Invite
+              <Plus className="w-4 h-4" /> {t('settings.coManagement.invite')}
             </button>
           </form>
         )}
@@ -224,21 +226,21 @@ export function SettingsTab({ parent }: { parent: any }) {
               <CollaboratorRow key={c.id} collab={c} isOwner={isOwner} onRemove={() => handleRemoveCollab(c.id)} onUpdate={handleUpdateCollab} />
             ))
           ) : (
-            <div className="text-center py-8 font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] italic bg-[color:var(--color-carely-surface-lowest)] rounded-2xl border border-dashed border-[color:var(--color-carely-surface-high)]">No co-managers added yet.</div>
+            <div className="text-center py-8 font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] italic bg-[color:var(--color-carely-surface-lowest)] rounded-2xl border border-dashed border-[color:var(--color-carely-surface-high)]">{t('settings.coManagement.empty')}</div>
           )}
         </div>
       </div>
 
       {isOwner && (
         <div className="pt-8 border-t border-[color:var(--color-carely-surface-high)]">
-          <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-2">Developer Tools</h2>
-          <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mb-4">Inject safe mock data to test charts and logs. All mock entries are specially marked and can be instantly cleared.</p>
+          <h2 className="font-lexend font-bold text-[color:var(--color-carely-on-surface)] text-xl mb-2">{t('settings.developer.title')}</h2>
+          <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mb-4">{t('settings.developer.description')}</p>
           <div className="flex gap-3">
              <button onClick={handleSeedMockData} disabled={isSeeding} className="bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-primary)]/30 text-[color:var(--color-carely-primary)] px-4 py-2 rounded-xl font-jakarta font-medium text-sm hover:bg-[color:var(--color-carely-primary)]/10 transition-colors disabled:opacity-50">
-               {isSeeding ? 'Processing...' : 'Seed Mock Data (60 Days)'}
+               {isSeeding ? t('settings.developer.processing') : t('settings.developer.seedMock')}
              </button>
              <button onClick={handleClearMockData} disabled={isSeeding} className="bg-[color:var(--color-carely-surface-low)] border border-[color:var(--color-carely-surface-high)] text-[color:var(--color-carely-on-surface-variant)] px-4 py-2 rounded-xl font-jakarta font-medium text-sm hover:bg-[color:var(--color-carely-surface-high)] transition-colors disabled:opacity-50">
-               Clear Mock Data
+               {t('settings.developer.clearMock')}
              </button>
           </div>
         </div>
@@ -246,10 +248,10 @@ export function SettingsTab({ parent }: { parent: any }) {
 
       {isOwner && (
         <div className="pt-8 border-t border-[color:var(--color-carely-surface-high)]">
-          <h2 className="font-lexend font-bold text-[color:var(--color-carely-error)] text-xl mb-2">Danger Zone</h2>
-          <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mb-4">Deleting this patient will permanently remove all associated vitals, prescriptions, and intake logs.</p>
+          <h2 className="font-lexend font-bold text-[color:var(--color-carely-error)] text-xl mb-2">{t('settings.danger.title')}</h2>
+          <p className="font-jakarta text-sm text-[color:var(--color-carely-on-surface-variant)] mb-4">{t('settings.danger.description')}</p>
           <button onClick={handleDelete} disabled={isDeleting} className="bg-[color:var(--color-carely-error)] text-white px-6 py-2 rounded-xl font-jakarta font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <Trash2 className="w-4 h-4" /> {isDeleting ? 'Deleting...' : 'Delete Patient Record'}
+            <Trash2 className="w-4 h-4" /> {isDeleting ? t('settings.danger.deleting') : t('settings.danger.deleteButton')}
           </button>
         </div>
       )}

@@ -1,1 +1,331 @@
-{}
+{
+  "home": {
+    "loadingOverview": "ওভারভিউ লোড হচ্ছে...",
+    "title": "কেয়ারলি",
+    "greeting": "হ্যালো, {{name}}। এই হলো স্বাস্থ্যের সার্বিক অবস্থা।",
+    "defaultCaregiver": "কেয়ারগিভার",
+    "openSettings": "কেয়ারলি সেটিংস",
+    "empty": {
+      "title": "এখনো কোনো রোগী নেই",
+      "description": "ভাইটালস, ওষুধ ও স্বাস্থ্য ইতিহাস এক জায়গায় রাখতে একজন রোগী যোগ করুন।"
+    },
+    "settings": {
+      "title": "কেয়ারলি সেটিংস",
+      "temperature": {
+        "title": "তাপমাত্রার একক",
+        "description": "কেয়ারলিতে সকল তাপমাত্রা এন্ট্রির জন্য ব্যবহৃত",
+        "fahrenheit": "ফারেনহাইট (°F)",
+        "celsius": "সেলসিয়াস (°C)",
+        "dbMigrationPrompt": "সেটিংস সম্পাদনাযোগ্য করতে DB মাইগ্রেশন চালান।"
+      },
+      "categories": {
+        "title": "ভাইটাল ক্যাটাগরি",
+        "labels": {
+          "key": "কী",
+          "name": "নাম",
+          "kind": "ধরন",
+          "unit": "একক",
+          "active": "সক্রিয়"
+        },
+        "placeholders": {
+          "key": "যেমন HEAD_CIRCUMFERENCE",
+          "name": "যেমন মাথার পরিধি",
+          "unit": "যেমন সেমি, কেজি, বিপিএম"
+        },
+        "kind": {
+          "numeric": "সাংখ্যিক",
+          "bloodPressure": "রক্তচাপ"
+        },
+        "actions": {
+          "addCategory": "ক্যাটাগরি যোগ করুন",
+          "saveChanges": "পরিবর্তন সংরক্ষণ",
+          "cancelEdit": "সম্পাদনা বাতিল",
+          "editTooltip": "ক্যাটাগরি সম্পাদনা",
+          "moveUp": "উপরে নিন",
+          "moveDown": "নিচে নিন",
+          "deleteTooltip": "ক্যাটাগরি মুছুন"
+        },
+        "footer": {
+          "migrationNeeded": "যোগ/সম্পাদনা/মুছে ফেলা/পুনঃক্রম সক্রিয় করতে DB মাইগ্রেশন চালান। এখন ডিফল্ট দেখাচ্ছে।",
+          "livePersistence": "পরিবর্তনগুলো সার্বজনীনভাবে সেভ হয় এবং তাৎক্ষণিকভাবে চিপস, স্ট্যাটস ও লগ ফর্মে প্রভাব ফেলে।"
+        },
+        "toasts": {
+          "orderUpdated": "ক্রম হালনাগাদ হয়েছে",
+          "reorderFailed": "পুনঃক্রম ব্যর্থ: {{reason}}",
+          "unknownError": "অজানা ত্রুটি"
+        }
+      }
+    }
+  },
+  "patient": {
+    "loading": "রোগী লোড হচ্ছে...",
+    "notFound": "রোগী পাওয়া যায়নি বা অ্যাক্সেস অস্বীকৃত।",
+    "backToDashboard": "ড্যাশবোর্ডে ফিরুন",
+    "yearsOld_one": "{{count}} বছর বয়স",
+    "yearsOld_other": "{{count}} বছর বয়স",
+    "tabs": {
+      "measurements": "লগ বুক",
+      "medicine": "ওষুধ",
+      "stats": "স্ট্যাটস",
+      "settings": "সেটিংস"
+    },
+    "bottomTabs": {
+      "log": "লগ",
+      "meds": "ওষুধ",
+      "stats": "স্ট্যাটস",
+      "settings": "সেটিংস"
+    }
+  },
+  "parentCard": {
+    "latestVitals": "সর্বশেষ ভাইটালস",
+    "viewActivity": "অ্যাক্টিভিটি দেখুন",
+    "meds": "ওষুধ",
+    "openSchedule": "সূচি খুলুন"
+  },
+  "addParent": {
+    "triggerButton": "রোগী যোগ করুন",
+    "title": "নতুন রোগী যোগ করুন",
+    "fullName": "পূর্ণ নাম",
+    "fullNamePlaceholder": "যেমন রহিম উদ্দিন",
+    "dob": "জন্ম তারিখ (ঐচ্ছিক)",
+    "saving": "যোগ হচ্ছে...",
+    "save": "রোগী সংরক্ষণ",
+    "toasts": {
+      "added": "রোগী সফলভাবে যোগ হয়েছে",
+      "addFailed": "যোগ করতে ব্যর্থ: {{reason}}"
+    }
+  },
+  "measurements": {
+    "title": "সাম্প্রতিক পরিমাপ",
+    "clearFilters": "ফিল্টার মুছুন",
+    "filterMeasurements": "পরিমাপ ফিল্টার",
+    "filterTitle": "পরিমাপ ফিল্টার",
+    "applyAll": "সব",
+    "apply": "প্রয়োগ ({{count}})",
+    "applyAllBtn": "প্রয়োগ ({{value}})",
+    "loading": "লগ লোড হচ্ছে...",
+    "logVital": "ভাইটাল লগ",
+    "empty": {
+      "title": "কোনো পরিমাপ নেই",
+      "description": "আপনার মানদণ্ডে কোনো ভাইটাল মেলেনি।"
+    }
+  },
+  "vitalLog": {
+    "editTitle": "পরিমাপ সম্পাদনা",
+    "logTitle": "পরিমাপ লগ",
+    "labels": {
+      "dateTime": "তারিখ ও সময়",
+      "type": "ধরন",
+      "measurement": "পরিমাপ",
+      "notes": "নোট"
+    },
+    "placeholders": {
+      "systolic": "সিস্টোলিক ({{unit}})",
+      "diastolic": "ডায়াস্টোলিক ({{unit}})",
+      "valueWithUnit": "মান ({{unit}})",
+      "valueNoUnit": "মান",
+      "notes": "নোট (ঐচ্ছিক)"
+    },
+    "saving": "সংরক্ষণ হচ্ছে...",
+    "save": "সংরক্ষণ",
+    "toasts": {
+      "updated": "পরিমাপ হালনাগাদ হয়েছে",
+      "logged": "পরিমাপ লগ হয়েছে",
+      "saveFailed": "ভাইটালস সংরক্ষণ ব্যর্থ: {{reason}}"
+    }
+  },
+  "vitalLogItem": {
+    "today": "আজ",
+    "byUser": "{{username}} দ্বারা",
+    "deleteDialog": {
+      "title": "লগ মুছবেন?",
+      "description": "আপনি কি নিশ্চিত এই {{type}} পরিমাপ স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।",
+      "cancel": "বাতিল",
+      "delete": "মুছুন"
+    },
+    "toasts": {
+      "deleted": "পরিমাপ মুছে ফেলা হয়েছে",
+      "deleteFailed": "মুছতে ব্যর্থ: {{reason}}"
+    }
+  },
+  "stats": {
+    "title": "স্বাস্থ্য প্রবণতা",
+    "chart": {
+      "suffix": "চার্ট",
+      "medianEnabled": "প্রতিদিনের মিডিয়ান দেখানো হচ্ছে",
+      "medianDisabled": "সব এন্ট্রি দেখানো হচ্ছে",
+      "medianSrOn": "প্রতিদিনের মিডিয়ান সক্রিয়",
+      "medianSrOff": "প্রতিদিনের মিডিয়ান নিষ্ক্রিয়",
+      "refresh": "ডেটা রিফ্রেশ",
+      "weekShort": "১সপ্তাহ",
+      "monthShort": "১মাস",
+      "loading": "ডেটা লোড হচ্ছে..."
+    },
+    "summary": {
+      "avg": "গড়",
+      "high": "উচ্চ",
+      "low": "নিম্ন"
+    }
+  },
+  "medicine": {
+    "titles": {
+      "today": "আজকের ওষুধ",
+      "yesterday": "গতকালের ওষুধ",
+      "tomorrow": "আগামীকালের ওষুধ",
+      "other": "{{date}} এর ওষুধ"
+    },
+    "dosesScheduled_one": "{{count}} ডোজ নির্ধারিত",
+    "dosesScheduled_other": "{{count}} ডোজ নির্ধারিত",
+    "dailyProgress": "দৈনিক অগ্রগতি",
+    "completedOf": "{{total}} এর মধ্যে {{completed}}",
+    "empty": {
+      "title": "কোনো সক্রিয় প্রেসক্রিপশন নেই",
+      "description": "দৈনিক গ্রহণ ট্র্যাক করতে ওষুধ যোগ করুন।"
+    }
+  },
+  "medicineCard": {
+    "inactive": "নিষ্ক্রিয়",
+    "removePrescription": "প্রেসক্রিপশন সরান",
+    "editPrescription": "প্রেসক্রিপশন সম্পাদনা",
+    "slots": {
+      "morning": "সকাল",
+      "afternoon": "দুপুর",
+      "evening": "বিকাল",
+      "night": "রাত",
+      "done": "সম্পন্ন"
+    },
+    "confirmRemove": {
+      "title": "প্রেসক্রিপশন সরাবেন?",
+      "description": "এটি প্রেসক্রিপশনটিকে নিষ্ক্রিয় হিসেবে চিহ্নিত করবে। পূর্বের গ্রহণের ইতিহাস রাখা হবে।",
+      "removing": "সরানো হচ্ছে...",
+      "confirm": "সরান"
+    },
+    "toasts": {
+      "removed": "প্রেসক্রিপশন সরানো হয়েছে",
+      "removeFailed": "সরাতে ব্যর্থ: {{reason}}",
+      "updateFailed": "হালনাগাদ ব্যর্থ: {{reason}}"
+    }
+  },
+  "prescriptionForm": {
+    "triggerButton": "প্রেসক্রিপশন যোগ",
+    "editTitle": "প্রেসক্রিপশন সম্পাদনা",
+    "newTitle": "নতুন প্রেসক্রিপশন",
+    "placeholders": {
+      "medicineName": "ওষুধের নাম",
+      "customSchedule": "যেমন খাবারের পর দিনে ৪ বার",
+      "notes": "নোট (যেমন দুপুরের খাবারের পর)"
+    },
+    "labels": {
+      "startDate": "শুরুর তারিখ",
+      "endDate": "শেষের তারিখ (ঐচ্ছিক)",
+      "morning": "সকাল",
+      "afternoon": "দুপুর",
+      "evening": "বিকাল",
+      "night": "রাত",
+      "useCustom": "কাস্টম সূচি ব্যবহার করুন"
+    },
+    "saving": "সংরক্ষণ হচ্ছে...",
+    "save": "প্রেসক্রিপশন সংরক্ষণ",
+    "toasts": {
+      "added": "ওষুধ যোগ হয়েছে",
+      "updated": "ওষুধ হালনাগাদ হয়েছে",
+      "addFailed": "যোগ করতে ব্যর্থ: {{reason}}"
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "রোগীর প্রোফাইল",
+      "fullName": "পূর্ণ নাম",
+      "dob": "জন্ম তারিখ",
+      "tempNotice": "তাপমাত্রার একক এখন কেয়ারলি অ্যাপ সেটিংসে কনফিগার করা (সার্বজনীন)।",
+      "saving": "সংরক্ষণ হচ্ছে...",
+      "save": "প্রোফাইল সংরক্ষণ"
+    },
+    "coManagement": {
+      "title": "সহ-ব্যবস্থাপনা",
+      "description": "এই রোগীর রেকর্ড দেখতে ও সম্পাদনা করতে পারবেন এমন ব্যক্তিদের পরিচালনা করুন।",
+      "emailPlaceholder": "ব্যবহারকারীর ইমেইল ঠিকানা লিখুন",
+      "invite": "আমন্ত্রণ",
+      "empty": "এখনো কোনো সহ-ব্যবস্থাপক যোগ হয়নি।"
+    },
+    "developer": {
+      "title": "ডেভেলপার টুলস",
+      "description": "চার্ট ও লগ পরীক্ষার জন্য নিরাপদ মক ডেটা যোগ করুন। সব মক এন্ট্রি বিশেষভাবে চিহ্নিত এবং তাৎক্ষণিকভাবে মুছে ফেলা যাবে।",
+      "processing": "প্রক্রিয়াকরণ হচ্ছে...",
+      "seedMock": "মক ডেটা যোগ করুন (৬০ দিন)",
+      "clearMock": "মক ডেটা মুছুন"
+    },
+    "danger": {
+      "title": "বিপজ্জনক অঞ্চল",
+      "description": "এই রোগীকে মুছে ফেললে সকল সংশ্লিষ্ট ভাইটালস, প্রেসক্রিপশন ও গ্রহণের লগ স্থায়ীভাবে মুছে যাবে।",
+      "deleting": "মুছে ফেলা হচ্ছে...",
+      "deleteButton": "রোগীর রেকর্ড মুছে ফেলুন"
+    },
+    "confirm": {
+      "seed": {
+        "title": "মক ডেটা যোগ করবেন?",
+        "description": "এটি ৬০ দিনের মক ভাইটালস ও একটি মক প্রেসক্রিপশন যোগ করবে। পরে মক ডেটা মুছে ফেলা যাবে।",
+        "confirm": "মক ডেটা যোগ করুন"
+      },
+      "clear": {
+        "title": "মক ডেটা মুছবেন?",
+        "description": "এটি এই রোগীর জন্য MOCK_DATA হিসেবে চিহ্নিত সব রেকর্ড মুছে ফেলবে।",
+        "confirm": "মক ডেটা মুছুন"
+      },
+      "delete": {
+        "title": "রোগীর রেকর্ড মুছবেন?",
+        "description": "এটি সকল সংশ্লিষ্ট ভাইটালস, প্রেসক্রিপশন ও গ্রহণের লগ স্থায়ীভাবে মুছে ফেলবে। এটি আর ফেরানো যাবে না।",
+        "confirm": "মুছুন"
+      }
+    },
+    "toasts": {
+      "profileUpdated": "প্রোফাইল হালনাগাদ হয়েছে",
+      "updateFailed": "হালনাগাদ ব্যর্থ: {{reason}}",
+      "coManagerAdded": "সহ-ব্যবস্থাপক যোগ হয়েছে",
+      "coManagerRemoved": "সহ-ব্যবস্থাপক সরানো হয়েছে",
+      "permissionsUpdated": "অনুমতি হালনাগাদ হয়েছে",
+      "mockSeeded": "মক ডেটা সফলভাবে যোগ হয়েছে",
+      "mockCleared": "মক ডেটা মুছে ফেলা হয়েছে",
+      "deleteFailed": "মুছতে ব্যর্থ: {{reason}}"
+    }
+  },
+  "collaborator": {
+    "viewVitals": "ভাইটালস দেখুন",
+    "addVitals": "ভাইটালস যোগ করুন",
+    "viewPrescription": "প্রেসক্রিপশন দেখুন",
+    "editPrescription": "প্রেসক্রিপশন সম্পাদনা"
+  },
+  "roles": {
+    "owner": "মালিক",
+    "coManager": "সহ-ব্যবস্থাপক"
+  },
+  "status": {
+    "active": "সক্রিয়",
+    "inactive": "নিষ্ক্রিয়"
+  },
+  "confirm": {
+    "working": "প্রক্রিয়াধীন…"
+  },
+  "calendar": {
+    "close": "ক্যালেন্ডার বন্ধ",
+    "open": "সম্পূর্ণ ক্যালেন্ডার খুলুন",
+    "legend": {
+      "noneScheduled": "নির্ধারিত নেই",
+      "complete": "সম্পন্ন",
+      "partial": "আংশিক",
+      "missed": "মিস",
+      "noneActive": "কিছুই সক্রিয় নেই",
+      "allClear": "সব সম্পন্ন",
+      "skipped": "স্কিপ হয়েছে"
+    },
+    "weekdayShort": {
+      "su": "র",
+      "mo": "সো",
+      "tu": "ম",
+      "we": "বু",
+      "th": "বৃ",
+      "fr": "শু",
+      "sa": "শ"
+    }
+  }
+}

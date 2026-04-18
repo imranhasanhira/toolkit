@@ -1,5 +1,6 @@
 // import { getCustomerPortalUrl, useQuery } from "wasp/client/operations";
 // import { Link as WaspRouterLink, routes } from "wasp/client/router";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import type { User } from "wasp/entities";
 import { getMyAppPermissions, useQuery } from "wasp/client/operations";
@@ -150,6 +151,7 @@ function UserCurrentSubscriptionPlan({
       parsePaymentPlanId(subscriptionPlan),
       datePaid,
       subscriptionStatus as SubscriptionStatus,
+      t,
     );
   }
 
@@ -169,15 +171,17 @@ function formatSubscriptionStatusMessage(
   subscriptionPlan: PaymentPlanId,
   datePaid: Date,
   subscriptionStatus: SubscriptionStatus,
+  t: TFunction,
 ): string {
   const paymentPlanName = prettyPaymentPlanName(subscriptionPlan);
   const statusToMessage: Record<SubscriptionStatus, string> = {
-    active: `${paymentPlanName}`,
-    past_due: `Payment for your ${paymentPlanName} plan is past due! Please update your subscription payment information.`,
-    cancel_at_period_end: `Your ${paymentPlanName} plan subscription has been canceled, but remains active until the end of the current billing period: ${prettyPrintEndOfBillingPeriod(
-      datePaid,
-    )}`,
-    deleted: `Your previous subscription has been canceled and is no longer active.`,
+    active: paymentPlanName,
+    past_due: t("account.subscription.pastDue", { plan: paymentPlanName }),
+    cancel_at_period_end: t("account.subscription.cancelAtPeriodEnd", {
+      plan: paymentPlanName,
+      endDate: prettyPrintEndOfBillingPeriod(datePaid),
+    }),
+    deleted: t("account.subscription.deleted"),
   };
 
   if (!statusToMessage[subscriptionStatus]) {
