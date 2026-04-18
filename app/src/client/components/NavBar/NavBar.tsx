@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { LogIn, Menu } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,6 +25,12 @@ import LanguageSwitcher from "../../../i18n/LanguageSwitcher";
 
 export interface NavigationItem {
   name: string;
+  /**
+   * Optional translation key (resolved against the `common` namespace). Falls
+   * back to `name` when the key is missing. Kept optional so that other call
+   * sites passing plain strings (e.g. the landing footer) still type-check.
+   */
+  i18nKey?: string;
   to: string;
 }
 
@@ -94,16 +101,21 @@ export default function NavBar({
                   {(() => {
                     const path = location.pathname;
                     const base = t("nav.toolkit");
-                    // Subapp names are brand names, kept untranslated.
-                    if (path.startsWith("/online-judge")) return `${base} / Online Judge`;
-                    if (path.startsWith("/carely")) return `${base} / Carely`;
+                    if (path.startsWith("/online-judge"))
+                      return `${base} / ${t("apps.onlineJudge")}`;
+                    if (path.startsWith("/carely"))
+                      return `${base} / ${t("apps.carely")}`;
+                    if (path.startsWith("/sokafilm"))
+                      return `${base} / ${t("apps.sokafilm")}`;
+                    if (path.startsWith("/reddit-bot"))
+                      return `${base} / ${t("apps.redditBot")}`;
                     return base;
                   })()}
                 </span>
               </WaspRouterLink>
 
               <ul className="ml-4 hidden items-center gap-6 lg:flex">
-                {renderNavigationItems(navigationItems)}
+                {renderNavigationItems(navigationItems, t)}
               </ul>
             </div>
             <NavBarMobileMenu
@@ -214,7 +226,7 @@ function NavBarMobileMenu({
           <div className="mt-6 flow-root">
             <div className="divide-border -my-6 divide-y">
               <ul className="space-y-2 py-6">
-                {renderNavigationItems(navigationItems, setMobileMenuOpen)}
+                {renderNavigationItems(navigationItems, t, setMobileMenuOpen)}
               </ul>
               <div className="py-6">
                 {shouldShowAiCredit ? (
@@ -252,6 +264,7 @@ function NavBarMobileMenu({
 
 function renderNavigationItems(
   navigationItems: NavigationItem[],
+  t: TFunction,
   setMobileMenuOpen?: Dispatch<SetStateAction<boolean>>,
 ) {
   const menuStyles = cn({
@@ -262,6 +275,9 @@ function renderNavigationItems(
   });
 
   return navigationItems.map((item) => {
+    const label = item.i18nKey
+      ? t(item.i18nKey, { defaultValue: item.name })
+      : item.name;
     return (
       <li key={item.name}>
         <ReactRouterLink
@@ -270,7 +286,7 @@ function renderNavigationItems(
           onClick={setMobileMenuOpen && (() => setMobileMenuOpen(false))}
           target={item.to.startsWith("http") ? "_blank" : undefined}
         >
-          {item.name}
+          {label}
         </ReactRouterLink>
       </li>
     );

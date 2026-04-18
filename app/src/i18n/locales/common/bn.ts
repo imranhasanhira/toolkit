@@ -44,6 +44,12 @@ const bn = {
     openMenu: "মূল মেনু খুলুন",
     toolkit: "টুলকিট",
   },
+  apps: {
+    onlineJudge: "অনলাইন জাজ",
+    sokafilm: "সোকাফিল্ম",
+    redditBot: "রেডিট বট",
+    carely: "কেয়ারলি",
+  },
   userMenu: {
     accountSettings: "অ্যাকাউন্ট সেটিংস",
     adminDashboard: "অ্যাডমিন ড্যাশবোর্ড",

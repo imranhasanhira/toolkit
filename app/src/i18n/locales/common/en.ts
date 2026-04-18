@@ -46,6 +46,12 @@ const en = {
     openMenu: "Open main menu",
     toolkit: "Toolkit",
   },
+  apps: {
+    onlineJudge: "Online Judge",
+    sokafilm: "SokaFilm",
+    redditBot: "Reddit Bot",
+    carely: "Carely",
+  },
   userMenu: {
     accountSettings: "Account Settings",
     adminDashboard: "Admin Dashboard",
