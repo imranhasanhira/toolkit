@@ -5,6 +5,9 @@ import { getMyAppPermissions, useQuery } from "wasp/client/operations";
 import { routes } from "wasp/client/router";
 import { Toaster } from "../client/components/ui/toaster";
 import { Toaster as HotToaster } from "react-hot-toast";
+// i18n must be initialised exactly once, before any component calls
+// useTranslation. Importing for side effects is intentional.
+import "../i18n";
 import "./Main.css";
 import NavBar from "./components/NavBar/NavBar";
 import {

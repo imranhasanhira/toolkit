@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Bengali webfont. Without this, Bengali characters fall back to the system
+ * font which renders poorly on Windows and older Android WebViews. */
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap");
+
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 @plugin "tailwindcss-animate";
@@ -345,6 +349,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Per-glyph fallback: browsers pick Hind Siliguri only for characters the
+     * primary font stack lacks (i.e. Bengali). English text is unaffected. */
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Hind Siliguri", "Noto Sans Bengali",
+      sans-serif;
+  }
+  :lang(bn) {
+    font-family:
+      "Hind Siliguri", "Noto Sans Bengali", ui-sans-serif, system-ui,
+      -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }
 

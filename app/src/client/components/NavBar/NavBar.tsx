@@ -18,6 +18,7 @@ import logo from "../../static/logo.webp";
 import { cn } from "../../utils";
 import AiCreditIndicator from "../AiCreditIndicator";
 import DarkModeSwitcher from "../DarkModeSwitcher";
+import LanguageSwitcher from "../../../i18n/LanguageSwitcher";
 
 
 export interface NavigationItem {
@@ -125,6 +126,7 @@ function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
     <div className="hidden items-center justify-end gap-3 lg:flex lg:flex-1">
       <ul className="flex items-center justify-center gap-2 sm:gap-4">
         {shouldShowAiCredit ? <AiCreditIndicator /> : null}
+        <LanguageSwitcher />
         <DarkModeSwitcher />
       </ul>
       {!user ? (
@@ -174,7 +176,8 @@ function NavBarMobileMenu({
   }, [location.pathname]);
 
   return (
-    <div className="flex lg:hidden">
+    <div className="flex items-center gap-3 lg:hidden">
+      <LanguageSwitcher />
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetTrigger asChild>
           <button
@@ -230,6 +233,7 @@ function NavBarMobileMenu({
               </div>
               <div className="flex items-center gap-3 py-6">
                 <AiCreditIndicator />
+                <LanguageSwitcher />
                 <DarkModeSwitcher />
               </div>
             </div>
