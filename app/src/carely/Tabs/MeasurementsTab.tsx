@@ -6,9 +6,18 @@ import { VitalTypeChip } from '../components/VitalTypeChip';
 import { VitalLogItem } from '../components/VitalLogItem';
 import { VitalLogForm } from '../components/VitalLogForm';
 import { EmptyState } from '../components/EmptyState';
-import { Activity, ListFilter, X } from 'lucide-react';
+import { Activity, ListFilter, X, Thermometer, Droplet, Heart, Wind, Scale } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../client/components/ui/dialog';
 import { vitalDisplayName } from '../utils/vitalLabels';
+
+const TYPE_ICONS: Record<string, any> = {
+  BLOOD_PRESSURE: Activity,
+  GLUCOSE: Droplet,
+  TEMPERATURE: Thermometer,
+  SPO2: Wind,
+  HEART_RATE: Heart,
+  WEIGHT: Scale,
+};
 
 export function MeasurementsTab({ parent }: { parent: any }) {
   const { data: user } = useAuth();
@@ -136,7 +145,8 @@ export function MeasurementsTab({ parent }: { parent: any }) {
           {orderedTypes.map((vt: string) => (
             <VitalTypeChip
               key={vt}
-              label={`+ ${typeLabelByKey[vt] ?? vt.replace('_', ' ')}`}
+              label={typeLabelByKey[vt] ?? vt.replace('_', ' ')}
+              icon={TYPE_ICONS[vt] || Activity}
               selected={false}
               onClick={() => setQuickAddType(vt)}
             />
