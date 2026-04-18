@@ -32,8 +32,8 @@ export function AddParentModal({ onCreated }: { onCreated: () => void }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2 bg-[color:var(--color-carely-primary)] text-white px-4 py-2 rounded-full font-jakarta font-medium shadow-[0_2px_10px_var(--color-carely-tertiary)] hover:opacity-90 transition-opacity">
-          <Plus className="w-5 h-5" /> {t('addParent.triggerButton')}
+        <button className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap bg-[color:var(--color-carely-primary)] text-white px-4 py-2 rounded-full font-jakarta font-medium shadow-[0_2px_10px_var(--color-carely-tertiary)] hover:opacity-90 transition-opacity">
+          <Plus className="w-5 h-5 shrink-0" /> {t('addParent.triggerButton')}
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-[color:var(--color-carely-surface-lowest)] border-[color:var(--color-carely-surface-high)] rounded-2xl">

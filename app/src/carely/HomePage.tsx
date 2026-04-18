@@ -258,12 +258,15 @@ export default function CarelyHomePage() {
   return (
     <div className="min-h-screen bg-[color:var(--color-carely-surface)] px-4 py-8 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-8 sm:flex-nowrap sm:items-center">
+          {/* On mobile: title + greeting claim the full width so the long
+              Bengali greeting wraps naturally. On sm+ the actions sit inline
+              on the right again. */}
+          <div className="min-w-0 w-full sm:w-auto sm:flex-1">
             <h1 className="font-lexend text-3xl font-bold text-[color:var(--color-carely-on-surface)]">{t('home.title')}</h1>
             <p className="font-jakarta text-[color:var(--color-carely-on-surface-variant)] mt-1">{t('home.greeting', { name: user?.username || t('home.defaultCaregiver') })}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 ml-auto">
             {user?.isAdmin && (
               <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <DialogTrigger asChild>
