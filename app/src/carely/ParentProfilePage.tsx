@@ -9,6 +9,7 @@ import { StatsTab } from './Tabs/StatsTab';
 import { SettingsTab } from './Tabs/SettingsTab';
 import { TabSwitcher } from './components/TabSwitcher';
 import { BottomTabBar } from './components/BottomTabBar';
+import { FloatingBackButton } from './components/FloatingBackButton';
 import { ParentAvatar } from './components/ParentAvatar';
 import { RoleBadge } from './components/RoleBadge';
 import { useAuth } from 'wasp/client/auth';
@@ -88,7 +89,8 @@ export default function CarelyParentPage() {
 
       </div>
 
-      {/* Mobile Tab Bar */}
+      {/* Mobile Tab Bar + thumb-reachable back button */}
+      <FloatingBackButton to="/carely" />
       <BottomTabBar parentId={parent.id} />
     </div>
   );
