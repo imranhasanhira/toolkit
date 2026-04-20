@@ -71,9 +71,12 @@ export function StatsTab({ parent }: { parent: any }) {
     return { start, end };
   }, [period, endOffsetDays]);
 
+  const selectedKind = categoryByKey[metric]?.kind as string | undefined;
+  const isEventMetric = selectedKind === 'event';
+
   const chartData = useMemo(() => {
     if (!logs) return [];
-    
+
     // Sort oldest to newest
     const sorted = [...logs].sort((a, b) => new Date(a.loggedAt).getTime() - new Date(b.loggedAt).getTime());
 
@@ -81,6 +84,29 @@ export function StatsTab({ parent }: { parent: any }) {
       const d = new Date(l.loggedAt);
       return d >= range.start && d <= range.end;
     });
+
+    // Event-kind categories aren't a time-series of values — they're a
+    // frequency count. Bin the filtered logs by local calendar day and
+    // emit one point per day in the window (including empty days) so the
+    // bar chart reads as a proper event-count timeline.
+    if (isEventMetric) {
+      const counts = new Map<string, number>();
+      for (const l of filtered) {
+        const k = toLocalDateKey(new Date(l.loggedAt));
+        counts.set(k, (counts.get(k) ?? 0) + 1);
+      }
+      const points: { timestamp: number; count: number }[] = [];
+      const cursor = new Date(range.start);
+      cursor.setHours(0, 0, 0, 0);
+      const endDay = new Date(range.end);
+      endDay.setHours(0, 0, 0, 0);
+      while (cursor.getTime() <= endDay.getTime()) {
+        const key = toLocalDateKey(cursor);
+        points.push({ timestamp: cursor.getTime(), count: counts.get(key) ?? 0 });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      return points as any[];
+    }
 
     const selected = (() => {
       if (!medianPerDay) return filtered;
@@ -130,7 +156,7 @@ export function StatsTab({ parent }: { parent: any }) {
         diastolic: isBP ? (l.value as any).diastolic : undefined,
       };
     });
-  }, [logs, range.start, range.end, medianPerDay, categoryByKey]);
+  }, [logs, range.start, range.end, medianPerDay, categoryByKey, isEventMetric]);
 
   const handlePrev = () => {
     setEndOffsetDays(o => o + (period === 'week' ? 7 : 30));
@@ -163,6 +189,18 @@ export function StatsTab({ parent }: { parent: any }) {
   // Calc averages
   const stats = useMemo(() => {
     if (!chartData || chartData.length === 0) return { avg: '-', min: '-', max: '-' };
+    if (isEventMetric) {
+      // For events, summaries are about frequency. We reuse the same three
+      // tiles but relabel them below (total / avg per day / max per day).
+      const counts = chartData.map((d: any) => d.count || 0);
+      const total = counts.reduce((a, b) => a + b, 0);
+      const days = counts.length || 1;
+      return {
+        avg: Math.round((total / days) * 10) / 10,
+        min: total,
+        max: Math.max(...counts),
+      };
+    }
     if (metric === 'BLOOD_PRESSURE') {
        const sys = chartData.map(d => d.systolic || 0);
        const dia = chartData.map(d => d.diastolic || 0);
@@ -179,14 +217,14 @@ export function StatsTab({ parent }: { parent: any }) {
          max: Math.max(...vals)
        };
     }
-  }, [chartData, metric]);
+  }, [chartData, metric, isEventMetric]);
 
   const getUnit = (type: string) => {
     if (type === 'TEMPERATURE') return `°${((appSettings as any)?.temperatureUnit === 'C' ? 'C' : 'F')}`;
     const cat = categoryByKey[type];
     return cat?.unit || '';
   };
-  const unit = getUnit(metric);
+  const unit = isEventMetric ? '' : getUnit(metric);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 lg:pb-0">
@@ -207,6 +245,7 @@ export function StatsTab({ parent }: { parent: any }) {
               {vitalDisplayName(t, categoryByKey[metric]) || metric.replace('_', ' ')} {t('stats.chart.suffix')}
             </h3>
             <div className="flex items-center gap-2 shrink-0">
+              {!isEventMetric && (
               <button
                 type="button"
                 onClick={() => setMedianPerDay((v) => !v)}
@@ -235,6 +274,7 @@ export function StatsTab({ parent }: { parent: any }) {
                   <path d="M6 11.75H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </button>
+              )}
 
               <button
                 onClick={() => refetch()}
@@ -269,6 +309,7 @@ export function StatsTab({ parent }: { parent: any }) {
           <StatChart
             data={chartData}
             type={metric}
+            variant={isEventMetric ? 'count' : 'line'}
             onNudge={handleNudge}
             disableNudgeRight={endOffsetDays === 0}
           />
@@ -276,9 +317,19 @@ export function StatsTab({ parent }: { parent: any }) {
       </div>
 
       <div className="flex gap-2 sm:gap-3">
-        <StatSummaryTile title={t('stats.summary.avg')} value={String(stats.avg)} unit={unit} />
-        <StatSummaryTile title={t('stats.summary.high')} value={String(stats.max)} unit={unit} />
-        <StatSummaryTile title={t('stats.summary.low')} value={String(stats.min)} unit={unit} />
+        {isEventMetric ? (
+          <>
+            <StatSummaryTile title={t('stats.summary.total')} value={String(stats.min)} unit="" />
+            <StatSummaryTile title={t('stats.summary.avgPerDay')} value={String(stats.avg)} unit="" />
+            <StatSummaryTile title={t('stats.summary.peakDay')} value={String(stats.max)} unit="" />
+          </>
+        ) : (
+          <>
+            <StatSummaryTile title={t('stats.summary.avg')} value={String(stats.avg)} unit={unit} />
+            <StatSummaryTile title={t('stats.summary.high')} value={String(stats.max)} unit={unit} />
+            <StatSummaryTile title={t('stats.summary.low')} value={String(stats.min)} unit={unit} />
+          </>
+        )}
       </div>
     </div>
   );

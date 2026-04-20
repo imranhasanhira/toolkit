@@ -158,7 +158,7 @@ export default function CarelyHomePage() {
   const EMPTY_DRAFT: {
     key: string;
     displayName: string;
-    kind: 'numeric' | 'blood_pressure';
+    kind: 'numeric' | 'blood_pressure' | 'event';
     unit: string;
     isActive: boolean;
   } = { key: '', displayName: '', kind: 'numeric', unit: '', isActive: true };
@@ -180,7 +180,7 @@ export default function CarelyHomePage() {
     setDraft({
       key: c.key ?? '',
       displayName: c.displayName ?? '',
-      kind: (c.kind as 'numeric' | 'blood_pressure') ?? 'numeric',
+      kind: (c.kind as 'numeric' | 'blood_pressure' | 'event') ?? 'numeric',
       unit: c.unit ?? '',
       isActive: c.isActive !== false,
     });
@@ -418,7 +418,15 @@ export default function CarelyHomePage() {
                   <Label>{t('home.settings.categories.labels.kind')}</Label>
                   <Select
                     value={draft.kind}
-                    onValueChange={(v) => setDraft((d) => ({ ...d, kind: v as 'numeric' | 'blood_pressure' }))}
+                    onValueChange={(v) =>
+                      setDraft((d) => ({
+                        ...d,
+                        kind: v as 'numeric' | 'blood_pressure' | 'event',
+                        // Event has no unit, so wipe any stale value from
+                        // a previous kind selection.
+                        unit: v === 'event' ? '' : d.unit,
+                      }))
+                    }
                   >
                     <SelectTrigger className="h-10 w-full bg-[color:var(--color-carely-surface-lowest)] border border-[color:var(--color-carely-surface-high)] rounded-xl px-3 font-jakarta text-[color:var(--color-carely-on-surface)] shadow-none">
                       <SelectValue />
@@ -426,17 +434,20 @@ export default function CarelyHomePage() {
                     <SelectContent>
                       <SelectItem value="numeric">{t('home.settings.categories.kind.numeric')}</SelectItem>
                       <SelectItem value="blood_pressure">{t('home.settings.categories.kind.bloodPressure')}</SelectItem>
+                      <SelectItem value="event">{t('home.settings.categories.kind.event')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>{t('home.settings.categories.labels.unit')}</Label>
-                  <Input
-                    value={draft.unit}
-                    onChange={(e) => setDraft((d) => ({ ...d, unit: e.target.value }))}
-                    placeholder={t('home.settings.categories.placeholders.unit')}
-                  />
-                </div>
+                {draft.kind !== 'event' && (
+                  <div className="space-y-1.5">
+                    <Label>{t('home.settings.categories.labels.unit')}</Label>
+                    <Input
+                      value={draft.unit}
+                      onChange={(e) => setDraft((d) => ({ ...d, unit: e.target.value }))}
+                      placeholder={t('home.settings.categories.placeholders.unit')}
+                    />
+                  </div>
+                )}
                 <div className="flex items-center gap-2 sm:col-span-2">
                   <Checkbox
                     checked={draft.isActive}

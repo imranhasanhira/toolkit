@@ -10,7 +10,8 @@
     },
     "kinds": {
       "numeric": "সাংখ্যিক",
-      "blood_pressure": "রক্তচাপ"
+      "blood_pressure": "রক্তচাপ",
+      "event": "ইভেন্ট"
     }
   },
   "home": {
@@ -51,7 +52,8 @@
         },
         "kind": {
           "numeric": "সাংখ্যিক",
-          "bloodPressure": "রক্তচাপ"
+          "bloodPressure": "রক্তচাপ",
+          "event": "ইভেন্ট (শুধু গণনা)"
         },
         "actions": {
           "addCategory": "ক্যাটাগরি যোগ করুন",
@@ -134,15 +136,18 @@
   "vitalLog": {
     "editTitle": "পরিমাপ সম্পাদনা",
     "logTitle": "পরিমাপ লগ",
+    "quickTitle": "{{name}} লগ",
     "labels": {
       "dateTime": "তারিখ ও সময়",
       "type": "ধরন",
       "measurement": "পরিমাপ",
+      "heartRate": "হৃদস্পন্দন (ঐচ্ছিক)",
       "notes": "নোট"
     },
     "placeholders": {
       "systolic": "সিস্টোলিক ({{unit}})",
       "diastolic": "ডায়াস্টোলিক ({{unit}})",
+      "heartRate": "হৃদস্পন্দন ({{unit}})",
       "valueWithUnit": "মান ({{unit}})",
       "valueNoUnit": "মান",
       "notes": "নোট (ঐচ্ছিক)"
@@ -152,12 +157,15 @@
     "toasts": {
       "updated": "পরিমাপ হালনাগাদ হয়েছে",
       "logged": "পরিমাপ লগ হয়েছে",
-      "saveFailed": "ভাইটালস সংরক্ষণ ব্যর্থ: {{reason}}"
+      "saveFailed": "ভাইটালস সংরক্ষণ ব্যর্থ: {{reason}}",
+      "hrCompanionFailed": "রক্তচাপ সংরক্ষণ হয়েছে, তবে হৃদস্পন্দন লগ করা যায়নি: {{reason}}",
+      "unknownError": "অজানা ত্রুটি"
     }
   },
   "vitalLogItem": {
     "today": "আজ",
     "byUser": "{{username}} দ্বারা",
+    "eventRecorded": "ইভেন্ট রেকর্ড হয়েছে",
     "deleteDialog": {
       "title": "লগ মুছবেন?",
       "description": "আপনি কি নিশ্চিত এই {{type}} পরিমাপ স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।",
@@ -185,7 +193,10 @@
     "summary": {
       "avg": "গড়",
       "high": "উচ্চ",
-      "low": "নিম্ন"
+      "low": "নিম্ন",
+      "total": "মোট",
+      "avgPerDay": "দৈনিক গড়",
+      "peakDay": "সর্বোচ্চ/দিন"
     }
   },
   "medicine": {

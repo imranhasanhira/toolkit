@@ -176,11 +176,12 @@ export function MeasurementsTab({ parent }: { parent: any }) {
       </div>
 
       {canAddVitals && (
-        <VitalLogForm 
-          open={!!quickAddType} 
-          onOpenChange={(o) => { if (!o) setQuickAddType(null) }} 
-          initialType={quickAddType || undefined} 
-          parentId={parent.id} 
+        <VitalLogForm
+          mode="quick"
+          open={!!quickAddType}
+          onOpenChange={(o) => { if (!o) setQuickAddType(null) }}
+          initialType={quickAddType || undefined}
+          parentId={parent.id}
           temperatureUnit={parent.temperatureUnit}
           onLogged={refetch}
           hideTrigger={true}

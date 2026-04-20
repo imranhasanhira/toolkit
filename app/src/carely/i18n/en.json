@@ -10,7 +10,8 @@
     },
     "kinds": {
       "numeric": "numeric",
-      "blood_pressure": "blood pressure"
+      "blood_pressure": "blood pressure",
+      "event": "event"
     }
   },
   "home": {
@@ -51,7 +52,8 @@
         },
         "kind": {
           "numeric": "Numeric",
-          "bloodPressure": "Blood pressure"
+          "bloodPressure": "Blood pressure",
+          "event": "Event (count only)"
         },
         "actions": {
           "addCategory": "Add category",
@@ -134,15 +136,18 @@
   "vitalLog": {
     "editTitle": "Edit measurement",
     "logTitle": "Log measurement",
+    "quickTitle": "Log {{name}}",
     "labels": {
       "dateTime": "Date & time",
       "type": "Type",
       "measurement": "Measurement",
+      "heartRate": "Heart rate (optional)",
       "notes": "Notes"
     },
     "placeholders": {
       "systolic": "Systolic ({{unit}})",
       "diastolic": "Diastolic ({{unit}})",
+      "heartRate": "Heart rate ({{unit}})",
       "valueWithUnit": "Value ({{unit}})",
       "valueNoUnit": "Value",
       "notes": "Notes (optional)"
@@ -152,12 +157,15 @@
     "toasts": {
       "updated": "Measurement updated",
       "logged": "Measurement logged",
-      "saveFailed": "Failed to save vitals: {{reason}}"
+      "saveFailed": "Failed to save vitals: {{reason}}",
+      "hrCompanionFailed": "Blood pressure saved, but heart rate couldn't be logged: {{reason}}",
+      "unknownError": "Unknown error"
     }
   },
   "vitalLogItem": {
     "today": "Today",
     "byUser": "by {{username}}",
+    "eventRecorded": "Event recorded",
     "deleteDialog": {
       "title": "Delete Log?",
       "description": "Are you sure you want to permanently delete this {{type}} measurement? This cannot be undone.",
@@ -185,7 +193,10 @@
     "summary": {
       "avg": "Avg",
       "high": "High",
-      "low": "Low"
+      "low": "Low",
+      "total": "Total",
+      "avgPerDay": "Avg / day",
+      "peakDay": "Peak / day"
     }
   },
   "medicine": {

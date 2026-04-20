@@ -143,7 +143,10 @@ export const getCarelyVitalLogs = async (args: { parentId: string; type?: string
   });
 };
 
-type CarelyVitalCategoryKind = "blood_pressure" | "numeric";
+// "event" is a no-measurement kind used as a frequency counter — each log
+// simply records that something happened at a given time (optional notes),
+// with `value: {}`. Has no unit and is excluded from numeric/BP analytics.
+type CarelyVitalCategoryKind = "blood_pressure" | "numeric" | "event";
 
 const DEFAULT_CARELY_VITAL_CATEGORIES: Array<{
   key: string;
@@ -242,8 +245,16 @@ export const upsertCarelyVitalCategory = async (
   const displayName = args.displayName.trim();
   if (!displayName) throw new HttpError(400, "Display name is required");
 
+  // Unit handling per kind:
+  //   event         → no unit makes sense, force null.
+  //   numeric       → optional free-form string, normalize empty → null.
+  //   blood_pressure → always mmHg (stored on the category for display).
   const unit =
-    args.kind === "numeric" ? (args.unit ?? "").trim() || null : (args.unit ?? "mmHg").trim() || "mmHg";
+    args.kind === "event"
+      ? null
+      : args.kind === "numeric"
+        ? (args.unit ?? "").trim() || null
+        : (args.unit ?? "mmHg").trim() || "mmHg";
 
   if (args.id) {
     const existing = await context.entities.CarelyVitalCategory.findUnique({

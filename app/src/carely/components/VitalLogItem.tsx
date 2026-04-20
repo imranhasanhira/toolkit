@@ -136,9 +136,17 @@ export function VitalLogItem({
   const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const dateStr = isToday ? t('vitalLogItem.today') : dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
+  // The row doesn't have access to the category record, so we infer the
+  // kind from `log.value` shape: systolic → BP, numeric `value` → numeric,
+  // anything else (including the `{}` payload emitted by event logs) is
+  // treated as an event-kind entry with no measurement to display.
+  const hasBP = log.value && typeof (log.value as any).systolic !== 'undefined';
+  const hasNumeric = log.value && typeof (log.value as any).value !== 'undefined';
+  const isEvent = !hasBP && !hasNumeric;
+
   let valueDisp = '';
-  if (log.type === 'BLOOD_PRESSURE') valueDisp = `${log.value.systolic}/${log.value.diastolic} ${log.value.unit}`;
-  else valueDisp = `${log.value.value} ${log.value.unit}`;
+  if (hasBP) valueDisp = `${log.value.systolic}/${log.value.diastolic} ${log.value.unit}`;
+  else if (hasNumeric) valueDisp = `${log.value.value} ${log.value.unit ?? ''}`.trim();
 
   return (
     <>
@@ -156,9 +164,15 @@ export function VitalLogItem({
               <h4 className="font-lexend font-semibold text-[color:var(--color-carely-on-surface)] truncate">
                 {typeLabel ?? formatVitalType(log.type)}
               </h4>
-              <p className="font-lexend font-bold text-[color:var(--color-carely-primary)] text-lg leading-tight">
-                {valueDisp}
-              </p>
+              {isEvent ? (
+                <p className="font-lexend font-semibold text-[color:var(--color-carely-primary)] text-sm leading-tight">
+                  {t('vitalLogItem.eventRecorded')}
+                </p>
+              ) : (
+                <p className="font-lexend font-bold text-[color:var(--color-carely-primary)] text-lg leading-tight">
+                  {valueDisp}
+                </p>
+              )}
             </div>
             <div className="shrink-0 flex items-end gap-1.5">
               <div className="text-right">
