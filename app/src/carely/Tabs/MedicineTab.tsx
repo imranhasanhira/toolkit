@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, getCarelyPrescriptions, getCarelyMedicineIntakeLogs, getCarelyMedicineLogsByRange } from "wasp/client/operations";
 import { Pill, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { prescriptionCoversDate, utcDateKey } from '../utils/dateKey';
 import { MedicineCard } from '../components/MedicineCard';
 import { PrescriptionForm } from '../components/PrescriptionForm';
 import { EmptyState } from '../components/EmptyState';
@@ -34,12 +35,8 @@ function useAdherenceStatus(parentId: string, prescriptions: any, allLogs: any) 
 
     if (!prescriptions || !allLogs) return 'LOADING';
 
-    const activeRx = prescriptions.filter((rx: any) => {
-      const start = new Date(rx.startDate); start.setHours(0, 0, 0, 0);
-      const end = rx.endDate ? new Date(rx.endDate) : null;
-      if (end) end.setHours(23, 59, 59, 999);
-      return d >= start && (!end || d <= end);
-    });
+    const dayKey = toLocalDateKey(d);
+    const activeRx = prescriptions.filter((rx: any) => rx.isActive && prescriptionCoversDate(rx, dayKey));
 
     let totalSlots = 0;
     activeRx.forEach((rx: any) => {
@@ -55,9 +52,8 @@ function useAdherenceStatus(parentId: string, prescriptions: any, allLogs: any) 
 
     if (totalSlots === 0) return 'EMPTY';
 
-    const strDate = toLocalDateKey(d);
     const dateLogs = allLogs.filter(
-      (l: any) => toLocalDateKey(new Date(l.intakeDate)) === strDate
+      (l: any) => utcDateKey(l.intakeDate) === dayKey
     );
 
     if (dateLogs.length >= totalSlots) return 'TICK';
@@ -102,9 +98,12 @@ export function MedicineTab({ parent }: { parent: any }) {
 
   const { getStatusForDate, renderStatusDot } = useAdherenceStatus(parent.id, prescriptions, allLogs);
 
-  const handleUpdate = () => refetchLogs();
+  const handleUpdate = () => {
+    refetchLogs();
+    refetchRx();
+  };
 
-  const activeRx = prescriptions?.filter((p: any) => p.isActive) || [];
+  const activeRx = prescriptions?.filter((p: any) => p.isActive && prescriptionCoversDate(p, dateStr)) || [];
 
   let totalSlots = 0;
   activeRx.forEach((rx: any) => {
@@ -118,7 +117,8 @@ export function MedicineTab({ parent }: { parent: any }) {
     }
   });
 
-  const completedSlots = logs?.length || 0;
+  const activeIds = new Set(activeRx.map((p: any) => p.id));
+  const completedSlots = logs?.filter((l: any) => activeIds.has(l.prescriptionId)).length || 0;
   const overallProgress = totalSlots > 0 ? (completedSlots / totalSlots) * 100 : 0;
 
   let title = t('medicine.titles.today');

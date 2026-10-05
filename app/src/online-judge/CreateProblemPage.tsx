@@ -7,9 +7,6 @@ import { Link } from "react-router";
 export default function CreateProblemPage() {
     const { data: user, isLoading: isAuthLoading } = useAuth();
 
-    if (isAuthLoading) return <div>Loading...</div>;
-    // Admin check removed to allow all users to create problems
-
     const [title, setTitle] = useState("");
     const [slug, setSlug] = useState("");
     const [description, setDescription] = useState("");
@@ -52,7 +49,17 @@ export default function CreateProblemPage() {
         }
     };
 
-    // Admin check logic removed from here as well
+    if (isAuthLoading) return <div>Loading...</div>;
+    if (!user?.isAdmin) {
+        return (
+            <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
+                    <p className="text-gray-600">You do not have permission to create problems.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto p-6 max-w-4xl">

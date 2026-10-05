@@ -3,6 +3,7 @@
  * Credits use Prisma Decimal for exact precision; convert to number for arithmetic.
  */
 
+import { prisma } from 'wasp/server';
 import {
   REDDIT_SETTINGS_KEYS,
   REDDIT_SETTINGS_DEFAULTS,
@@ -222,7 +223,7 @@ export async function getBalance(
 }
 
 export async function deductCredit(
-  entities: any,
+  _entities: any,
   userId: string,
   amount: number,
   reason: string,
@@ -230,39 +231,57 @@ export async function deductCredit(
 ): Promise<void> {
   if (amount <= 0) return;
 
-  const account = await entities.RedditCreditAccount.findUnique({
-    where: { userId },
+  await prisma.$transaction(async (tx) => {
+    const updated = await tx.redditCreditAccount.updateMany({
+      where: { userId, balance: { gte: amount } },
+      data: {
+        balance: { decrement: amount },
+        totalUsed: { increment: amount },
+      },
+    });
+    if (updated.count !== 1) {
+      const account = await tx.redditCreditAccount.findUnique({ where: { userId } });
+      const balance = toNum(account?.balance);
+      throw new InsufficientRedditCreditError(
+        `Insufficient Reddit credit: have ${balance}, need ${amount}`
+      );
+    }
+    await tx.redditCreditTransaction.create({
+      data: {
+        userId,
+        amount: -amount,
+        reason,
+        jobId: jobId ?? undefined,
+      },
+    });
   });
-  const balance = toNum(account?.balance);
-  if (balance < amount) {
-    throw new InsufficientRedditCreditError(
-      `Insufficient Reddit credit: have ${balance}, need ${amount}`
-    );
-  }
+}
 
-  const newBalance = balance - amount;
-  const newTotalUsed = toNum(account?.totalUsed) + amount;
+/** Restore credits after a Reddit API call that was charged but did not succeed. */
+export async function refundCredit(
+  userId: string,
+  amount: number,
+  reason: string,
+  jobId?: string | null
+): Promise<void> {
+  if (amount <= 0) return;
 
-  await entities.RedditCreditAccount.upsert({
-    where: { userId },
-    create: {
-      userId,
-      balance: newBalance,
-      totalUsed: newTotalUsed,
-    },
-    update: {
-      balance: newBalance,
-      totalUsed: newTotalUsed,
-    },
-  });
-
-  await entities.RedditCreditTransaction.create({
-    data: {
-      userId,
-      amount: -amount,
-      reason,
-      jobId: jobId ?? undefined,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.redditCreditAccount.update({
+      where: { userId },
+      data: {
+        balance: { increment: amount },
+        totalUsed: { decrement: amount },
+      },
+    });
+    await tx.redditCreditTransaction.create({
+      data: {
+        userId,
+        amount,
+        reason,
+        jobId: jobId ?? undefined,
+      },
+    });
   });
 }
 

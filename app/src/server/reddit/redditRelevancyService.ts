@@ -162,6 +162,6 @@ export async function evaluateRelevancy(
       (options as any).model,
       postUrl ?? '(no-url)'
     );
-    return { relevant: false, painPointSummary: null, reasoning: null };
+    throw err;
   }
 }

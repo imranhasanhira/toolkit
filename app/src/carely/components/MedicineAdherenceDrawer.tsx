@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, getCarelyPrescriptions, getCarelyMedicineLogsByRange } from "wasp/client/operations";
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { prescriptionCoversDate, utcDateKey } from '../utils/dateKey';
 
 const WEEKDAY_SHORT_KEYS = ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'] as const;
 
@@ -64,13 +65,8 @@ export function MedicineAdherenceDrawer({ parentId, onDateSelect, activeOffset }
     if (!prescriptions || !logs) return 'LOADING';
 
     // 1. Find active prescriptions for this date -> calculate required slots
-    const activeRx = prescriptions.filter((rx: any) => {
-      const start = new Date(rx.startDate); start.setHours(0,0,0,0);
-      const end = rx.endDate ? new Date(rx.endDate) : null;
-      if (end) end.setHours(23,59,59,999);
-      
-      return d >= start && (!end || d <= end);
-    });
+    const dayKey = toLocalDateKey(d);
+    const activeRx = prescriptions.filter((rx: any) => rx.isActive && prescriptionCoversDate(rx, dayKey));
 
     let totalSlots = 0;
     activeRx.forEach((rx: any) => {
@@ -86,8 +82,7 @@ export function MedicineAdherenceDrawer({ parentId, onDateSelect, activeOffset }
 
     if (totalSlots === 0) return 'EMPTY'; // Not prescribed anything
 
-    const strDate = toLocalDateKey(d);
-    const dateLogs = logs.filter((l: any) => toLocalDateKey(new Date(l.intakeDate)) === strDate);
+    const dateLogs = logs.filter((l: any) => utcDateKey(l.intakeDate) === dayKey);
     
     const completed = dateLogs.length;
 

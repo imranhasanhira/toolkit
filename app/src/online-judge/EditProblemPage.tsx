@@ -57,6 +57,16 @@ export default function EditProblemPage() {
     }, []);
 
     if (isAuthLoading || isProblemLoading) return <div>Loading...</div>;
+    if (!user?.isAdmin) {
+        return (
+            <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
+                    <p className="text-gray-600">You do not have permission to edit problems.</p>
+                </div>
+            </div>
+        );
+    }
     if (problemError) return <div>Error loading problem: {problemError.message}</div>;
     if (!problem) return <div>Problem not found</div>;
 

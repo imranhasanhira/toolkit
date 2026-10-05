@@ -26,6 +26,9 @@ export const createProblem: CreateProblem<CreateProblemArgs, Problem> = async (
     if (!context.user) {
         throw new HttpError(401, "Unauthorized");
     }
+    if (!context.user.isAdmin) {
+        throw new HttpError(403, "Only admins can create problems");
+    }
     await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
     const { title, slug, description, difficulty, testCases } = args;
@@ -70,6 +73,9 @@ export const updateProblem: UpdateProblem<UpdateProblemArgs, Problem> = async (
 ) => {
     if (!context.user) {
         throw new HttpError(401, "Unauthorized");
+    }
+    if (!context.user.isAdmin) {
+        throw new HttpError(403, "Only admins can update problems");
     }
     await requireAppAccess(context.user.id, APP_KEYS.ONLINE_JUDGE, context.user.isAdmin);
 
@@ -166,9 +172,7 @@ export const getProblem: GetProblem<GetProblemArgs, Problem & { testCases: TestC
     const problem = await context.entities.Problem.findUnique({
         where: { slug: args.slug },
         include: {
-            testCases: {
-                // where: { isSample: true }, // Uncomment to only show samples if desired. Currently showing all.
-            },
+            testCases: context.user.isAdmin ? true : { where: { isSample: true } },
         },
     });
 

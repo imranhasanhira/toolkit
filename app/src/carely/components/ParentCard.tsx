@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ParentAvatar } from './ParentAvatar';
 import { RoleBadge } from './RoleBadge';
+import { ageInYears } from '../utils/dateKey';
 
 export function ParentCard({ parent, isOwner }: { parent: any, isOwner: boolean }) {
   const navigate = useNavigate();
   const { t } = useTranslation('carely');
-  const age = parent.dateOfBirth
-    ? new Date().getFullYear() - new Date(parent.dateOfBirth).getFullYear()
-    : null;
+  const age = parent.dateOfBirth ? ageInYears(parent.dateOfBirth) : null;
   return (
     <div onClick={() => navigate(`/carely/parent/${parent.id}`)} className="cursor-pointer block bg-[color:var(--color-carely-surface-lowest)] p-5 rounded-2xl border border-[color:var(--color-carely-surface-high)] shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[color:var(--color-carely-tertiary)] opacity-30 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />

@@ -6,7 +6,10 @@ export function CollaboratorRow({ collab, isOwner, onRemove, onUpdate }: { colla
   const { t } = useTranslation('carely');
   const handleToggle = (key: string, value: boolean) => {
     if (!isOwner) return;
-    onUpdate({ ...collab, [key]: value });
+    const next = { ...collab, [key]: value };
+    if (key === 'canAddVitals' && value) next.canViewVitals = true;
+    if (key === 'canViewVitals' && !value) next.canAddVitals = false;
+    onUpdate(next);
   };
 
   return (

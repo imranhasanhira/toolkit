@@ -70,6 +70,48 @@ function getProjectAiSettings(project: any, category: 'text' | 'image' | 'video'
   return settings as AiSettings;
 }
 
+async function requireProjectOwner(context: any, projectId: string) {
+  const project = await context.entities.Project.findFirst({
+    where: { id: projectId, userId: context.user.id },
+  });
+  if (!project) throw new HttpError(404, 'Project not found');
+  return project;
+}
+
+async function requireStoryOwner(context: any, storyId: string) {
+  const story = await context.entities.Story.findFirst({
+    where: { id: storyId },
+    include: { project: true },
+  });
+  if (!story || story.project.userId !== context.user.id) {
+    throw new HttpError(404, 'Story not found');
+  }
+  return story;
+}
+
+async function requireSceneOwner(context: any, sceneId: string) {
+  const scene = await context.entities.Scene.findFirst({
+    where: { id: sceneId },
+    include: { story: { include: { project: true } } },
+  });
+  if (!scene || scene.story.project.userId !== context.user.id) {
+    throw new HttpError(404, 'Scene not found');
+  }
+  return scene;
+}
+
+async function assertCharactersBelongToProject(context: any, projectId: string, characterIds: string[]) {
+  const uniqueIds = [...new Set(characterIds)];
+  if (uniqueIds.length === 0) return;
+  const rows = await context.entities.Character.findMany({
+    where: { projectId, id: { in: uniqueIds } },
+    select: { id: true },
+  });
+  if (rows.length !== uniqueIds.length) {
+    throw new HttpError(400, 'One or more characters do not belong to this project');
+  }
+}
+
 // Helper function to convert input file UUIDs to file paths
 async function convertUuidsToFilePaths(
   inputFileUuids: string[],
@@ -83,7 +125,14 @@ async function convertUuidsToFilePaths(
 
   for (const fileUuid of inputFileUuids) {
     try {
-      // Check if file exists in storage
+      const owned = await context.entities.File.findFirst({
+        where: { uuid: fileUuid, userId: context.user.id },
+        select: { id: true },
+      });
+      if (!owned) {
+        console.warn(`Input file is not owned by the current user: ${fileUuid}`);
+        continue;
+      }
       if (!fileExistsInStorage(fileUuid)) {
         console.warn(`Input file does not exist in storage: ${fileUuid}`);
         continue;
@@ -236,6 +285,7 @@ export const getCharactersByProject: GetCharactersByProject<{ projectId: string 
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireProjectOwner(context, args.projectId);
 
   return context.entities.Character.findMany({
     where: { 
@@ -250,6 +300,7 @@ export const createCharacter: CreateCharacter<{ projectId: string; name: string;
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireProjectOwner(context, args.projectId);
 
   if (!args.name || args.name.trim().length === 0) {
     throw new HttpError(400, 'Character name is required');
@@ -339,6 +390,7 @@ export const getStoriesByProject: GetStoriesByProject<{ projectId: string }, Sto
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireProjectOwner(context, args.projectId);
 
   return context.entities.Story.findMany({
     where: { projectId: args.projectId },
@@ -352,6 +404,7 @@ export const createStory: CreateStory<{ projectId: string; title: string; descri
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireProjectOwner(context, args.projectId);
 
   if (!args.title || args.title.trim().length === 0) {
     throw new HttpError(400, 'Story title is required');
@@ -428,6 +481,8 @@ export const addCharactersToStory: AddCharactersToStory<{ storyId: string; chara
   if (!story || story.project.userId !== context.user.id) {
     throw new HttpError(404, 'Story not found');
   }
+
+  await assertCharactersBelongToProject(context, story.projectId, args.characterIds);
 
   // Add characters to story
   for (const characterId of args.characterIds) {
@@ -623,6 +678,7 @@ export const getScenesByStory: GetScenesByStory<{ storyId: string }, Scene[]> = 
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireStoryOwner(context, args.storyId);
 
   return context.entities.Scene.findMany({
     where: { 
@@ -669,9 +725,14 @@ export const createScene: CreateScene<{ storyId: string; title: string; descript
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  const story = await requireStoryOwner(context, args.storyId);
 
   if (!args.title || args.title.trim().length === 0) {
     throw new HttpError(400, 'Scene title is required');
+  }
+
+  if (args.characterIds?.length) {
+    await assertCharactersBelongToProject(context, story.projectId, args.characterIds);
   }
 
   const scene = await context.entities.Scene.create({
@@ -716,6 +777,10 @@ export const updateScene: UpdateScene<{ id: string; title?: string; description?
 
   if (!scene || scene.story.project.userId !== context.user.id) {
     throw new HttpError(404, 'Scene not found');
+  }
+
+  if (args.characterIds?.length) {
+    await assertCharactersBelongToProject(context, scene.story.projectId, args.characterIds);
   }
 
   const updatedScene = await context.entities.Scene.update({
@@ -830,6 +895,7 @@ export const getShotsByScene: GetShotsByScene<{ sceneId: string }, Shot[]> = asy
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireSceneOwner(context, args.sceneId);
 
   return context.entities.Shot.findMany({
     where: { sceneId: args.sceneId },
@@ -849,6 +915,7 @@ export const createShot: CreateShot<{ sceneId: string; title: string; descriptio
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireSceneOwner(context, args.sceneId);
 
   if (!args.title || args.title.trim().length === 0) {
     throw new HttpError(400, 'Shot title is required');
@@ -1048,6 +1115,7 @@ export const getDialogsByScene: GetDialogsByScene<{ sceneId: string }, Dialog[]>
     throw new HttpError(401, 'Not authorized');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
+  await requireSceneOwner(context, args.sceneId);
 
   return context.entities.Dialog.findMany({
     where: { sceneId: args.sceneId },
@@ -2212,6 +2280,9 @@ export const getAppSettings: GetAppSettings<{ key: string }, any> = async (args,
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
   }
+  if (!context.user.isAdmin) {
+    throw new HttpError(403, 'Only admins can read app settings');
+  }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
   try {
@@ -2236,6 +2307,9 @@ export const getAppSettings: GetAppSettings<{ key: string }, any> = async (args,
 export const updateAppSettings: UpdateAppSettings<{ key: string; value: any }, any> = async (args, context) => {
   if (!context.user) {
     throw new HttpError(401, 'Not authorized');
+  }
+  if (!context.user.isAdmin) {
+    throw new HttpError(403, 'Only admins can update app settings');
   }
   await requireAppAccess(context.user.id, APP_KEYS.SOKAFILM, context.user.isAdmin);
 
@@ -2521,7 +2595,10 @@ export const importTsvData: ImportTsvData<ImportTsvDataArgs, ImportTsvDataResult
   // Step 1: Create or reuse characters
   for (const charInput of args.characters) {
     if (charInput.isExisting && charInput.existingCharacterId) {
-      // Reuse existing character
+      const owned = existingCharacters.some((ec) => ec.id === charInput.existingCharacterId);
+      if (!owned) {
+        throw new HttpError(400, 'Character does not belong to this project');
+      }
       characterNameToId.set(charInput.name.toLowerCase(), charInput.existingCharacterId);
       charactersReused++;
     } else {

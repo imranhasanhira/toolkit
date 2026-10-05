@@ -459,7 +459,8 @@ query getFileGenerationStatus {
 api serveFile {
   fn: import { serveFile } from "@src/server/serverSetup",
   httpRoute: (GET, "/serve-file/:filename"),
-  auth: false
+  auth: true,
+  entities: [User, File]
 }
 
 route SokaFilmRoute { path: "/sokafilm", to: SokaFilmHomepage }

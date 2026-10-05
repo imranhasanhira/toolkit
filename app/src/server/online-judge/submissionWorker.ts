@@ -36,6 +36,22 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
         return;
     }
 
+    const terminalStatuses = new Set([
+        "ACCEPTED",
+        "WRONG_ANSWER",
+        "TIME_LIMIT_EXCEEDED",
+        "RUNTIME_ERROR",
+        "COMPILATION_ERROR",
+    ]);
+    if (terminalStatuses.has(submission.status) && submission.testCaseResults.length > 0) {
+        console.log(`Submission ${submissionId} already graded (${submission.status}), skipping retry`);
+        return;
+    }
+
+    await context.entities.SubmissionTestCaseResult.deleteMany({
+        where: { submissionId },
+    });
+
     await context.entities.Submission.update({
         where: { id: submissionId },
         data: { status: "PROCESSING" },
@@ -45,6 +61,7 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
     const testCases = problem.testCases;
     let allPassed = true;
     let totalExecutionTime = 0;
+    let executedCount = 0;
     let failedStatus: string | null = null; // Track the first error status
 
     // Prepare Environment
@@ -78,6 +95,7 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
             }
 
             totalExecutionTime += (result.executionTime || 0);
+            executedCount += 1;
 
             await context.entities.SubmissionTestCaseResult.create({
                 data: {
@@ -101,8 +119,8 @@ export const gradeSubmission: GradeSubmission<never, void> = async (
         const finalStatus = allPassed ? "ACCEPTED" : (failedStatus || "WRONG_ANSWER");
 
         // Calculate average execution time
-        const avgExecutionTime = testCases.length > 0
-            ? Math.round(totalExecutionTime / testCases.length)
+        const avgExecutionTime = executedCount > 0
+            ? Math.round(totalExecutionTime / executedCount)
             : 0;
 
         await context.entities.Submission.update({

@@ -133,9 +133,18 @@ export async function saveBase64ImageWithMulter(
 /**
  * Get file path for a storage key (now just filename)
  */
+const SAFE_STORAGE_KEY = /^[a-zA-Z0-9_-]+$/;
+
 export function getFilePathFromKey(key: string): string {
-  const storageDir = getStorageDirectory();
-  return path.join(storageDir, key) + '.png';
+  if (!SAFE_STORAGE_KEY.test(key)) {
+    throw new Error('Invalid storage key');
+  }
+  const storageDir = path.resolve(getStorageDirectory());
+  const filePath = path.resolve(storageDir, `${key}.png`);
+  if (filePath !== path.join(storageDir, `${key}.png`)) {
+    throw new Error('Invalid storage key');
+  }
+  return filePath;
 }
 
 /**

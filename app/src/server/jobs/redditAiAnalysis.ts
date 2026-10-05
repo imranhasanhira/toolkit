@@ -1,3 +1,4 @@
+import { redditAiAnalysisJob } from 'wasp/server/jobs';
 import { getSettings, getDecryptedOpenRouterApiKey } from '../reddit/redditCreditService';
 import { evaluateRelevancy } from '../reddit/redditRelevancyService';
 import {
@@ -5,7 +6,7 @@ import {
   RedditBotProjectPostStatus,
   RedditBotAiAnalysisRunStatus,
 } from '@prisma/client';
-import { AI_ANALYSIS_STATUSES_QUEUED, AI_ANALYSIS_STATUSES_ALL } from '../../reddit-bot/redditBotAiStatusConstants';
+import { AI_ANALYSIS_STATUSES_QUEUED } from '../../reddit-bot/redditBotAiStatusConstants';
 
 export type RedditAiAnalysisJobPayload = {
   runId?: string;
@@ -22,6 +23,86 @@ export type RedditAiAnalysisJobPayload = {
 };
 
 const BATCH_CAP = 100;
+const STALE_IN_PROGRESS_MS = 10 * 60 * 1000;
+const CANDIDATE_PAGE = 200;
+
+function keywordsMatch(matchedKeywords: unknown, filterKeywords: string[]): boolean {
+  const mk = (matchedKeywords as string[]) ?? [];
+  return mk.some((m) => filterKeywords.some((k) => k.toLowerCase() === m.toLowerCase()));
+}
+
+function analysisWhere(args: RedditAiAnalysisJobPayload, runStartedAt?: Date | null): any | null {
+  if (args.jobId) {
+    return {
+      jobId: args.jobId,
+      aiAnalysisStatus: { in: [...AI_ANALYSIS_STATUSES_QUEUED] },
+    };
+  }
+  if (!args.projectId) return null;
+  const where: any = { projectId: args.projectId };
+  const and: any[] = [];
+  if (args.includeAlreadyProcessed && runStartedAt) {
+    // Each post is processed once per run: already-finished rows only if they
+    // were last updated before this run started.
+    and.push({
+      OR: [
+        { aiAnalysisStatus: { in: [...AI_ANALYSIS_STATUSES_QUEUED] } },
+        {
+          aiAnalysisStatus: {
+            in: [RedditBotAiAnalysisStatus.COMPLETED, RedditBotAiAnalysisStatus.FAILED],
+          },
+          updatedAt: { lt: runStartedAt },
+        },
+      ],
+    });
+  } else {
+    where.aiAnalysisStatus = { in: [...AI_ANALYSIS_STATUSES_QUEUED] };
+  }
+  const fs = args.filterSnapshot;
+  if (fs) {
+    if (fs.status) where.status = fs.status;
+    if (fs.subreddits?.length) {
+      and.push({
+        post: {
+          OR: fs.subreddits.map((s: string) => ({
+            subreddit: { equals: s, mode: 'insensitive' as const },
+          })),
+        },
+      });
+    }
+    if (fs.postedAfter || fs.postedBefore) {
+      const postedAt: any = {};
+      if (fs.postedAfter) postedAt.gte = new Date(fs.postedAfter);
+      if (fs.postedBefore) postedAt.lte = new Date(fs.postedBefore);
+      and.push({ post: { postedAt } });
+    }
+  }
+  if (and.length) where.AND = and;
+  return where;
+}
+
+async function findNextAnalysisPost(entities: any, args: RedditAiAnalysisJobPayload, runStartedAt?: Date | null) {
+  const where = analysisWhere(args, runStartedAt);
+  if (!where) return null;
+  const filterKeywords = args.filterSnapshot?.keywords;
+  const select = { id: true, projectId: true, postId: true, jobId: true, matchedKeywords: true };
+  let skip = 0;
+  while (true) {
+    const page = await entities.RedditBotProjectPost.findMany({
+      where,
+      select,
+      orderBy: { createdAt: 'asc' },
+      take: CANDIDATE_PAGE,
+      skip,
+    });
+    if (page.length === 0) return null;
+    if (!filterKeywords?.length) return page[0];
+    const match = page.find((pp: { matchedKeywords: unknown }) => keywordsMatch(pp.matchedKeywords, filterKeywords));
+    if (match) return match;
+    if (page.length < CANDIDATE_PAGE) return null;
+    skip += CANDIDATE_PAGE;
+  }
+}
 
 export const processRedditAiAnalysis = async (
   args: RedditAiAnalysisJobPayload,
@@ -73,12 +154,12 @@ export const processRedditAiAnalysis = async (
   }
 
   let processed = 0;
-  let run: { id: string; stopRequestedAt: Date | null; totalToProcess: number; processedCount: number } | null = null;
+  let run: { id: string; createdAt: Date; stopRequestedAt: Date | null; totalToProcess: number; processedCount: number } | null = null;
 
   if (args.runId) {
     run = await entities.RedditBotAiAnalysisRun.findUnique({
       where: { id: args.runId },
-      select: { id: true, stopRequestedAt: true, totalToProcess: true, processedCount: true },
+      select: { id: true, createdAt: true, stopRequestedAt: true, totalToProcess: true, processedCount: true },
     });
     if (!run) return;
     if (run.stopRequestedAt) {
@@ -88,6 +169,22 @@ export const processRedditAiAnalysis = async (
       });
       return;
     }
+  }
+
+  const reclaimWhere: any = {
+    aiAnalysisStatus: RedditBotAiAnalysisStatus.IN_PROGRESS,
+  };
+  if (args.jobId) {
+    reclaimWhere.jobId = args.jobId;
+  } else if (args.projectId) {
+    reclaimWhere.projectId = args.projectId;
+    reclaimWhere.updatedAt = { lt: new Date(Date.now() - STALE_IN_PROGRESS_MS) };
+  }
+  if (args.jobId || args.projectId) {
+    await entities.RedditBotProjectPost.updateMany({
+      where: reclaimWhere,
+      data: { aiAnalysisStatus: RedditBotAiAnalysisStatus.PENDING },
+    });
   }
 
   while (processed < BATCH_CAP) {
@@ -105,58 +202,7 @@ export const processRedditAiAnalysis = async (
       }
     }
 
-    let projectPost: { id: string; projectId: string; postId: string; jobId: string | null } | null = null;
-
-    if (args.jobId) {
-      projectPost = await entities.RedditBotProjectPost.findFirst({
-        where: {
-          jobId: args.jobId,
-          aiAnalysisStatus: { in: [...AI_ANALYSIS_STATUSES_QUEUED] },
-        },
-        select: { id: true, projectId: true, postId: true, jobId: true },
-      });
-    } else if (args.projectId) {
-      const statuses = args.includeAlreadyProcessed ? AI_ANALYSIS_STATUSES_ALL : [...AI_ANALYSIS_STATUSES_QUEUED];
-      const where: any = {
-        projectId: args.projectId,
-        aiAnalysisStatus: { in: statuses },
-      };
-      const fs = args.filterSnapshot;
-      if (fs) {
-        if (fs.status) where.status = fs.status;
-        if (fs.subreddits?.length) {
-          where.post = where.post || {};
-          where.post.OR = fs.subreddits.map((s: string) => ({
-            subreddit: { equals: s, mode: 'insensitive' as const },
-          }));
-        }
-        if (fs.postedAfter || fs.postedBefore) {
-          where.post = where.post || {};
-          where.post.postedAt = {};
-          if (fs.postedAfter) where.post.postedAt.gte = new Date(fs.postedAfter);
-          if (fs.postedBefore) where.post.postedAt.lte = new Date(fs.postedBefore);
-        }
-      }
-      projectPost = await entities.RedditBotProjectPost.findFirst({
-        where,
-        select: { id: true, projectId: true, postId: true, jobId: true, matchedKeywords: true },
-      });
-      if (projectPost && fs?.keywords?.length) {
-        const mk = ((projectPost as any).matchedKeywords as string[]) ?? [];
-        const matchesKw = mk.some((m: string) => fs.keywords!.some((k: string) => k.toLowerCase() === m.toLowerCase()));
-        if (!matchesKw) {
-          const allCandidates = await entities.RedditBotProjectPost.findMany({
-            where,
-            select: { id: true, projectId: true, postId: true, jobId: true, matchedKeywords: true },
-            take: 200,
-          });
-          projectPost = allCandidates.find((pp: any) => {
-            const ppMk = (pp.matchedKeywords as string[]) ?? [];
-            return ppMk.some((m: string) => fs.keywords!.some((k: string) => k.toLowerCase() === m.toLowerCase()));
-          }) ?? null;
-        }
-      }
-    }
+    const projectPost = await findNextAnalysisPost(entities, args, run?.createdAt);
 
     if (!projectPost) break;
 
@@ -235,10 +281,24 @@ export const processRedditAiAnalysis = async (
       where: { id: args.runId },
       select: { stopRequestedAt: true },
     });
+    if (runRow?.stopRequestedAt) {
+      await entities.RedditBotAiAnalysisRun.update({
+        where: { id: args.runId },
+        data: { status: RedditBotAiAnalysisRunStatus.KILLED, processedCount: run.processedCount },
+      });
+      return;
+    }
+    if (processed >= BATCH_CAP) {
+      const more = await findNextAnalysisPost(entities, args, run?.createdAt);
+      if (more) {
+        await redditAiAnalysisJob.submit(args);
+        return;
+      }
+    }
     await entities.RedditBotAiAnalysisRun.update({
       where: { id: args.runId },
       data: {
-        status: runRow?.stopRequestedAt ? RedditBotAiAnalysisRunStatus.KILLED : RedditBotAiAnalysisRunStatus.COMPLETED,
+        status: RedditBotAiAnalysisRunStatus.COMPLETED,
         processedCount: run.processedCount,
       },
     });

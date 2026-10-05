@@ -13,7 +13,8 @@ export type AiFileGenerationJobPayload = {
  */
 async function convertUuidsToFilePaths(
   inputFileUuids: string[],
-  context: any
+  context: any,
+  ownerUserId: string
 ): Promise<string[]> {
   if (!inputFileUuids || inputFileUuids.length === 0) {
     return [];
@@ -23,7 +24,14 @@ async function convertUuidsToFilePaths(
 
   for (const fileUuid of inputFileUuids) {
     try {
-      // Check if file exists in storage
+      const owned = await context.entities.File.findFirst({
+        where: { uuid: fileUuid, userId: ownerUserId },
+        select: { id: true },
+      });
+      if (!owned) {
+        console.warn(`Input file is not owned by the generating user: ${fileUuid}`);
+        continue;
+      }
       if (!fileExistsInStorage(fileUuid)) {
         console.warn(`Input file does not exist in storage: ${fileUuid}`);
         continue;
@@ -94,7 +102,7 @@ export const processAiFileGeneration: AiFileGenerationJob<AiFileGenerationJobPay
 
     // Convert input file UUIDs to file paths if provided
     const inputImageFilepaths = taskInput.inputFileUuids 
-      ? await convertUuidsToFilePaths(taskInput.inputFileUuids, context)
+      ? await convertUuidsToFilePaths(taskInput.inputFileUuids, context, file.userId)
       : undefined;
       console.log(`✅ Found ${inputImageFilepaths?.length || 0} / ${taskInput.inputFileUuids?.length || 0} input file paths for fileUuid: ${fileUuid}`);
 

@@ -163,10 +163,15 @@ export const uploadFile = async (req: any, res: any) => {
   });
 };
 
-export const serveFile = async (req: any, res: any, next: any) => {
+export const serveFile = async (req: any, res: any, context: any) => {
   try {
-    const filename = req.params.filename;
-    if (!filename) {
+    if (!context?.user) {
+      return res.status(401).json({ error: 'Not authorized' });
+    }
+
+    const rawName = req.params.filename as string | undefined;
+    const filename = rawName ? path.basename(rawName) : '';
+    if (!filename || filename !== rawName || filename.includes('..')) {
       return res.status(400).json({ error: 'Filename is required' });
     }
 
@@ -175,36 +180,45 @@ export const serveFile = async (req: any, res: any, next: any) => {
       where: { uuid },
       select: { userId: true },
     });
-    if (file) {
-      const user = await prisma.user.findUnique({
-        where: { id: file.userId },
-        select: { isAdmin: true },
-      });
-      const allowed = await hasAppAccess(file.userId, APP_KEYS.SOKAFILM, user?.isAdmin ?? false);
-      if (!allowed) {
-        return res.status(403).json({ error: 'Access denied to this app' });
-      }
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
     }
 
-    const storageDir = getStorageDirectory();
+    const isAdmin = !!context.user.isAdmin;
+    if (file.userId !== context.user.id && !isAdmin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const allowed = await hasAppAccess(context.user.id, APP_KEYS.SOKAFILM, isAdmin);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Access denied to this app' });
+    }
+
+    const storageDir = path.resolve(getStorageDirectory());
 
     let filePath: string | null = null;
 
-    const userDirs = fs.readdirSync(storageDir, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name);
+    const isInsideStorage = (candidate: string) => {
+      const resolved = path.resolve(candidate);
+      return resolved.startsWith(storageDir + path.sep) && path.basename(resolved) === filename;
+    };
 
-    for (const userDir of userDirs) {
-      const potentialPath = path.join(storageDir, userDir, filename);
-      if (fs.existsSync(potentialPath)) {
-        filePath = potentialPath;
-        break;
+    if (fs.existsSync(storageDir)) {
+      const userDirs = fs.readdirSync(storageDir, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name);
+
+      for (const userDir of userDirs) {
+        const potentialPath = path.resolve(storageDir, userDir, filename);
+        if (isInsideStorage(potentialPath) && fs.existsSync(potentialPath)) {
+          filePath = potentialPath;
+          break;
+        }
       }
     }
 
     if (!filePath) {
-      const rootPath = path.join(storageDir, filename);
-      if (fs.existsSync(rootPath)) {
+      const rootPath = path.resolve(storageDir, filename);
+      if (isInsideStorage(rootPath) && fs.existsSync(rootPath)) {
         filePath = rootPath;
       }
     }

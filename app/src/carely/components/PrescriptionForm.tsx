@@ -4,6 +4,7 @@ import { createCarelyPrescription, updateCarelyPrescription } from "wasp/client/
 import { Plus } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { utcDateKey } from '../utils/dateKey';
 
 export function PrescriptionForm({ parentId, onCreated, initialRx, open, onOpenChange }: { parentId: string, onCreated: () => void, initialRx?: any, open?: boolean, onOpenChange?: (open: boolean) => void }) {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -47,8 +48,8 @@ export function PrescriptionForm({ parentId, onCreated, initialRx, open, onOpenC
            setNight(String(s.night || '0'));
            setNotes(initialRx.doseNote || '');
         }
-        setStartDate(initialRx.startDate ? toLocalIso(new Date(initialRx.startDate)) : toLocalIso(new Date()));
-        setEndDate(initialRx.endDate ? toLocalIso(new Date(initialRx.endDate)) : '');
+        setStartDate(initialRx.startDate ? utcDateKey(initialRx.startDate) : toLocalIso(new Date()));
+        setEndDate(initialRx.endDate ? utcDateKey(initialRx.endDate) : '');
       } else {
         setName('');
         setUseCustom(false);

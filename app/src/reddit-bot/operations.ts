@@ -13,7 +13,7 @@ import { APP_KEYS } from '../shared/appKeys';
 import { z } from 'zod';
 import { ensureArgsSchemaOrThrowHttpError } from '../server/validation';
 import { RedditBotProjectPostStatus, RedditBotAiAnalysisStatus } from '@prisma/client';
-import { AI_ANALYSIS_STATUSES_ALL } from './redditBotAiStatusConstants';
+import { AI_ANALYSIS_STATUSES_ALL, AI_ANALYSIS_STATUSES_QUEUED } from './redditBotAiStatusConstants';
 
 /**
  * Ensures the user is the project owner or an admin. Call this for every operation
@@ -579,12 +579,16 @@ export const markRedditBotProjectPostsAsExported = async (
   await requireAppAccess(context.user.id, APP_KEYS.REDDIT_BOT, context.user.isAdmin);
 
   const args = ensureArgsSchemaOrThrowHttpError(markAsExportedSchema, rawArgs);
-  const first = await context.entities.RedditBotProjectPost.findFirst({
-    where: { id: args.projectPostIds[0] },
+  const posts = await context.entities.RedditBotProjectPost.findMany({
+    where: { id: { in: args.projectPostIds } },
     include: { project: true },
   });
-  if (!first) throw new HttpError(404, 'Project post not found');
-  ensureProjectAccess(first.project, context.user.id, context.user.isAdmin);
+  if (posts.length !== args.projectPostIds.length) {
+    throw new HttpError(404, 'Project post not found');
+  }
+  for (const post of posts) {
+    ensureProjectAccess(post.project, context.user.id, context.user.isAdmin);
+  }
 
   await context.entities.RedditBotProjectPost.updateMany({
     where: { id: { in: args.projectPostIds } },
@@ -1059,7 +1063,9 @@ export const getRedditAiAnalysisProspectiveCount = async (
     postedAfter: args.postedAfter,
     postedBefore: args.postedBefore,
   });
-  where.aiAnalysisStatus = { in: AI_ANALYSIS_STATUSES_ALL };
+  where.aiAnalysisStatus = {
+    in: args.includeAlreadyProcessed ? AI_ANALYSIS_STATUSES_ALL : [...AI_ANALYSIS_STATUSES_QUEUED],
+  };
 
   const projectKeywords = (project!.keywords as string[]) || [];
   let count: number;
@@ -1117,7 +1123,9 @@ export const triggerRedditAiAnalysis = async (
     postedAfter: args.postedAfter,
     postedBefore: args.postedBefore,
   });
-  where.aiAnalysisStatus = { in: AI_ANALYSIS_STATUSES_ALL };
+  where.aiAnalysisStatus = {
+    in: args.includeAlreadyProcessed ? AI_ANALYSIS_STATUSES_ALL : [...AI_ANALYSIS_STATUSES_QUEUED],
+  };
 
   const projectKeywords = (project!.keywords as string[]) || [];
   let totalToProcess: number;

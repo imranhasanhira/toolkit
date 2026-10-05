@@ -3,6 +3,7 @@ import { useParams, Link, useLocation, useNavigate } from 'react-router';
 import { useQuery, getCarelyParentById } from "wasp/client/operations";
 import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ageInYears } from './utils/dateKey';
 import { MeasurementsTab } from './Tabs/MeasurementsTab';
 import { MedicineTab } from './Tabs/MedicineTab';
 import { StatsTab } from './Tabs/StatsTab';
@@ -65,7 +66,7 @@ export default function CarelyParentPage() {
                   </h1>
                   {parent.dateOfBirth && (
                     <p className="font-jakarta text-[color:var(--color-carely-on-surface-variant)] text-sm">
-                      {t('patient.yearsOld', { count: new Date().getFullYear() - new Date(parent.dateOfBirth).getFullYear() })}
+                      {t('patient.yearsOld', { count: ageInYears(parent.dateOfBirth) })}
                     </p>
                   )}
                 </div>

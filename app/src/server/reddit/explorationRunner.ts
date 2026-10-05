@@ -4,6 +4,7 @@ import {
   getSettings,
   getDecryptedOpenRouterApiKey,
   deductCredit,
+  refundCredit,
   InsufficientRedditCreditError,
   toNum,
 } from './redditCreditService';
@@ -110,8 +111,10 @@ export async function runExploration(
 
       const settingsPage = await getSettings(entities);
       const creditPerCall = settingsPage.credits.perApiCall || 1;
+      let creditCharged = false;
       try {
         await deductCredit(entities, userId, creditPerCall, 'reddit_api_call', jobId);
+        creditCharged = true;
       } catch (err) {
         if (err instanceof InsufficientRedditCreditError) {
           console.warn(`[exploration] job=${jobId} insufficient credit, marking FAILED`);
@@ -127,6 +130,16 @@ export async function runExploration(
         }
         throw err;
       }
+
+      const refundChargedCall = async () => {
+        if (!creditCharged) return;
+        creditCharged = false;
+        try {
+          await refundCredit(userId, creditPerCall, 'reddit_api_call_refund', jobId);
+        } catch (refundErr) {
+          console.error(`[exploration] job=${jobId} failed to refund credit after Reddit API error:`, refundErr);
+        }
+      };
 
       let listing;
       const maxAttempts = 3;
@@ -179,6 +192,7 @@ export async function runExploration(
               `[exploration] job=${jobId} Reddit API error (non-retryable), aborting job:`,
               err
             );
+            await refundChargedCall();
             throw new Error(
               `Reddit exploration failed due to Reddit API error: ${message}`.slice(0, 1000)
             );
@@ -190,6 +204,7 @@ export async function runExploration(
               `[exploration] job=${jobId} Reddit API call failed after ${attempt} attempt(s), aborting job:`,
               err
             );
+            await refundChargedCall();
             throw new Error(
               `Reddit exploration failed after ${attempt} attempt(s): ${message}`.slice(0, 1000)
             );
@@ -268,13 +283,15 @@ export async function runExploration(
         if (
           existingLink &&
           (existingLink.status === RedditBotProjectPostStatus.RELEVANT ||
-            existingLink.status === RedditBotProjectPostStatus.DISCARDED)
+            existingLink.status === RedditBotProjectPostStatus.DISCARDED ||
+            existingLink.aiAnalysisStatus === RedditBotAiAnalysisStatus.IN_PROGRESS)
         ) {
-          continue; // already in a final state (AI said relevant or discarded)
+          continue; // final AI result, or analysis still running
         }
 
         const text = `${(existingPost?.title ?? post.title) ?? ''} ${(existingPost?.content ?? post.selftext) ?? ''}`;
-        const matched = matchKeywords(text, projectKeywords);
+        const keywordsForMatch = keywords.length > 0 ? keywords : projectKeywords;
+        const matched = matchKeywords(text, keywordsForMatch);
         const isMatched = matched.length > 0;
 
         const aiAnalysisStatus = aiEnabled ? RedditBotAiAnalysisStatus.PENDING : RedditBotAiAnalysisStatus.NOT_REQUESTED;

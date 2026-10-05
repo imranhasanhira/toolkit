@@ -10,10 +10,10 @@ async function checkAuth(context: any) {
 }
 
 function parseLocalDateKey(dateKey: string): Date {
-  // Expect "YYYY-MM-DD" and create a local-midnight Date.
+  // Expect "YYYY-MM-DD" and store UTC midnight so the calendar day does not shift by timezone.
   const [y, m, d] = dateKey.split('-').map(Number);
   if (!y || !m || !d) throw new HttpError(400, 'Invalid date');
-  return new Date(y, m - 1, d, 0, 0, 0, 0);
+  return new Date(Date.UTC(y, m - 1, d));
 }
 
 // --- Parents ---
@@ -112,7 +112,7 @@ export const updateCarelyCollaboratorPermissions = async (args: { id: string; ca
       canViewPrescription: args.canViewPrescription,
       canEditPrescription: args.canEditPrescription,
       canAddVitals: args.canAddVitals,
-      canViewVitals: args.canViewVitals,
+      canViewVitals: args.canViewVitals || args.canAddVitals,
     }
   });
 };
@@ -129,7 +129,7 @@ export const getCarelyVitalLogs = async (args: { parentId: string; type?: string
   const userId = await checkAuth(context);
   const parent = await getCarelyParentById({ id: args.parentId }, context); // re-use access check
   const collab = parent.collaborators.find((c: any) => c.userId === userId);
-  if (parent.createdByUserId !== userId && (!collab || !collab.canViewVitals)) {
+  if (parent.createdByUserId !== userId && (!collab || (!collab.canViewVitals && !collab.canAddVitals))) {
     throw new HttpError(403, "View logs permission required");
   }
 

@@ -16,7 +16,7 @@ export const processRedditScheduleRunner = async (_args: any, context: any) => {
     const config = (schedule.config as Record<string, unknown>) || {};
     const subreddits = (config.subreddits as string[]) ?? (schedule.project.subreddits as string[]) ?? [];
     const keywords = (config.keywords as string[]) ?? (schedule.project.keywords as string[]) ?? [];
-    const range = (config.relativeDateRange as { start?: string; end?: string }) ?? { start: '-24h', end: 'now' };
+    const range = (config.relativeDateRange as { start?: string; end?: string; bufferMinutes?: number }) ?? { start: '-24h', end: 'now' };
     const maxPosts = (config.maxPostsToExplore as number) | 0;
     const maxLeads = (config.maxLeadsToFind as number) | 0;
     const strictKeywordSearch = config.strictKeywordSearch as boolean | undefined;
@@ -24,7 +24,11 @@ export const processRedditScheduleRunner = async (_args: any, context: any) => {
     const jobConfig = {
       subreddits: subreddits.length ? subreddits : ['all'],
       keywords,
-      relativeDateRange: { start: range.start ?? '-24h', end: range.end ?? 'now' },
+      relativeDateRange: {
+        start: range.start ?? '-24h',
+        end: range.end ?? 'now',
+        bufferMinutes: range.bufferMinutes ?? 0,
+      },
       maxPostsToExplore: maxPosts || undefined,
       maxLeadsToFind: maxLeads || undefined,
       strictKeywordSearch,
@@ -51,7 +55,11 @@ export const processRedditScheduleRunner = async (_args: any, context: any) => {
       options: {
         subreddits: subreddits.length ? subreddits : ['all'],
         keywords,
-        relativeDateRange: { start: range.start ?? '-24h', end: range.end ?? 'now' },
+        relativeDateRange: {
+          start: range.start ?? '-24h',
+          end: range.end ?? 'now',
+          bufferMinutes: range.bufferMinutes ?? 0,
+        },
         maxPostsToExplore: maxPosts || undefined,
         maxLeadsToFind: maxLeads || undefined,
         strictKeywordSearch,
