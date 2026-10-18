@@ -51,6 +51,7 @@ const en = {
     sokafilm: "SokaFilm",
     redditBot: "Reddit Bot",
     carely: "Carely",
+    leaveManager: "Leave Manager",
   },
   userMenu: {
     accountSettings: "Account Settings",

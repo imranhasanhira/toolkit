@@ -1030,3 +1030,96 @@ action clearCarelyMockData {
   entities: [CarelyParent, CarelyVitalLog, CarelyPrescription, CarelyMedicineIntakeLog, CarelyCollaborator]
 }
 //#endregion
+
+//#region Leave Manager
+route LeaveManagerRoute { path: "/leave-manager", to: LeaveManagerPage }
+page LeaveManagerPage {
+  authRequired: true,
+  component: import { LeaveManagerPage } from "@src/leave-manager/LeaveManagerPage"
+}
+
+query getLeaveProjects {
+  fn: import { getLeaveProjects } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory, LmGovernmentHoliday, LmSettings]
+}
+
+action createLeaveProject {
+  fn: import { createLeaveProject } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory]
+}
+
+action updateLeaveProject {
+  fn: import { updateLeaveProject } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject]
+}
+
+action archiveLeaveProject {
+  fn: import { archiveLeaveProject } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject]
+}
+
+action unarchiveLeaveProject {
+  fn: import { unarchiveLeaveProject } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject]
+}
+
+query getLeaveCategories {
+  fn: import { getLeaveCategories } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory]
+}
+
+query getLeaveDays {
+  fn: import { getLeaveDays } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveDay, LmLeaveCategory]
+}
+
+query getGovernmentHolidays {
+  fn: import { getGovernmentHolidays } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmGovernmentHoliday, LmSettings]
+}
+
+action createLeaveCategory {
+  fn: import { createLeaveCategory } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory]
+}
+
+action updateLeaveCategory {
+  fn: import { updateLeaveCategory } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory, LmLeaveDay]
+}
+
+action deleteLeaveCategory {
+  fn: import { deleteLeaveCategory } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory, LmLeaveDay]
+}
+
+action archiveLeaveCategory {
+  fn: import { archiveLeaveCategory } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory]
+}
+
+action unarchiveLeaveCategory {
+  fn: import { unarchiveLeaveCategory } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveCategory]
+}
+
+action upsertLeaveDays {
+  fn: import { upsertLeaveDays } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveDay, LmLeaveCategory]
+}
+
+action deleteLeaveDays {
+  fn: import { deleteLeaveDays } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmLeaveDay]
+}
+
+action createGovernmentHolidays {
+  fn: import { createGovernmentHolidays } from "@src/leave-manager/operations",
+  entities: [LmLeaveProject, LmGovernmentHoliday, LmLeaveDay]
+}
+
+action deleteGovernmentHoliday {
+  fn: import { deleteGovernmentHoliday } from "@src/leave-manager/operations",
+  entities: [LmGovernmentHoliday]
+}
+//#endregion

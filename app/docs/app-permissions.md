@@ -1,6 +1,6 @@
 # App-specific permissions — Full documentation
 
-The toolkit gates access to each **app** (SokaFilm, Online Judge, Reddit Bot) by a per-user, per-app permission matrix. There is **no global middleware**: every app-specific action and query must explicitly call `requireAppAccess`. Admins bypass all checks and see all apps. Non-admins only see and use apps for which they have a `UserAppPermission` row.
+The toolkit gates access to each **app** (SokaFilm, Online Judge, Reddit Bot, Carely, Leave Manager) by a per-user, per-app permission matrix. There is **no global middleware**: every app-specific action and query must explicitly call `requireAppAccess`. Admins bypass all checks and see all apps. Non-admins only see and use apps for which they have a `UserAppPermission` row.
 
 ---
 
@@ -64,7 +64,7 @@ flowchart TB
 
 ## 2. Concepts
 
-- **AppKey** — Enum-like set of app identifiers in [appKeys.ts](../src/shared/appKeys.ts): `sokafilm`, `online-judge`, `reddit-bot`. Used in `UserAppPermission`, nav items, and permission checks. Must stay in sync with nav and backend gating.
+- **AppKey** — Enum-like set of app identifiers in [appKeys.ts](../src/shared/appKeys.ts): `sokafilm`, `online-judge`, `reddit-bot`, `carely`, `leave-manager`. Used in `UserAppPermission`, nav items, and permission checks. Must stay in sync with nav and backend gating.
 - **UserAppPermission** — One row per (userId, appKey) means the user is allowed that app. Stored in DB; admins grant/revoke via the admin matrix.
 - **requireAppAccess(userId, appKey, isAdmin)** — Throws `HttpError(403)` if the user does not have access. Call at the start of every app-specific action/query (and in custom APIs like file serve).
 - **hasAppAccess(userId, appKey, isAdmin)** — Returns `true`/`false`. Use when you need a boolean (e.g. custom logic: “allow if file owner or has app access”).
@@ -76,8 +76,8 @@ flowchart TB
 ## 3. Features
 
 - **Nav filtering** — Logged-in user’s nav items are filtered by `getMyAppPermissions` (allowed app keys). Logged-out users see no app links.
-- **Route guard** — If a user opens an app route (e.g. `/sokafilm`, `/online-judge`, `/reddit-bot`) without that app in `allowedAppKeys`, the app redirects to Account.
-- **Backend gating** — Every SokaFilm, Online Judge, and Reddit Bot action/query calls `requireAppAccess` with the appropriate `AppKey`; 403 if not allowed.
+- **Route guard** — If a user opens an app route (e.g. `/sokafilm`, `/online-judge`, `/reddit-bot`, `/carely`, `/leave-manager`) without that app in `allowedAppKeys`, the app redirects to Account.
+- **Backend gating** — Every SokaFilm, Online Judge, Reddit Bot, Carely, and Leave Manager action/query calls `requireAppAccess` with the appropriate `AppKey`; 403 if not allowed.
 - **Custom APIs** — Other entry points (e.g. `serveFile` in serverSetup) use `hasAppAccess` when access depends on app permission.
 - **Admin UI** — App permissions page: user list (paginated, filter by email) × app columns; checkbox to grant/revoke per (user, app). Admins are shown as having all apps and toggles disabled.
 
@@ -218,7 +218,7 @@ sequenceDiagram
 
 **Where app access is enforced:**
 
-- Every SokaFilm, Online Judge, and Reddit Bot action/query: first line (or early) calls `requireAppAccess(context.user.id, APP_KEYS.*, context.user.isAdmin)`.
+- Every SokaFilm, Online Judge, Reddit Bot, Carely, and Leave Manager action/query: first line (or early) calls `requireAppAccess(context.user.id, APP_KEYS.*, context.user.isAdmin)`.
 - Custom API example: [serverSetup.ts](../src/server/serverSetup.ts) uses `hasAppAccess` for file serve when access is tied to SokaFilm.
 
 ---

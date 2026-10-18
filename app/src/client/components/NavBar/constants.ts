@@ -15,6 +15,7 @@ const baseNavigationItems: NavItemWithApp[] = [
   { name: "SokaFilm", i18nKey: "apps.sokafilm", to: routes.SokaFilmRoute.to, appKey: "sokafilm" },
   { name: "Reddit Bot", i18nKey: "apps.redditBot", to: routes.RedditBotRoute.to, appKey: "reddit-bot" },
   { name: "Carely", i18nKey: "apps.carely", to: routes.CarelyRoute.to, appKey: "carely" },
+  { name: "Leave Manager", i18nKey: "apps.leaveManager", to: routes.LeaveManagerRoute.to, appKey: "leave-manager" },
 ];
 
 export const marketingNavigationItems: NavItemWithApp[] = baseNavigationItems;

@@ -22,6 +22,7 @@ export default function LandingPage() {
       { key: 'sokafilm' as AppKey, name: t('apps.sokafilm.name'), to: routes.SokaFilmRoute.to, description: t('apps.sokafilm.description') },
       { key: 'reddit-bot' as AppKey, name: t('apps.redditBot.name'), to: routes.RedditBotRoute.to, description: t('apps.redditBot.description') },
       { key: 'carely' as AppKey, name: t('apps.carely.name'), to: routes.CarelyRoute.to, description: t('apps.carely.description') },
+      { key: 'leave-manager' as AppKey, name: t('apps.leaveManager.name'), to: routes.LeaveManagerRoute.to, description: t('apps.leaveManager.description') },
     ] as const;
 
     const allowedApps = apps.filter((a) => allowedAppKeys.includes(a.key));

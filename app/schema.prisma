@@ -35,6 +35,11 @@ model User {
   careVitalLogs             CarelyVitalLog[] @relation("CareVitalLogs")
   carePrescriptions         CarelyPrescription[] @relation("CarePrescriptions")
   careMedicineIntakeLogs    CarelyMedicineIntakeLog[] @relation("CareMedicineIntakeLogs")
+  lmLeaveProjects           LmLeaveProject[]
+  lmLeaveCategories         LmLeaveCategory[]
+  lmLeaveDays               LmLeaveDay[]
+  lmGovernmentHolidays      LmGovernmentHoliday[]
+  lmSettings                LmSettings?
 }
 
 model UserAppPermission {
@@ -729,4 +734,104 @@ model CarelyMedicineIntakeLog {
   takenAt       DateTime @default(now())
 
   @@unique([prescriptionId, slot, intakeDate])
+}
+
+// Leave Manager. Physical tables are prefixed lm_ so they stay clear of other apps.
+// A null projectId means the row applies to every project for that user.
+// scopeId is the project id, or "global", so names stay unique inside a scope.
+model LmLeaveProject {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  name           String
+  color          String?
+  isArchived     Boolean  @default(false)
+  defaultsSeeded Boolean  @default(false)
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+
+  categories     LmLeaveCategory[]
+  leaveDays      LmLeaveDay[]
+  holidays       LmGovernmentHoliday[]
+
+  @@unique([userId, name])
+  @@map("lm_leave_project")
+}
+
+model LmLeaveCategory {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  name       String
+  color      String
+  startDate  DateTime  @default(now()) @db.Date
+  endDate    DateTime? @db.Date
+  quota      Int       @default(20)
+  isArchived Boolean   @default(false)
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+
+  project    LmLeaveProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String?
+  scopeId    String
+
+  leaveDays  LmLeaveDay[]
+
+  @@unique([userId, scopeId, name])
+  @@map("lm_leave_category")
+}
+
+model LmLeaveDay {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+
+  date       DateTime @db.Date
+  dateString String
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+
+  project    LmLeaveProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
+
+  category   LmLeaveCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  @@unique([userId, projectId, dateString, categoryId])
+  @@map("lm_leave_day")
+}
+
+model LmGovernmentHoliday {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  date        DateTime @db.Date
+  dateString  String
+  name        String
+  description String?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+
+  project     LmLeaveProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String?
+  scopeId     String
+
+  @@unique([userId, scopeId, dateString])
+  @@map("lm_government_holiday")
+}
+
+model LmSettings {
+  id             String  @id @default(uuid())
+  holidaysSeeded Boolean @default(false)
+
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String  @unique
+
+  @@map("lm_settings")
 }

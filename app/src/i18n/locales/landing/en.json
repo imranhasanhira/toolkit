@@ -24,6 +24,10 @@
     "carely": {
       "name": "Carely",
       "description": "Track vitals, medications, and trends for care."
+    },
+    "leaveManager": {
+      "name": "Leave Manager",
+      "description": "Mark leave, quotas, and holidays on a calendar."
     }
   },
   "hero": {

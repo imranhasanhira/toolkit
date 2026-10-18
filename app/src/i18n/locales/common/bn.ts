@@ -49,6 +49,7 @@ const bn = {
     sokafilm: "সোকাফিল্ম",
     redditBot: "রেডিট বট",
     carely: "কেয়ারলি",
+    leaveManager: "লিভ ম্যানেজার",
   },
   userMenu: {
     accountSettings: "অ্যাকাউন্ট সেটিংস",

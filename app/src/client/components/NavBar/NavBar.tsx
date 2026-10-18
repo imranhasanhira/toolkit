@@ -62,7 +62,8 @@ export default function NavBar({
 
       <header
         className={cn(
-          "sticky top-0 z-50 transition-all duration-300",
+          "z-50 transition-all duration-300",
+          location.pathname.startsWith("/leave-manager") ? "relative" : "sticky top-0",
         )}
       >
         <div
@@ -109,6 +110,8 @@ export default function NavBar({
                       return `${base} / ${t("apps.sokafilm")}`;
                     if (path.startsWith("/reddit-bot"))
                       return `${base} / ${t("apps.redditBot")}`;
+                    if (path.startsWith("/leave-manager"))
+                      return `${base} / ${t("apps.leaveManager")}`;
                     return base;
                   })()}
                 </span>

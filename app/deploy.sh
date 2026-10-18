@@ -33,7 +33,7 @@ REMOTE_BACKEND="dokku@${DOKKU_HOST}:${APP_BACKEND}"
 REMOTE_FRONTEND="dokku@${DOKKU_HOST}:${APP_FRONTEND}"
 
 # Inferred API URL (Adjust if your Dokku configuration differs)
-API_URL="https://toolkit-api.naurinjahan.com"
+API_URL="https://toolkit-api.imranhira.com"
 
 BRANCH="main"
 # Use Amsterdam time for release tags (Europe/Amsterdam)
